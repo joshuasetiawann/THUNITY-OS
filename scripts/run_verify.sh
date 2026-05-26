@@ -52,7 +52,7 @@ if python3 scripts/verify_multiboot.py "$KERNEL"; then ok "Multiboot header + ch
 line
 
 echo "4) Required symbols — nm"
-for s in _start kernel_main isr_handler irq_handler shell_run; do
+for s in _start kernel_main isr_handler irq_handler shell_run pmm_init pmm_alloc_frame pmm_free_frame; do
   if nm "$KERNEL" | grep -qE "[Tt] $s$"; then echo "    [ ok ] $s"; ok "symbol $s present";
   else echo "    [miss] $s"; no "symbol $s"; fi
 done
@@ -60,6 +60,14 @@ line
 
 echo "5) Section sizes — size(1)"
 size "$KERNEL" | sed 's/^/    /'
+line
+
+echo "6) Memory allocator — host unit test (tests/test_pmm.c)"
+if gcc -O2 -std=gnu11 -Wall -Wextra -o build/test_pmm tests/test_pmm.c 2>/tmp/tpmm.err; then
+  if ./build/test_pmm | sed 's/^/    /'; then ok "frame allocator unit test"; else no "frame allocator unit test (assertion failed)"; fi
+else
+  no "frame allocator unit test (compile failed)"; sed 's/^/      /' /tmp/tpmm.err
+fi
 line
 
 echo "NOT VERIFIED IN THIS ENVIRONMENT (honest):"

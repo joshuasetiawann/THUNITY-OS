@@ -13,7 +13,7 @@ CC      := gcc
 LD      := gcc
 
 INCLUDES := -Ikernel/lib -Ikernel/arch/x86 -Ikernel/core \
-            -Ikernel/drivers -Ikernel/shell \
+            -Ikernel/drivers -Ikernel/shell -Ikernel/mm \
             -Ikernel/include -Ikernel/include/thuos
 
 # Freestanding 32-bit kernel. We provide our own mem*/str* so we disable the
@@ -39,7 +39,7 @@ SRCS_S  := $(shell find kernel -name '*.S' | sort)
 OBJS    := $(patsubst kernel/%,$(OBJDIR)/%,$(SRCS_C:.c=.o)) \
            $(patsubst kernel/%,$(OBJDIR)/%,$(SRCS_S:.S=.o))
 
-.PHONY: all kernel verify status iso run run-serial demo clean
+.PHONY: all kernel verify status test iso run run-serial demo clean
 
 all: kernel
 
@@ -63,6 +63,12 @@ verify: kernel
 
 status:
 	@bash scripts/status.sh
+
+# Host-side unit test of the page-frame allocator (native gcc, no QEMU needed).
+test:
+	@mkdir -p $(BUILD)
+	@gcc -O2 -std=gnu11 -Wall -Wextra -o $(BUILD)/test_pmm tests/test_pmm.c
+	@./$(BUILD)/test_pmm
 
 iso: kernel
 	@if command -v grub-mkrescue >/dev/null 2>&1 && command -v xorriso >/dev/null 2>&1; then \

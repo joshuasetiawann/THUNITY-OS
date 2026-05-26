@@ -10,15 +10,27 @@
 #include "string.h"
 #include "version.h"
 #include "pit.h"
+#include "pmm.h"
 
 #define LINE_MAX 128
 
-static uint32_t mem_lower_kb;
-static uint32_t mem_upper_kb;
-
-void shell_set_memory(uint32_t lower_kb, uint32_t upper_kb) {
-    mem_lower_kb = lower_kb;
-    mem_upper_kb = upper_kb;
+/* Parse a 32-bit hex value, accepting an optional 0x prefix. */
+static bool parse_hex(const char *s, uint32_t *out) {
+    uint32_t v = 0;
+    bool any = false;
+    if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) s += 2;
+    for (; *s; s++) {
+        char c = *s;
+        uint32_t d;
+        if (c >= '0' && c <= '9')      d = (uint32_t)(c - '0');
+        else if (c >= 'a' && c <= 'f') d = (uint32_t)(c - 'a' + 10);
+        else if (c >= 'A' && c <= 'F') d = (uint32_t)(c - 'A' + 10);
+        else return false;
+        v = (v << 4) | d;
+        any = true;
+    }
+    *out = v;
+    return any;
 }
 
 static void print_banner(void) {
@@ -34,22 +46,26 @@ static void print_banner(void) {
 
 static void cmd_help(void) {
     kprintf("THUOS shell commands:\n");
-    kprintf("  help      Show this help\n");
-    kprintf("  about     About THUOS\n");
-    kprintf("  version   Kernel name and version\n");
-    kprintf("  status    Implemented / in-progress / planned\n");
-    kprintf("  sysinfo   System summary\n");
-    kprintf("  uptime    Uptime in ticks and seconds\n");
-    kprintf("  ticks     Raw PIT tick counter\n");
-    kprintf("  mem       Memory information (from Multiboot)\n");
-    kprintf("  echo      Print the rest of the line\n");
-    kprintf("  banner    Show the THUOS banner\n");
-    kprintf("  color N   Set text color (0-15)\n");
-    kprintf("  thupkg    Package manager (design preview)\n");
-    kprintf("  clear     Clear the screen\n");
-    kprintf("  crash X   Test fault handler (div0) - testing only\n");
-    kprintf("  reboot    Reboot the machine\n");
-    kprintf("  halt      Halt the CPU\n");
+    kprintf("  help       Show this help\n");
+    kprintf("  about      About THUOS\n");
+    kprintf("  version    Kernel name and version\n");
+    kprintf("  status     Implemented / in-progress / planned\n");
+    kprintf("  sysinfo    System summary\n");
+    kprintf("  uptime     Uptime in ticks and seconds\n");
+    kprintf("  ticks      Raw PIT tick counter\n");
+    kprintf("  mem        Memory summary (physical memory manager)\n");
+    kprintf("  memmap     Multiboot memory map\n");
+    kprintf("  pages      Page-frame statistics\n");
+    kprintf("  allocpage  Allocate one 4 KiB physical frame\n");
+    kprintf("  freepage A Free a frame by physical address (hex)\n");
+    kprintf("  echo       Print the rest of the line\n");
+    kprintf("  banner     Show the THUOS banner\n");
+    kprintf("  color N    Set text color (0-15)\n");
+    kprintf("  thupkg     Package manager (design preview)\n");
+    kprintf("  clear      Clear the screen\n");
+    kprintf("  crash X    Test fault handler (div0) - testing only\n");
+    kprintf("  reboot     Reboot the machine\n");
+    kprintf("  halt       Halt the CPU\n");
 }
 
 static void cmd_about(void) {
@@ -72,10 +88,10 @@ static void cmd_status(void) {
     kprintf("  [done]    GDT, IDT, CPU exceptions 0-31\n");
     kprintf("  [done]    PIC remap, PIT timer, keyboard IRQ, shell\n");
     kprintf("  [done]    Panic/assert system\n");
-    kprintf("  [wip]     Memory manager (Milestone 0.3)\n");
+    kprintf("  [done]    Physical memory manager (Milestone 0.3)\n");
+    kprintf("  [plan]    Paging + kernel heap (designed, not yet built)\n");
     kprintf("  [plan]    VFS + initrd (Milestone 0.4)\n");
     kprintf("  [plan]    Userspace + syscalls (Milestone 0.5)\n");
-    kprintf("  [plan]    Framebuffer GUI / THU Desktop\n");
 }
 
 static void cmd_sysinfo(void) {
@@ -84,9 +100,9 @@ static void cmd_sysinfo(void) {
     kprintf("Kernel  : %s\n", THUOS_KERNEL_NAME);
     kprintf("Timer   : PIT @ %u Hz\n", pit_frequency());
     kprintf("Uptime  : %u s (%u ticks)\n", pit_seconds(), pit_ticks());
-    if (mem_upper_kb) {
-        kprintf("Memory  : ~%u KiB low, ~%u KiB high (Multiboot)\n",
-                mem_lower_kb, mem_upper_kb);
+    if (pmm_available()) {
+        kprintf("Memory  : ~%u KiB usable, %u free frames (4 KiB)\n",
+                pmm_usable_bytes() / 1024u, pmm_free_frames());
     }
     kprintf("Build   : %s %s\n", THUOS_BUILD_DATE, THUOS_BUILD_TIME);
 }
@@ -97,23 +113,48 @@ static void cmd_uptime(void) {
 }
 
 static void cmd_mem(void) {
-    if (mem_upper_kb) {
-        uint32_t total_kb = mem_lower_kb + mem_upper_kb;
-        kprintf("Multiboot memory hint:\n");
-        kprintf("  lower : %u KiB\n", mem_lower_kb);
-        kprintf("  upper : %u KiB\n", mem_upper_kb);
-        kprintf("  total : ~%u KiB (~%u MiB)\n", total_kb, total_kb / 1024);
-    } else {
-        kprintf("No Multiboot memory map was provided by the bootloader.\n");
+    if (!pmm_available()) {
+        kprintf("No Multiboot memory information was provided by the bootloader.\n");
+        return;
     }
-    kprintf("Full physical memory manager is planned for Milestone 0.3.\n");
+    kprintf("Memory hint: %u KiB low, %u KiB high (Multiboot)\n",
+            pmm_mem_lower_kb(), pmm_mem_upper_kb());
+    pmm_print_stats();
+}
+
+static void cmd_allocpage(void) {
+    uint32_t addr = pmm_alloc_frame();
+    if (addr == 0) {
+        kprintf("allocpage: out of physical memory (no free frame)\n");
+        return;
+    }
+    kprintf("Allocated frame at physical 0x%08x (free now: %u frames)\n",
+            addr, pmm_free_frames());
+    kprintf("Free it with: freepage 0x%08x\n", addr);
+}
+
+static void cmd_freepage(const char *args) {
+    uint32_t addr;
+    if (!parse_hex(args, &addr)) {
+        kprintf("usage: freepage <physical-address-in-hex>\n");
+        return;
+    }
+    int r = pmm_free_frame(addr);
+    switch (r) {
+        case 0:  kprintf("Freed frame at 0x%08x (free now: %u frames)\n",
+                         addr & ~(PMM_PAGE_SIZE - 1), pmm_free_frames()); break;
+        case -1: kprintf("freepage: 0x%08x is unaligned or out of range\n", addr); break;
+        case -2: kprintf("freepage: 0x%08x is a protected region (refused)\n", addr); break;
+        case -3: kprintf("freepage: 0x%08x was already free\n", addr); break;
+        default: kprintf("freepage: error %d\n", r); break;
+    }
 }
 
 static void cmd_thupkg(const char *args) {
     if (strcmp(args, "list") == 0) {
         kprintf("thupkg - installed/known packages (design preview):\n");
-        kprintf("  thu-coreutils   0.2.0   [designed]\n");
-        kprintf("  thu-terminal    0.2.0   [designed]\n");
+        kprintf("  thu-coreutils   0.3.0   [designed]\n");
+        kprintf("  thu-terminal    0.3.0   [designed]\n");
         kprintf("  thu-files       0.1.0   [planned]\n");
         kprintf("  thu-settings    0.1.0   [planned]\n");
         kprintf("Note: thupkg is a design preview; no real install backend yet.\n");
@@ -173,23 +214,27 @@ static void execute(char *line) {
     while (*args && *args != ' ') args++;
     if (*args == ' ') { *args = '\0'; args++; while (*args == ' ') args++; }
 
-    if (line[0] == '\0')                 return;
-    else if (strcmp(line, "help") == 0)    cmd_help();
-    else if (strcmp(line, "about") == 0)   cmd_about();
-    else if (strcmp(line, "version") == 0) cmd_version();
-    else if (strcmp(line, "status") == 0)  cmd_status();
-    else if (strcmp(line, "sysinfo") == 0) cmd_sysinfo();
-    else if (strcmp(line, "uptime") == 0)  cmd_uptime();
-    else if (strcmp(line, "ticks") == 0)   kprintf("%u\n", pit_ticks());
-    else if (strcmp(line, "mem") == 0)     cmd_mem();
-    else if (strcmp(line, "echo") == 0)    kprintf("%s\n", args);
-    else if (strcmp(line, "banner") == 0)  print_banner();
-    else if (strcmp(line, "color") == 0)   cmd_color(args);
-    else if (strcmp(line, "thupkg") == 0)  cmd_thupkg(args);
-    else if (strcmp(line, "clear") == 0)   vga_clear();
-    else if (strcmp(line, "crash") == 0)   cmd_crash(args);
-    else if (strcmp(line, "reboot") == 0)  reboot_machine();
-    else if (strcmp(line, "halt") == 0)    halt_machine();
+    if (line[0] == '\0')                     return;
+    else if (strcmp(line, "help") == 0)      cmd_help();
+    else if (strcmp(line, "about") == 0)     cmd_about();
+    else if (strcmp(line, "version") == 0)   cmd_version();
+    else if (strcmp(line, "status") == 0)    cmd_status();
+    else if (strcmp(line, "sysinfo") == 0)   cmd_sysinfo();
+    else if (strcmp(line, "uptime") == 0)    cmd_uptime();
+    else if (strcmp(line, "ticks") == 0)     kprintf("%u\n", pit_ticks());
+    else if (strcmp(line, "mem") == 0)       cmd_mem();
+    else if (strcmp(line, "memmap") == 0)    pmm_print_mmap();
+    else if (strcmp(line, "pages") == 0)     pmm_print_stats();
+    else if (strcmp(line, "allocpage") == 0) cmd_allocpage();
+    else if (strcmp(line, "freepage") == 0)  cmd_freepage(args);
+    else if (strcmp(line, "echo") == 0)      kprintf("%s\n", args);
+    else if (strcmp(line, "banner") == 0)    print_banner();
+    else if (strcmp(line, "color") == 0)     cmd_color(args);
+    else if (strcmp(line, "thupkg") == 0)    cmd_thupkg(args);
+    else if (strcmp(line, "clear") == 0)     vga_clear();
+    else if (strcmp(line, "crash") == 0)     cmd_crash(args);
+    else if (strcmp(line, "reboot") == 0)    reboot_machine();
+    else if (strcmp(line, "halt") == 0)      halt_machine();
     else kprintf("Unknown command: %s (try 'help')\n", line);
 }
 

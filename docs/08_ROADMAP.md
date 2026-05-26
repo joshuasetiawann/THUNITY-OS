@@ -8,8 +8,8 @@ targets, not promises that any later work is done.
 
 ```
 [x] 0.0.1  Boot Seed (baseline)   conception: Multiboot x86 kernel + shell direction
-[x] 0.2.0  Boot Seed              kernel foundation, diagnostics, timer, preview   <-- NOW
-[ ] 0.3.0  Memory Foundation
+[x] 0.2.0  Boot Seed              kernel foundation, diagnostics, timer, preview
+[x] 0.3.0  Memory Foundation      Multiboot map, 4 KiB frame allocator, mem cmds   <-- NOW
 [ ] 0.4.0  Filesystem Foundation
 [ ] 0.5.0  Userspace Seed
 [ ] 0.6.0  Graphics Foundation
@@ -24,16 +24,18 @@ Multiboot boot, VGA console, serial COM1, `kprintf`, GDT, IDT, CPU exceptions
 a 17-command `thuos>` shell, freestanding `mem*`/`str*`, a verifying build
 system, and an interactive THU Desktop concept preview.
 
-## 0.3.0 — Memory Foundation  ⏭ next
+## 0.3.0 — Memory Foundation  ✅ (this milestone)
 
-- Parse the Multiboot memory map.
-- Physical page (frame) allocator over 4 KiB pages.
-- Reserve kernel image, boot structures, VGA memory.
-- Identity paging + virtual-memory layout.
-- Kernel heap (`kmalloc`/`kfree`) with diagnostics.
-- Shell: `memmap`, `pages`, `heap`. Doc: `docs/MEMORY_MANAGER.md`.
+- Parse the Multiboot memory map. **done**
+- Physical page (frame) allocator over 4 KiB pages. **done**
+- Reserve low 1 MiB, kernel image, and Multiboot structures. **done**
+- Memory shell commands: `memmap`, `pages`, `allocpage`, `freepage`. **done**
+- Host unit test of the allocator (`make test`). **done**
+- Identity paging + kernel VM layout — **designed**, not built ([`10_PAGING_PLAN.md`](10_PAGING_PLAN.md)).
+- Kernel heap (`kmalloc`/`kfree`) — **designed**, not built ([`11_KERNEL_HEAP_PLAN.md`](11_KERNEL_HEAP_PLAN.md)).
+- Doc: [`09_MEMORY_FOUNDATION.md`](09_MEMORY_FOUNDATION.md).
 
-## 0.4.0 — Filesystem Foundation
+## 0.4.0 — Filesystem Foundation  ⏭ next
 
 - Initrd / ramdisk loaded at boot.
 - VFS abstraction (inode, file, directory, mountpoint).
