@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>THUOS · Aurora — Kanvas Spasial</title>
+<style>
+:root{
+  --bg0:#04050d; --bg1:#070a18; --ink:#eaf0ff; --ink2:#9fb0d8; --ink3:#62719b;
+  --teal:#2de2c6; --violet:#7b5cff; --magenta:#ff5cae; --amber:#ffce6b; --green:#5cffb0;
+  --glass:rgba(255,255,255,.045); --edge:rgba(255,255,255,.12);
+  --ff:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,'SF Mono','JetBrains Mono',Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg0);color:var(--ink);
+  font-family:var(--ff);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{cursor:default;user-select:none;touch-action:none}
+
+/* ---------- ambient background layers ---------- */
+#sky{position:fixed;inset:0;z-index:0;background:
+  radial-gradient(1200px 800px at 22% 18%, rgba(45,226,198,.10), transparent 60%),
+  radial-gradient(1100px 900px at 82% 30%, rgba(123,92,255,.12), transparent 62%),
+  radial-gradient(1300px 1000px at 60% 96%, rgba(255,92,174,.10), transparent 60%),
+  linear-gradient(160deg,#04050d 0%,#070a18 55%,#05070f 100%);}
+#aurora{position:fixed;inset:-25%;z-index:0;filter:blur(70px) saturate(125%);opacity:.7;pointer-events:none}
+.band{position:absolute;border-radius:50%;mix-blend-mode:screen;opacity:.55;animation:drift 26s ease-in-out infinite}
+.b1{width:60vw;height:42vw;left:6%;top:8%;background:radial-gradient(circle,rgba(45,226,198,.9),transparent 65%);animation-delay:0s}
+.b2{width:55vw;height:48vw;right:2%;top:2%;background:radial-gradient(circle,rgba(123,92,255,.9),transparent 65%);animation-delay:-7s}
+.b3{width:64vw;height:46vw;left:24%;bottom:-12%;background:radial-gradient(circle,rgba(255,92,174,.8),transparent 65%);animation-delay:-13s}
+.b4{width:40vw;height:34vw;right:18%;bottom:-6%;background:radial-gradient(circle,rgba(92,255,176,.55),transparent 65%);animation-delay:-19s}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(4%,-3%) scale(1.08)}66%{transform:translate(-3%,4%) scale(.96)}}
+#stars{position:fixed;inset:0;z-index:1;pointer-events:none}
+#grain{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.04;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
+#vignette{position:fixed;inset:0;z-index:3;pointer-events:none;
+  background:radial-gradient(140% 120% at 50% 45%,transparent 55%,rgba(2,3,8,.66) 100%)}
+
+/* ---------- the spatial canvas ---------- */
+#stage{position:fixed;inset:0;z-index:4;overflow:hidden;cursor:grab}
+#stage.panning{cursor:grabbing}
+#world{position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;will-change:transform}
+#links{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+#links line{stroke:rgba(159,176,216,.16);stroke-width:1.4;vector-effect:non-scaling-stroke}
+#links line.path{stroke:rgba(45,226,198,.30);stroke-dasharray:2 7;stroke-width:2}
+
+.node{position:absolute;transform:translate(-50%,-50%);padding:18px 20px;border-radius:20px;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  border:1px solid var(--edge);backdrop-filter:blur(14px) saturate(140%);
+  box-shadow:0 18px 60px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08);
+  transition:box-shadow .35s,border-color .35s,transform .12s;cursor:pointer;
+  --accent:var(--teal)}
+.node::before{content:"";position:absolute;inset:-1px;border-radius:21px;padding:1px;pointer-events:none;
+  background:linear-gradient(140deg,var(--accent),transparent 55%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;opacity:.55}
+.node:hover{box-shadow:0 22px 80px rgba(0,0,0,.55),0 0 0 1px var(--accent),0 0 44px -8px var(--accent)}
+.node.sel{box-shadow:0 26px 90px rgba(0,0,0,.6),0 0 0 1.5px var(--accent),0 0 70px -6px var(--accent)}
+.node .kick{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.node .glyph{font-size:18px;width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:11px;
+  background:rgba(255,255,255,.06);border:1px solid var(--edge);color:var(--accent);
+  box-shadow:0 0 22px -6px var(--accent)}
+.node h3{margin:0;font-size:15px;letter-spacing:.2px;font-weight:600}
+.node .sub{font-size:11.5px;color:var(--ink3);letter-spacing:.4px;text-transform:uppercase;margin-top:1px}
+.node .detail{margin-top:6px;font-size:13px;line-height:1.5;color:var(--ink2);max-width:340px}
+.node .detail b{color:var(--ink);font-weight:600}
+.node .detail .warn{color:var(--amber)}
+.node .detail ul{margin:8px 0 0;padding-left:16px}
+.node .detail li{margin:3px 0}
+.node .tagrow{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+.node .tag{font-size:10.5px;color:var(--ink3);border:1px solid var(--edge);border-radius:999px;padding:2px 8px;letter-spacing:.3px}
+
+/* core node special */
+.node.core{--accent:var(--violet);text-align:center;padding:26px 30px}
+.node.core .ring{position:absolute;inset:-26px;border-radius:50%;border:1px solid rgba(123,92,255,.25);animation:spin 30s linear infinite}
+.node.core .ring.r2{inset:-46px;border-color:rgba(45,226,198,.18);animation-duration:46s;animation-direction:reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.node.core .orb{width:64px;height:64px;margin:0 auto 12px;border-radius:50%;
+  background:radial-gradient(circle at 38% 34%,#fff,#bfa9ff 30%,#6f4ff0 64%,#2a1c6e 100%);
+  box-shadow:0 0 60px -6px var(--violet),0 0 120px -20px var(--magenta);animation:breathe 5s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.06);filter:brightness(1.15)}}
+.node.core h2{margin:0;font-size:21px;font-weight:700;letter-spacing:.4px}
+.node.core .tag-core{margin-top:6px;font-size:12px;color:var(--ink2)}
+
+/* step nodes (roadmap path) */
+.node.step{padding:12px 14px;--accent:var(--teal);min-width:170px}
+.node.step .num{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:1px}
+.node.step h3{font-size:13px;margin-top:2px}
+.node.step .meta{font-size:11px;color:var(--ink3);margin-top:5px}
+.node.step.risk{--accent:var(--magenta)}
+.node.step.risk .badge{display:inline-block;margin-top:6px;font-size:10px;color:var(--magenta);
+  border:1px solid rgba(255,92,174,.4);border-radius:999px;padding:1px 7px}
+
+/* gauges in system node */
+.gauge{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:12px;color:var(--ink2)}
+.gauge .lab{width:42px;color:var(--ink3);font-family:var(--mono);font-size:11px}
+.gauge .track{flex:1;height:6px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden}
+.gauge .fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--violet));transition:width .8s}
+.gauge .val{width:38px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--ink)}
+
+/* semantic zoom tiers: control what shows at each zoom */
+[data-zoom="overview"] .node .detail,[data-zoom="overview"] .node .tagrow,[data-zoom="overview"] .node.step .meta{display:none}
+[data-zoom="overview"] .node .sub{opacity:.6}
+[data-zoom="mid"] .node .detail{max-height:0;opacity:0;overflow:hidden;margin-top:0}
+[data-zoom="detail"] .node .detail{opacity:1}
+.node .detail{transition:opacity .3s}
+
+/* ---------- calm periphery overlays ---------- */
+#topbar{position:fixed;top:0;left:0;right:0;z-index:7;display:flex;justify-content:space-between;align-items:center;
+  padding:16px 22px;pointer-events:none;font-size:12.5px;color:var(--ink2);letter-spacing:.3px}
+#topbar .brand{display:flex;align-items:center;gap:10px;pointer-events:auto}
+#topbar .dot{width:9px;height:9px;border-radius:50%;background:var(--teal);box-shadow:0 0 14px var(--teal)}
+#topbar .brand b{color:var(--ink);font-weight:600;letter-spacing:.6px}
+#topbar .center{display:flex;flex-direction:column;align-items:center;line-height:1.25}
+#topbar .clock{font-size:15px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+#topbar .climate{font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:1.2px}
+#topbar .right{display:flex;gap:14px;align-items:center}
+#topbar .vital{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+#topbar .vital b{color:var(--teal)}
+
+/* leap / intent bar */
+#leapWrap{position:fixed;z-index:9;left:50%;top:38%;transform:translate(-50%,-50%) scale(.96);
+  width:min(560px,90vw);opacity:0;pointer-events:none;transition:opacity .22s,transform .22s}
+#leapWrap.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+#leap{display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:18px;
+  background:rgba(10,13,28,.72);backdrop-filter:blur(22px) saturate(150%);
+  border:1px solid var(--edge);box-shadow:0 30px 90px rgba(0,0,0,.6),0 0 0 1px rgba(123,92,255,.25)}
+#leap .ico{color:var(--violet);font-size:18px}
+#leap input{flex:1;background:none;border:none;outline:none;color:var(--ink);font-size:17px;font-family:var(--ff)}
+#leap input::placeholder{color:var(--ink3)}
+#leap kbd{font-family:var(--mono);font-size:10.5px;color:var(--ink3);border:1px solid var(--edge);border-radius:6px;padding:2px 6px}
+#leapList{margin-top:8px;border-radius:16px;overflow:hidden;border:1px solid var(--edge);
+  background:rgba(8,11,24,.82);backdrop-filter:blur(22px)}
+#leapList .row{display:flex;align-items:center;gap:12px;padding:11px 16px;font-size:13.5px;color:var(--ink2);cursor:pointer}
+#leapList .row .g{width:24px;height:24px;display:grid;place-items:center;border-radius:8px;background:rgba(255,255,255,.05);color:var(--teal);font-size:13px}
+#leapList .row b{color:var(--ink);font-weight:600}
+#leapList .row small{color:var(--ink3);margin-left:auto;font-size:11px}
+#leapList .row.active,#leapList .row:hover{background:rgba(123,92,255,.16);color:var(--ink)}
+
+/* dock of jump-chips (calm, bottom) */
+#dock{position:fixed;z-index:7;bottom:18px;left:50%;transform:translateX(-50%);
+  display:flex;gap:8px;padding:8px;border-radius:18px;
+  background:rgba(10,13,28,.5);backdrop-filter:blur(18px) saturate(140%);
+  border:1px solid var(--edge);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+#dock button{all:unset;cursor:pointer;display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:12px;
+  font-size:12.5px;color:var(--ink2);transition:background .2s,color .2s}
+#dock button .g{font-size:14px}
+#dock button:hover{background:rgba(255,255,255,.07);color:var(--ink)}
+
+/* zoom controls + minimap (corner ambient) */
+#zoomctl{position:fixed;z-index:7;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px}
+#zoomctl button{all:unset;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:12px;
+  background:rgba(10,13,28,.55);backdrop-filter:blur(14px);border:1px solid var(--edge);
+  color:var(--ink2);font-size:18px;transition:.2s}
+#zoomctl button:hover{color:var(--ink);background:rgba(255,255,255,.08)}
+#mini{position:fixed;z-index:7;left:18px;bottom:18px;width:188px;height:124px;border-radius:14px;
+  background:rgba(8,11,24,.55);backdrop-filter:blur(14px);border:1px solid var(--edge);
+  box-shadow:0 14px 40px rgba(0,0,0,.4);cursor:pointer;overflow:hidden}
+#mini canvas{width:100%;height:100%;display:block}
+#mini .cap{position:absolute;top:6px;left:9px;font-size:9.5px;color:var(--ink3);letter-spacing:.6px;text-transform:uppercase}
+
+/* honest footer */
+#honest{position:fixed;z-index:7;bottom:64px;left:50%;transform:translateX(-50%);
+  font-size:11px;color:var(--ink3);letter-spacing:.5px;text-align:center;pointer-events:none;
+  background:rgba(4,5,13,.4);padding:4px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.06)}
+#honest b{color:var(--amber)}
+
+/* help overlay */
+#help{position:fixed;inset:0;z-index:12;display:none;place-items:center;background:rgba(3,4,10,.66);backdrop-filter:blur(8px)}
+#help.open{display:grid}
+#help .card{width:min(540px,92vw);padding:26px 28px;border-radius:22px;
+  background:rgba(10,13,28,.9);border:1px solid var(--edge);box-shadow:0 40px 120px rgba(0,0,0,.7)}
+#help h3{margin:0 0 4px;font-size:18px}
+#help p.s{margin:0 0 18px;color:var(--ink3);font-size:13px}
+#help .kv{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid rgba(255,255,255,.06);font-size:13.5px;color:var(--ink2)}
+#help kbd{font-family:var(--mono);font-size:11px;color:var(--ink);border:1px solid var(--edge);border-radius:7px;padding:3px 8px;background:rgba(255,255,255,.04)}
+#help .close{margin-top:18px;text-align:center;color:var(--ink3);font-size:12px}
+
+/* boot intro */
+#boot{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#04050d;transition:opacity .8s}
+#boot.gone{opacity:0;pointer-events:none}
+#boot .bcore{text-align:center}
+#boot .borb{width:78px;height:78px;margin:0 auto 22px;border-radius:50%;
+  background:radial-gradient(circle at 38% 34%,#fff,#bfa9ff 30%,#6f4ff0 64%,#221761 100%);
+  box-shadow:0 0 70px -4px var(--violet),0 0 140px -16px var(--magenta);animation:breathe 3s ease-in-out infinite}
+#boot h1{margin:0;font-size:24px;letter-spacing:3px;font-weight:700}
+#boot .tag{margin-top:8px;font-size:12px;color:var(--ink3);letter-spacing:2px;text-transform:uppercase}
+#boot .bar{margin:22px auto 0;width:200px;height:3px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
+#boot .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--violet),var(--magenta));animation:load 2.1s ease forwards}
+@keyframes load{to{width:100%}}
+@media (max-width:640px){.node .detail{max-width:240px}#mini{display:none}#topbar .right .vital:nth-child(2){display:none}}
+</style>
+</head>
+<body>
+<div id="sky"></div>
+<div id="aurora"><div class="band b1"></div><div class="band b2"></div><div class="band b3"></div><div class="band b4"></div></div>
+<canvas id="stars"></canvas>
+<div id="grain"></div>
+<div id="vignette"></div>
+
+<div id="stage">
+  <div id="world">
+    <svg id="links"></svg>
+  </div>
+</div>
+
+<!-- calm periphery -->
+<div id="topbar">
+  <div class="brand"><span class="dot"></span><b>THUOS · AURORA</b></div>
+  <div class="center"><div class="clock" id="clock">--:--</div><div class="climate" id="climate">iklim sistem · tenang</div></div>
+  <div class="right">
+    <span class="vital">cpu <b id="vcpu">—</b></span>
+    <span class="vital">mem <b id="vmem">—</b></span>
+    <span class="vital">uptime <b id="vup">0s</b></span>
+  </div>
+</div>
+
+<div id="leapWrap">
+  <div id="leap"><span class="ico">⌖</span>
+    <input id="leapInput" placeholder="lompat ke mana pun — ketik maksudmu…" autocomplete="off" spellcheck="false">
+    <kbd>esc</kbd></div>
+  <div id="leapList"></div>
+</div>
+
+<div id="dock">
+  <button data-jump="core"><span class="g">◉</span>Inti</button>
+  <button data-jump="reality"><span class="g">⚑</span>Realita</button>
+  <button data-jump="rm-title"><span class="g">⤳</span>Roadmap</button>
+  <button data-jump="ui-zui"><span class="g">⤢</span>Tampilan</button>
+  <button data-jump="system"><span class="g">❖</span>Sistem</button>
+  <button id="btnOverview"><span class="g">⊙</span>Tinjau semua</button>
+</div>
+
+<div id="zoomctl">
+  <button id="zin" title="Perbesar">+</button>
+  <button id="zout" title="Perkecil">−</button>
+  <button id="zfit" title="Tinjau semua (F)">⊙</button>
+  <button id="zhelp" title="Bantuan (?)">?</button>
+</div>
+
+<div id="mini"><span class="cap">peta</span><canvas id="minicv" width="376" height="248"></canvas></div>
+
+<div id="honest">konsep visi masa depan · bukan GUI kernel · bukan OS yang di-boot · <b>BOOT-VERIFIED: tidak ada</b></div>
+
+<div id="help">
+  <div class="card">
+    <h3>Cara menjelajah Aurora</h3>
+    <p class="s">Bukan desktop. Ini kanvas spasial tak-terbatas — kamu terbang di antara ide, sistem, dan roadmap THUOS.</p>
+    <div class="kv"><span>Geser kanvas</span><span>seret · <kbd>drag</kbd></span></div>
+    <div class="kv"><span>Perbesar / perkecil (ke arah kursor)</span><span><kbd>scroll</kbd> · <kbd>+</kbd> <kbd>−</kbd></span></div>
+    <div class="kv"><span>Lompat (cari niat)</span><span><kbd>/</kbd> atau <kbd>spasi</kbd></span></div>
+    <div class="kv"><span>Fokus ke satu sel</span><span><kbd>dbl-click</kbd></span></div>
+    <div class="kv"><span>Tinjau semua / kembali</span><span><kbd>F</kbd> · <kbd>Esc</kbd></span></div>
+    <div class="close">klik di mana saja untuk menutup · <kbd>?</kbd></div>
+  </div>
+</div>
+
+<div id="boot">
+  <div class="bcore">
+    <div class="borb"></div>
+    <h1>THUOS</h1>
+    <div class="tag">aurora · ruang kerja yang tenang</div>
+    <div class="bar"><i></i></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   THUOS · Aurora — a spatial / zoomable / calm OS concept.
+   Realization of the deep-research UI thesis (ZUI + calm + local-first).
+   NOT a booted OS. NOT the kernel GUI. An interactive vision.
+   ============================================================ */
+
+/* ---- content: spatial nodes ---- */
+const NODES = [
+  {id:'core', kind:'core', x:0, y:0, w:300,
+   title:'THUOS · Aurora', sub:'', glyph:'',
+   tags:'inti home now beranda mulai',
+   html:`<div class="ring"></div><div class="ring r2"></div>
+         <div class="orb"></div>
+         <h2>THUOS · Aurora</h2>
+         <div class="tag-core">Ruang kerja yang tenang, spasial, milikmu sendiri.</div>`},
+
+  {id:'reality', accent:'var(--amber)', glyph:'⚑', x:-760, y:-300, w:360,
+   title:'Apa ini sebenarnya', sub:'kejujuran',
+   tags:'jujur nyata real status boot verified realita kebenaran',
+   html:`THUOS hari ini = <b>kernel from-scratch yang jujur + subsistem host-tested</b>, di tahap <b>PRA-boot</b>.
+     <ul>
+       <li>Belum pernah di-boot (tak ada QEMU di sini)</li>
+       <li>Belum ada <b>context switch</b> nyata</li>
+       <li>Paging &amp; ring-3 masih <b>gated off</b> → belum ada isolasi memori</li>
+       <li>Filesystem read-only; tanpa networking/libc</li>
+     </ul>
+     <div style="margin-top:8px"><span class="warn">BOOT-VERIFIED: tidak ada.</span> Fondasinya benar — tapi kemampuan inti OS belum hidup.</div>`},
+
+  {id:'ui-zui', accent:'var(--teal)', glyph:'⤢', x:-880, y:300, w:330,
+   title:'Tampilan: Zoomable', sub:'zui · raskin',
+   tags:'zoom zui raskin pad archy spasial tampilan antarmuka ui kanvas',
+   html:`<b>ZUI</b> — Zooming User Interface (Jef Raskin <i>Archy</i>, Pad++).
+     Konten hidup di kanvas tak-terbatas. Navigasi = <b>zoom + "leap"</b> (cari-lompat), bukan tumpukan window &amp; folder.
+     <div style="margin-top:6px;color:var(--ink3)">Kamu sedang memakainya sekarang.</div>`},
+
+  {id:'ui-calm', accent:'var(--green)', glyph:'☁', x:-560, y:580, w:330,
+   title:'Tampilan: Calm', sub:'weiser · ambient',
+   tags:'calm tenang ambient weiser periferi damai fokus',
+   html:`<b>Calm / ambient</b> (Weiser &amp; Brown, 1995). Informasi tinggal di <b>tepi</b>, datang ke pusat hanya saat perlu.
+     Tenang, bukan berisik — perhatianmu yang berharga, bukan notifikasi.`},
+
+  {id:'ui-local', accent:'var(--violet)', glyph:'⬡', x:-150, y:650, w:340,
+   title:'Tampilan: Local-first', sub:'ink & switch',
+   tags:'local first data crdt privasi milik sendiri sinkron offline',
+   html:`<b>Local-first</b> (Ink &amp; Switch, 2019). Datamu hidup di <b>perangkatmu</b>, bukan di server orang lain.
+     Sinkron lewat <b>CRDT</b>, tetap berfungsi offline, tetap milikmu. <i>Paling selaras dengan nilai THUOS.</i>`},
+
+  {id:'system', accent:'var(--teal)', glyph:'❖', x:760, y:380, w:300,
+   title:'Sistem', sub:'telemetri konsep',
+   tags:'sistem cpu mem memori vitals telemetri kinerja uptime',
+   html:`<div id="gauges">
+       <div class="gauge"><span class="lab">cpu</span><span class="track"><i class="fill" id="gcpu"></i></span><span class="val" id="tcpu">0%</span></div>
+       <div class="gauge"><span class="lab">mem</span><span class="track"><i class="fill" id="gmem"></i></span><span class="val" id="tmem">0%</span></div>
+       <div class="gauge"><span class="lab">io</span><span class="track"><i class="fill" id="gio"></i></span><span class="val" id="tio">0%</span></div>
+     </div>
+     <div style="margin-top:8px;color:var(--ink3);font-size:11.5px">angka konsep (bukan dari kernel nyata) — di OS jujur, sistem menunjukkan keadaannya yang sebenarnya.</div>`},
+
+  {id:'assistant', accent:'var(--magenta)', glyph:'✦', x:300, y:-560, w:330,
+   title:'Niat, bukan menu', sub:'nlui · spekulatif',
+   tags:'asisten niat intent ai nlui bahasa perintah cari',
+   html:`Antarmuka berbasis-<b>niat</b> (NLUI). Tekan <kbd style="font-family:var(--mono);font-size:11px;border:1px solid var(--edge);padding:1px 5px;border-radius:5px">/</kbd> lalu ketik maksudmu — kamu <b>lompat</b>, bukan menyusuri menu.
+     <div style="margin-top:6px;color:var(--ink3)">Arah AI-native — <i>spekulatif</i>, ditandai jujur.</div>`},
+
+  {id:'arch', accent:'var(--violet)', glyph:'◈', x:1000, y:-130, w:340,
+   title:'Pilihan arsitektur', sub:'masa depan',
+   tags:'arsitektur microkernel rust capability sel4 fuchsia redox isolasi',
+   html:`Untuk jadi "masa depan": <b>microkernel + capability</b> (seL4, Fuchsia/Zircon), <b>memory-safety</b> (Rust/Redox), TCB kecil.
+     <ul><li>seL4: bukti formal ~8.700 baris C — tapi <span class="warn">bukan "tak bisa diretas"</span></li>
+       <li>Rust: ~70% bug keamanan = memory-safety</li></ul>
+     Trade-off nyata, bukan slogan. Semua <b>setelah</b> dasar real-OS hidup.`},
+
+  {id:'workspace', accent:'var(--teal)', glyph:'▦', x:-330, y:-640, w:320,
+   title:'Ruang kerja', sub:'lokal · milikmu',
+   tags:'ruang kerja workspace catatan kode kanvas berkas file dokumen',
+   html:`Bukan "folder di disk orang lain" — tapi <b>ruang</b> di kanvasmu: Catatan · Kode · Kanvas.
+     Semua data lokal, dapat di-zoom, dapat dicari-lompat. Susun duniamu sendiri.`},
+
+  {id:'rm-title', accent:'var(--teal)', glyph:'⤳', x:720, y:-430, w:320,
+   title:'Peta menuju OS nyata', sub:'roadmap · §3 riset',
+   tags:'roadmap peta langkah jalur menuju nyata real path rencana',
+   html:`Jalur berlapis dari "model host-tested" → "OS hidup". Sembilan langkah di bawah ini —
+     <span class="warn">4 yang merah</span> adalah yang paling berisiko. Zoom &amp; ikuti jalurnya.`},
+];
+
+/* roadmap step path (from research §3) */
+const STEPS = [
+  {n:1, t:'Boot-verify di QEMU',      m:'lalu hardware',           x:1150, y:-360, risk:false},
+  {n:2, t:'Aktifkan paging + isolasi', m:'#PF · higher-half',      x:1330, y:-160, risk:true,  badge:'tersulit #1'},
+  {n:3, t:'Context switch nyata',     m:'scheduler preemptif',     x:1440, y:70,   risk:true,  badge:'race'},
+  {n:4, t:'Ring 3 + syscall hidup',   m:'TSS · int 0x80 · iret',   x:1470, y:310,  risk:true,  badge:'tersulit #2'},
+  {n:5, t:'Filesystem writable',      m:'driver blok · ATA/virtio',x:1410, y:545,  risk:true,  badge:'crash-konsistensi'},
+  {n:6, t:'libc + POSIX',             m:'port newlib/musl',        x:1270, y:745,  risk:false},
+  {n:7, t:'Networking (TCP/IP)',      m:'NIC + lwIP',              x:1070, y:880,  risk:false},
+  {n:8, t:'Userland + self-hosting',  m:'shell · toolchain',       x:840,  y:945,  risk:false},
+  {n:9, t:'SMP + fitur masa depan',   m:'multi-core',              x:600,  y:975,  risk:false},
+];
+
+const LINKS = [
+  ['core','reality'],['core','rm-title'],['core','assistant'],['core','arch'],
+  ['core','system'],['core','workspace'],['core','ui-local'],
+  ['ui-zui','ui-calm'],['ui-calm','ui-local'],['core','ui-zui'],
+];
+
+/* ---------- build DOM ---------- */
+const world = document.getElementById('world');
+const linksSvg = document.getElementById('links');
+const nodeById = {};
+const allNodes = [];
+
+function el(tag, cls){const e=document.createElement(tag); if(cls)e.className=cls; return e;}
+
+NODES.forEach(n=>{
+  const d = el('div', 'node' + (n.kind==='core'?' core':''));
+  d.id = 'n-'+n.id;
+  if(n.accent) d.style.setProperty('--accent', n.accent);
+  d.style.left = n.x+'px'; d.style.top = n.y+'px';
+  if(n.w) d.style.width = n.w+'px';
+  if(n.kind==='core'){
+    d.innerHTML = n.html;
+  } else {
+    d.innerHTML =
+      '<div class="kick">'+(n.glyph?'<div class="glyph">'+n.glyph+'</div>':'')+
+      '<div><h3>'+n.title+'</h3>'+(n.sub?'<div class="sub">'+n.sub+'</div>':'')+'</div></div>'+
+      '<div class="detail">'+n.html+'</div>'+
+      '<div class="tagrow">'+n.tags.split(' ').slice(0,4).map(t=>'<span class="tag">'+t+'</span>').join('')+'</div>';
+  }
+  d.dataset.id = n.id;
+  world.appendChild(d);
+  n._el = d; n.cx = n.x; n.cy = n.y; n.hw = (n.w||300)/2; n.hh = 120;
+  nodeById[n.id] = n; allNodes.push(n);
+});
+
+STEPS.forEach(s=>{
+  const d = el('div','node step'+(s.risk?' risk':''));
+  d.id = 'n-step'+s.n;
+  d.style.left = s.x+'px'; d.style.top = s.y+'px';
+  d.innerHTML = '<div class="num">LANGKAH '+s.n+'</div><h3>'+s.t+'</h3>'+
+    '<div class="meta">'+s.m+'</div>'+(s.risk?'<div class="badge">'+(s.badge||'risiko')+'</div>':'');
+  const id = 'step'+s.n;
+  d.dataset.id = id;
+  world.appendChild(d);
+  const node = {id, x:s.x, y:s.y, cx:s.x, cy:s.y, w:180, hw:90, hh:50,
+    title:'Langkah '+s.n+': '+s.t, sub:s.m, glyph:s.risk?'▲':'•', tags:'langkah step '+s.t.toLowerCase(), _el:d};
+  nodeById[id]=node; allNodes.push(node);
+});
+
+/* connect roadmap steps as a dashed path */
+for(let i=0;i<STEPS.length-1;i++) LINKS.push(['step'+STEPS[i].n,'step'+STEPS[i+1].n,'path']);
+LINKS.push(['rm-title','step1','path']);
+
+LINKS.forEach(L=>{
+  const a=nodeById[L[0]], b=nodeById[L[1]]; if(!a||!b) return;
+  const ln=document.createElementNS('http://www.w3.org/2000/svg','line');
+  ln.setAttribute('x1',a.x); ln.setAttribute('y1',a.y);
+  ln.setAttribute('x2',b.x); ln.setAttribute('y2',b.y);
+  if(L[2]==='path') ln.setAttribute('class','path');
+  linksSvg.appendChild(ln);
+});
+
+/* ---------- camera ---------- */
+let vw=innerWidth, vh=innerHeight;
+const cam = {x:0, y:0, scale:0.55};
+const MIN=0.18, MAX=2.6;
+const stage=document.getElementById('stage');
+
+function applyCam(){
+  world.style.transform = `translate(${vw/2}px,${vh/2}px) scale(${cam.scale}) translate(${-cam.x}px,${-cam.y}px)`;
+  let z = cam.scale<0.42?'overview':(cam.scale<0.78?'mid':'detail');
+  if(document.body.dataset.zoom!==z) document.body.dataset.zoom=z;
+  drawMini();
+}
+function screenToWorld(sx,sy){return {x:(sx-vw/2)/cam.scale+cam.x, y:(sy-vh/2)/cam.scale+cam.y};}
+function clamp(v,a,b){return v<a?a:v>b?b:v;}
+
+function zoomAt(sx,sy,factor){
+  const before=screenToWorld(sx,sy);
+  cam.scale=clamp(cam.scale*factor,MIN,MAX);
+  const after=screenToWorld(sx,sy);
+  cam.x+=before.x-after.x; cam.y+=before.y-after.y;
+  applyCam();
+}
+
+/* smooth camera fly */
+let anim=null;
+function flyTo(tx,ty,tscale,dur){
+  dur=dur||640;
+  const sx=cam.x, sy=cam.y, ss=cam.scale;
+  tscale=clamp(tscale,MIN,MAX);
+  const t0=performance.now();
+  if(anim) cancelAnimationFrame(anim);
+  function step(now){
+    let p=Math.min(1,(now-t0)/dur);
+    const e=p<0.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2; // easeInOutCubic
+    cam.x=sx+(tx-sx)*e; cam.y=sy+(ty-sy)*e; cam.scale=ss+(tscale-ss)*e;
+    applyCam();
+    if(p<1) anim=requestAnimationFrame(step); else anim=null;
+  }
+  anim=requestAnimationFrame(step);
+}
+function flyToNode(id,scale){const n=nodeById[id]; if(!n)return; selectNode(id); flyTo(n.x,n.y,scale|| (id.startsWith('step')?1.4:1.05));}
+
+function bounds(){
+  let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+  allNodes.forEach(n=>{minx=Math.min(minx,n.x-n.hw);maxx=Math.max(maxx,n.x+n.hw);
+    miny=Math.min(miny,n.y-n.hh);maxy=Math.max(maxy,n.y+n.hh);});
+  return {minx,miny,maxx,maxy};
+}
+function overview(){
+  const b=bounds(); const cx=(b.minx+b.maxx)/2, cy=(b.miny+b.maxy)/2;
+  const sx=vw/((b.maxx-b.minx)+260), sy=vh/((b.maxy-b.miny)+260);
+  flyTo(cx,cy,clamp(Math.min(sx,sy),MIN,0.62),800); selectNode(null);
+}
+
+/* ---------- selection ---------- */
+let selId=null;
+function selectNode(id){
+  if(selId && nodeById[selId]) nodeById[selId]._el.classList.remove('sel');
+  selId=id;
+  if(id && nodeById[id]) nodeById[id]._el.classList.add('sel');
+}
+
+/* ---------- pointer pan ---------- */
+let panning=false, moved=false, sx0=0, sy0=0, cx0=0, cy0=0, pid=null;
+stage.addEventListener('pointerdown',e=>{
+  if(e.target.closest('#leapWrap,#dock,#zoomctl,#mini,#topbar,#help')) return;
+  panning=true; moved=false; pid=e.pointerId;
+  sx0=e.clientX; sy0=e.clientY; cx0=cam.x; cy0=cam.y;
+  stage.classList.add('panning'); stage.setPointerCapture(e.pointerId);
+});
+stage.addEventListener('pointermove',e=>{
+  if(!panning||e.pointerId!==pid) return;
+  const dx=e.clientX-sx0, dy=e.clientY-sy0;
+  if(Math.abs(dx)+Math.abs(dy)>4) moved=true;
+  cam.x=cx0-dx/cam.scale; cam.y=cy0-dy/cam.scale; applyCam();
+});
+function endPan(e){ if(e.pointerId!==pid)return; panning=false; stage.classList.remove('panning'); }
+stage.addEventListener('pointerup',e=>{
+  endPan(e);
+  if(!moved){
+    const nd=e.target.closest('.node');
+    if(nd) selectNode(nd.dataset.id);
+    else { selectNode(null); if(leapOpen) closeLeap(); }
+  }
+});
+stage.addEventListener('pointercancel',endPan);
+
+/* click node -> select; dblclick -> fly into it */
+world.addEventListener('dblclick',e=>{
+  const nd=e.target.closest('.node'); if(!nd)return;
+  flyToNode(nd.dataset.id, nd.dataset.id.startsWith('step')?1.5:1.15);
+});
+
+/* wheel zoom */
+stage.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const f=e.deltaY<0?1.12:1/1.12;
+  zoomAt(e.clientX,e.clientY,f);
+},{passive:false});
+
+/* ---------- leap / intent search ---------- */
+const leapWrap=document.getElementById('leapWrap');
+const leapInput=document.getElementById('leapInput');
+const leapList=document.getElementById('leapList');
+let leapOpen=false, leapMatches=[], leapActive=0;
+
+function openLeap(){leapOpen=true; leapWrap.classList.add('open'); leapInput.value=''; renderLeap(''); setTimeout(()=>leapInput.focus(),30);}
+function closeLeap(){leapOpen=false; leapWrap.classList.remove('open'); leapInput.blur();}
+function leapData(){
+  return allNodes.filter(n=>n.id!=='core'||true).map(n=>({
+    id:n.id, title:n.title||(n._el.querySelector('h2')?n._el.querySelector('h2').textContent:n.id),
+    sub:n.sub||'', glyph:n.glyph||'•', tags:(n.tags||'')+' '+(n.title||'')
+  }));
+}
+function renderLeap(q){
+  q=q.trim().toLowerCase();
+  const data=leapData();
+  let res;
+  if(!q){ res=data.filter(d=>['core','reality','rm-title','ui-zui','system','arch'].includes(d.id)); }
+  else { res=data.map(d=>{
+      const hay=(d.title+' '+d.tags).toLowerCase();
+      let score=0; q.split(/\s+/).forEach(w=>{ if(hay.includes(w)) score+= d.title.toLowerCase().includes(w)?3:1; });
+      return {d,score};
+    }).filter(o=>o.score>0).sort((a,b)=>b.score-a.score).slice(0,7).map(o=>o.d);
+  }
+  leapMatches=res; leapActive=0;
+  leapList.innerHTML = res.length? res.map((d,i)=>
+    '<div class="row'+(i===0?' active':'')+'" data-id="'+d.id+'"><span class="g">'+d.glyph+'</span>'+
+    '<span><b>'+d.title+'</b></span>'+(d.sub?'<small>'+d.sub+'</small>':'')+'</div>').join('')
+    : '<div class="row"><span class="g">∅</span>tak ada yang cocok — coba kata lain</div>';
+  [...leapList.querySelectorAll('.row[data-id]')].forEach(r=>{
+    r.addEventListener('click',()=>{ closeLeap(); flyToNode(r.dataset.id); });
+    r.addEventListener('mouseenter',()=>{ leapList.querySelectorAll('.row').forEach(x=>x.classList.remove('active')); r.classList.add('active'); leapActive=leapMatches.findIndex(m=>m.id===r.dataset.id);});
+  });
+}
+leapInput.addEventListener('input',e=>renderLeap(e.target.value));
+leapInput.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeLeap();}
+  else if(e.key==='Enter'){ const m=leapMatches[leapActive]||leapMatches[0]; if(m){closeLeap(); flyToNode(m.id);} }
+  else if(e.key==='ArrowDown'){e.preventDefault(); leapActive=Math.min(leapMatches.length-1,leapActive+1); paintActive();}
+  else if(e.key==='ArrowUp'){e.preventDefault(); leapActive=Math.max(0,leapActive-1); paintActive();}
+});
+function paintActive(){const rows=[...leapList.querySelectorAll('.row[data-id]')]; rows.forEach((r,i)=>r.classList.toggle('active',i===leapActive));}
+
+/* ---------- keyboard ---------- */
+addEventListener('keydown',e=>{
+  if(document.activeElement===leapInput) return;
+  if(e.key==='/'||(e.key===' '&&!leapOpen)){ e.preventDefault(); openLeap(); }
+  else if(e.key==='Escape'){ if(helpOpen)toggleHelp(false); else if(leapOpen)closeLeap(); else overview(); }
+  else if(e.key==='+'||e.key==='='){ zoomAt(vw/2,vh/2,1.18); }
+  else if(e.key==='-'||e.key==='_'){ zoomAt(vw/2,vh/2,1/1.18); }
+  else if(e.key==='f'||e.key==='F'){ overview(); }
+  else if(e.key==='?'){ toggleHelp(); }
+});
+
+/* ---------- dock / controls ---------- */
+document.querySelectorAll('#dock button[data-jump]').forEach(b=>
+  b.addEventListener('click',()=>flyToNode(b.dataset.jump, b.dataset.jump==='core'?0.9:1.05)));
+document.getElementById('btnOverview').addEventListener('click',overview);
+document.getElementById('zin').addEventListener('click',()=>zoomAt(vw/2,vh/2,1.2));
+document.getElementById('zout').addEventListener('click',()=>zoomAt(vw/2,vh/2,1/1.2));
+document.getElementById('zfit').addEventListener('click',overview);
+
+/* ---------- help ---------- */
+const help=document.getElementById('help'); let helpOpen=false;
+function toggleHelp(force){ helpOpen=(force===undefined)?!helpOpen:force; help.classList.toggle('open',helpOpen); }
+document.getElementById('zhelp').addEventListener('click',()=>toggleHelp());
+help.addEventListener('click',()=>toggleHelp(false));
+
+/* ---------- minimap ---------- */
+const mcv=document.getElementById('minicv'), mctx=mcv.getContext('2d');
+function drawMini(){
+  const b=bounds(); const pad=120;
+  const bw=(b.maxx-b.minx)+pad*2, bh=(b.maxy-b.miny)+pad*2;
+  const s=Math.min(mcv.width/bw, mcv.height/bh);
+  const ox=(mcv.width-bw*s)/2 - (b.minx-pad)*s;
+  const oy=(mcv.height-bh*s)/2 - (b.miny-pad)*s;
+  mctx.clearRect(0,0,mcv.width,mcv.height);
+  // links
+  mctx.strokeStyle='rgba(159,176,216,.18)'; mctx.lineWidth=1;
+  LINKS.forEach(L=>{const a=nodeById[L[0]],c=nodeById[L[1]]; if(!a||!c)return;
+    mctx.beginPath(); mctx.moveTo(a.x*s+ox,a.y*s+oy); mctx.lineTo(c.x*s+ox,c.y*s+oy); mctx.stroke();});
+  // nodes
+  allNodes.forEach(n=>{
+    const isStep=n.id.startsWith('step');
+    mctx.fillStyle = n.id===selId?'#fff':(isStep?'rgba(45,226,198,.8)':'rgba(123,92,255,.85)');
+    mctx.beginPath(); mctx.arc(n.x*s+ox,n.y*s+oy,isStep?2.4:3.4,0,7); mctx.fill();
+  });
+  // viewport rect
+  const tl=screenToWorld(0,0), br=screenToWorld(vw,vh);
+  mctx.strokeStyle='rgba(255,255,255,.55)'; mctx.lineWidth=1.2;
+  mctx.strokeRect(tl.x*s+ox, tl.y*s+oy, (br.x-tl.x)*s, (br.y-tl.y)*s);
+}
+mcv.addEventListener('pointerdown',e=>{
+  const r=mcv.getBoundingClientRect();
+  const b=bounds(); const pad=120;
+  const bw=(b.maxx-b.minx)+pad*2, bh=(b.maxy-b.miny)+pad*2;
+  const s=Math.min(mcv.width/bw,mcv.height/bh);
+  const ox=(mcv.width-bw*s)/2-(b.minx-pad)*s, oy=(mcv.height-bh*s)/2-(b.miny-pad)*s;
+  const mx=(e.clientX-r.left)*(mcv.width/r.width), my=(e.clientY-r.top)*(mcv.height/r.height);
+  flyTo((mx-ox)/s,(my-oy)/s,cam.scale,500);
+  e.stopPropagation();
+});
+
+/* ---------- starfield ---------- */
+const sc=document.getElementById('stars'), sx=sc.getContext('2d');
+let stars=[];
+function initStars(){
+  sc.width=vw; sc.height=vh; stars=[];
+  const n=Math.round(vw*vh/9000);
+  for(let i=0;i<n;i++) stars.push({x:Math.random()*vw,y:Math.random()*vh,
+    z:Math.random()*0.8+0.2, r:Math.random()*1.3+0.2, t:Math.random()*6.28});
+}
+let mpx=0,mpy=0;
+addEventListener('pointermove',e=>{ mpx=(e.clientX/vw-0.5); mpy=(e.clientY/vh-0.5); });
+function drawStars(now){
+  sx.clearRect(0,0,sc.width,sc.height);
+  for(const s of stars){
+    const tw=0.55+0.45*Math.sin(now/900+s.t);
+    const px=s.x + (mpx*40 - cam.x*0.012)*s.z;
+    const py=s.y + (mpy*40 - cam.y*0.012)*s.z;
+    sx.globalAlpha=tw*s.z;
+    sx.fillStyle = s.z>0.7?'#dfe8ff':(s.z>0.45?'#bcd0ff':'#8fa6e0');
+    sx.beginPath(); sx.arc((px%vw+vw)%vw,(py%vh+vh)%vh,s.r,0,7); sx.fill();
+  }
+  sx.globalAlpha=1;
+  requestAnimationFrame(drawStars);
+}
+
+/* ---------- ambient clock + vitals ---------- */
+const climates=['tenang','jernih','fokus','damai','hening'];
+const t0=Date.now();
+function tick(){
+  const d=new Date();
+  document.getElementById('clock').textContent=
+    String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  const up=Math.floor((Date.now()-t0)/1000);
+  document.getElementById('vup').textContent= up<60?up+'s':Math.floor(up/60)+'m '+(up%60)+'s';
+}
+let gv={cpu:12,mem:34,io:8};
+function vitals(){
+  gv.cpu=clamp(gv.cpu+(Math.random()*16-8),4,72);
+  gv.mem=clamp(gv.mem+(Math.random()*6-3),22,68);
+  gv.io =clamp(gv.io +(Math.random()*20-10),0,55);
+  const set=(id,v)=>{const e=document.getElementById(id); if(e)e.textContent=Math.round(v)+'%';};
+  const bar=(id,v)=>{const e=document.getElementById(id); if(e)e.style.width=v+'%';};
+  document.getElementById('vcpu').textContent=Math.round(gv.cpu)+'%';
+  document.getElementById('vmem').textContent=Math.round(gv.mem)+'%';
+  set('tcpu',gv.cpu); set('tmem',gv.mem); set('tio',gv.io);
+  bar('gcpu',gv.cpu); bar('gmem',gv.mem); bar('gio',gv.io);
+  document.getElementById('climate').textContent='iklim sistem · '+climates[Math.floor((Date.now()/9000)%climates.length)];
+}
+
+/* ---------- resize ---------- */
+addEventListener('resize',()=>{vw=innerWidth; vh=innerHeight; initStars(); applyCam();});
+
+/* ---------- boot ---------- */
+function start(){
+  initStars(); requestAnimationFrame(drawStars);
+  applyCam(); tick(); vitals();
+  setInterval(tick,1000); setInterval(vitals,1400);
+  // intro: from wide overview, gently settle near the core
+  cam.x=0; cam.y=0; cam.scale=0.22; applyCam();
+  setTimeout(()=>flyTo(0,40,0.62,1500),120);
+}
+window.addEventListener('load',()=>{
+  start();
+  const b=document.getElementById('boot');
+  setTimeout(()=>{ b.classList.add('gone'); }, 2200);
+  setTimeout(()=>{ b.style.display='none'; }, 3100);
+});
+</script>
+</body>
+</html>
