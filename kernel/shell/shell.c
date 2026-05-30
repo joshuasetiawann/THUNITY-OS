@@ -11,6 +11,7 @@
 #include "version.h"
 #include "pit.h"
 #include "pmm.h"
+#include "kheap.h"
 
 #define LINE_MAX 128
 
@@ -29,6 +30,15 @@ static bool parse_hex(const char *s, uint32_t *out) {
         v = (v << 4) | d;
         any = true;
     }
+    *out = v;
+    return any;
+}
+
+/* Parse an unsigned decimal value. */
+static bool parse_uint(const char *s, uint32_t *out) {
+    uint32_t v = 0;
+    bool any = false;
+    for (; *s >= '0' && *s <= '9'; s++) { v = v * 10u + (uint32_t)(*s - '0'); any = true; }
     *out = v;
     return any;
 }
@@ -58,6 +68,9 @@ static void cmd_help(void) {
     kprintf("  pages      Page-frame statistics\n");
     kprintf("  allocpage  Allocate one 4 KiB physical frame\n");
     kprintf("  freepage A Free a frame by physical address (hex)\n");
+    kprintf("  heap       Kernel heap stats (kmalloc arena)\n");
+    kprintf("  kmalloc N  Allocate N bytes from the kernel heap\n");
+    kprintf("  kfree A    Free a kmalloc pointer (hex address)\n");
     kprintf("  echo       Print the rest of the line\n");
     kprintf("  banner     Show the THUOS banner\n");
     kprintf("  color N    Set text color (0-15)\n");
@@ -89,9 +102,9 @@ static void cmd_status(void) {
     kprintf("  [done]    PIC remap, PIT timer, keyboard IRQ, shell\n");
     kprintf("  [done]    Panic/assert system\n");
     kprintf("  [done]    Physical memory manager (Milestone 0.3)\n");
-    kprintf("  [plan]    Paging + kernel heap (designed, not yet built)\n");
-    kprintf("  [plan]    VFS + initrd (Milestone 0.4)\n");
-    kprintf("  [plan]    Userspace + syscalls (Milestone 0.5)\n");
+    kprintf("  [done]    Kernel heap kmalloc/kfree (Milestone 0.4)\n");
+    kprintf("  [plan]    Paging + virtual memory (next, highest risk)\n");
+    kprintf("  [plan]    VFS + initrd, then userspace + syscalls\n");
 }
 
 static void cmd_sysinfo(void) {
@@ -148,6 +161,42 @@ static void cmd_freepage(const char *args) {
         case -3: kprintf("freepage: 0x%08x was already free\n", addr); break;
         default: kprintf("freepage: error %d\n", r); break;
     }
+}
+
+static void cmd_heap(void) {
+    kprintf("Kernel heap (fixed arena, pre-paging):\n");
+    kprintf("  total : %u bytes\n", (uint32_t)kheap_total());
+    kprintf("  used  : %u bytes\n", (uint32_t)kheap_used());
+    kprintf("  free  : %u bytes\n", (uint32_t)kheap_free());
+    kprintf("  blocks: %u\n",       (uint32_t)kheap_blocks());
+    kprintf("  integrity: %s\n", kheap_check() ? "OK" : "CORRUPT");
+}
+
+static void cmd_kmalloc(const char *args) {
+    uint32_t n;
+    if (!parse_uint(args, &n) || n == 0) {
+        kprintf("usage: kmalloc <bytes>\n");
+        return;
+    }
+    void *p = kmalloc((size_t)n);
+    if (!p) {
+        kprintf("kmalloc(%u): out of heap memory (free: %u bytes)\n", n, (uint32_t)kheap_free());
+        return;
+    }
+    kprintf("kmalloc(%u) = 0x%08x  (heap free now: %u bytes)\n",
+            n, (uint32_t)(uintptr_t)p, (uint32_t)kheap_free());
+    kprintf("Free it with: kfree 0x%08x\n", (uint32_t)(uintptr_t)p);
+}
+
+static void cmd_kfree(const char *args) {
+    uint32_t addr;
+    if (!parse_hex(args, &addr)) {
+        kprintf("usage: kfree <hex-address from kmalloc>\n");
+        return;
+    }
+    kfree((void *)(uintptr_t)addr);
+    kprintf("kfree(0x%08x): heap free now %u bytes, integrity %s\n",
+            addr, (uint32_t)kheap_free(), kheap_check() ? "OK" : "CORRUPT");
 }
 
 static void cmd_thupkg(const char *args) {
@@ -227,6 +276,9 @@ static void execute(char *line) {
     else if (strcmp(line, "pages") == 0)     pmm_print_stats();
     else if (strcmp(line, "allocpage") == 0) cmd_allocpage();
     else if (strcmp(line, "freepage") == 0)  cmd_freepage(args);
+    else if (strcmp(line, "heap") == 0)      cmd_heap();
+    else if (strcmp(line, "kmalloc") == 0)   cmd_kmalloc(args);
+    else if (strcmp(line, "kfree") == 0)     cmd_kfree(args);
     else if (strcmp(line, "echo") == 0)      kprintf("%s\n", args);
     else if (strcmp(line, "banner") == 0)    print_banner();
     else if (strcmp(line, "color") == 0)     cmd_color(args);

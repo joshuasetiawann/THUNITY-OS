@@ -73,14 +73,24 @@ button{font-family:inherit}
 .titlebar{height:42px;flex:0 0 42px;display:flex;align-items:center;gap:10px;padding:0 12px;cursor:grab;
   background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01));border-bottom:1px solid rgba(255,255,255,.06)}
 .titlebar.drag{cursor:grabbing}
-.titlebar .wicon{width:22px;height:22px;display:grid;place-items:center;border-radius:7px;background:rgba(255,255,255,.06);
-  border:1px solid var(--edge);font-size:13px;color:var(--accent)}
+.titlebar .wicon{width:24px;height:24px;display:grid;place-items:center;border-radius:8px;background:rgba(255,255,255,.05);
+  border:1px solid var(--edge);color:var(--accent)}
+.titlebar .wicon svg{width:15px;height:15px}
 .titlebar .wtitle{font-size:13.5px;font-weight:600}
 .titlebar .wsp{flex:1}
-.wbtn{width:26px;height:26px;display:grid;place-items:center;border-radius:8px;border:1px solid transparent;
-  background:rgba(255,255,255,.05);color:var(--ink3);cursor:pointer;font-size:13px;line-height:1;transition:.15s}
-.wbtn:hover{color:var(--ink);background:rgba(255,255,255,.12)}
-.wbtn.close:hover{background:rgba(255,109,176,.25);color:#fff}
+.lights{display:flex;gap:8px;align-items:center;margin-right:5px}
+.wbtn{width:12px;height:12px;padding:0;border-radius:50%;border:none;cursor:pointer;position:relative;
+  display:grid;place-items:center;transition:.15s}
+.wbtn.close{background:#ff5f57}.wbtn.min{background:#febc2e}.wbtn.max{background:#28c840}
+.wbtn::after{position:absolute;font-size:9px;font-weight:700;color:rgba(0,0,0,.55);opacity:0;transition:.12s;line-height:1}
+.lights:hover .wbtn.close::after{content:"×";opacity:1}
+.lights:hover .wbtn.min::after{content:"–";opacity:1}
+.lights:hover .wbtn.max::after{content:"+";opacity:1}
+.win:not(.active) .wbtn{background:rgba(255,255,255,.22)}
+.ci-ic{display:inline-flex;align-items:center;color:var(--ink3);margin-right:9px}
+.ci-ic svg{width:15px;height:15px}
+.qi svg{width:17px;height:17px}
+#menubar .mr svg{width:17px;height:17px}
 .winbody{flex:1;overflow:auto;padding:18px 20px;font-size:13.5px;color:var(--ink2);line-height:1.55}
 .winbody h3{color:var(--ink);font-size:16px;margin-bottom:4px}
 .winbody h4{color:var(--ink);font-size:14px}
@@ -94,9 +104,10 @@ button{font-family:inherit}
   border:1px solid var(--edge);box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .dockitem{position:relative;width:54px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 2px;border-radius:13px;transition:.16s}
 .dockitem:hover{background:rgba(255,255,255,.07);transform:translateY(-3px)}
-.dockitem .di{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;font-size:19px;
-  background:rgba(255,255,255,.06);border:1px solid var(--edge);color:var(--dc,var(--teal));
-  box-shadow:0 6px 18px -8px var(--dc,var(--teal))}
+.dockitem .di{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;
+  background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03));border:1px solid var(--edge);color:var(--dc,var(--teal));
+  box-shadow:0 8px 20px -10px var(--dc,var(--teal)),inset 0 1px 0 rgba(255,255,255,.08)}
+.dockitem .di svg{width:23px;height:23px}
 .dockitem .dl{font-size:9.5px;color:var(--ink3);letter-spacing:.2px;white-space:nowrap}
 .dockitem:hover .dl{color:var(--ink2)}
 .dockitem .run{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:transparent}
@@ -142,6 +153,11 @@ button{font-family:inherit}
 .tl.risk .dot{background:var(--magenta);box-shadow:0 0 16px -4px var(--magenta)}
 .tl .body{flex:1;padding-bottom:12px}.tl h4{font-size:13.5px}.tl .s{font-size:12px;color:var(--ink3);margin-top:2px}
 .tl .badge{display:inline-block;margin-top:6px;font-size:10px;color:var(--magenta);border:1px solid rgba(255,109,176,.4);border-radius:999px;padding:1px 8px}
+.tl .why{margin-top:8px;font-size:12px;line-height:1.5;color:var(--ink2);background:rgba(255,109,176,.08);border:1px solid rgba(255,109,176,.22);border-radius:10px;padding:8px 11px}
+.tl .why b{color:var(--magenta)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin:8px 0 14px;font-size:12px;color:var(--ink3)}
+.legend span{display:flex;align-items:center;gap:7px}
+.legend i{width:11px;height:11px;border-radius:50%;display:inline-block}
 .gauge{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12.5px}
 .gauge .lab{width:54px;color:var(--ink3);font-family:var(--mono);font-size:11px}
 .gauge .track{flex:1;height:7px;border-radius:7px;background:rgba(255,255,255,.07);overflow:hidden}
@@ -171,6 +187,58 @@ button{font-family:inherit}
 .tree summary::marker{color:var(--accent)}
 .tree .f{padding:2px 0 2px 18px;color:var(--ink2);font-size:12.5px}
 .tree .f .x{color:var(--ink3);font-size:11px;margin-left:6px}
+
+/* calculator */
+.calc{display:flex;flex-direction:column;height:100%;margin:-18px -20px}
+.calc-disp{flex:0 0 auto;padding:18px 18px 10px;text-align:right;font-family:var(--mono);font-size:30px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;min-height:64px}
+.calc-grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.06)}
+.calc-grid button{all:unset;cursor:pointer;display:grid;place-items:center;font-size:18px;color:var(--ink);background:rgba(18,22,40,.5);transition:.12s;font-family:var(--ff)}
+.calc-grid button:hover{background:rgba(255,255,255,.1)}
+.calc-grid button.op{color:var(--teal)}
+.calc-grid button.eq{background:linear-gradient(135deg,var(--teal),var(--violet));color:#06121a;font-weight:700}
+.calc-grid button.span2{grid-column:span 2}
+
+/* window resize handle */
+.resize-h{position:absolute;right:0;bottom:0;width:18px;height:18px;cursor:nwse-resize;z-index:5}
+.resize-h::after{content:"";position:absolute;right:3px;bottom:3px;width:8px;height:8px;border-right:2px solid rgba(255,255,255,.25);border-bottom:2px solid rgba(255,255,255,.25)}
+
+/* notifications */
+#notifs{position:fixed;top:50px;right:12px;z-index:9400;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.notif{min-width:230px;max-width:300px;border-radius:14px;padding:12px 14px;background:rgba(12,15,30,.92);backdrop-filter:blur(20px);border:1px solid var(--edge);box-shadow:0 20px 60px rgba(0,0,0,.5);transform:translateX(120%);transition:transform .4s cubic-bezier(.2,.9,.3,1);pointer-events:auto}
+.notif.on{transform:none}
+.notif .nt{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:var(--ink)}
+.notif .ni{width:24px;height:24px;display:grid;place-items:center;border-radius:7px;background:rgba(255,255,255,.06);color:var(--accent)}
+.notif .ni svg{width:15px;height:15px}
+.notif .nm{font-size:12px;color:var(--ink3);margin-top:5px;line-height:1.45}
+
+/* editor */
+.ed{display:flex;height:100%;margin:-18px -20px}
+.ed-side{flex:0 0 152px;border-right:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;background:rgba(0,0,0,.14)}
+.ed-new{all:unset;cursor:pointer;text-align:center;padding:11px;font-size:12.5px;color:var(--teal);border-bottom:1px solid rgba(255,255,255,.08)}
+.ed-new:hover{background:rgba(255,255,255,.06)}
+.ed-list{flex:1;overflow:auto}
+.ed-item{padding:10px 12px;font-size:12.5px;color:var(--ink2);cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ed-item:hover{background:rgba(255,255,255,.05)}
+.ed-item.on{background:rgba(45,226,198,.14);color:var(--ink)}
+.ed-empty{padding:14px 12px;font-size:12px;color:var(--ink3)}
+.ed-main{flex:1;display:flex;flex-direction:column;min-width:0}
+.ed-title{background:none;border:none;outline:none;color:var(--ink);font-family:var(--ff);font-size:15px;font-weight:600;padding:12px 16px 6px}
+.ed-body{flex:1;background:none;border:none;outline:none;resize:none;color:var(--ink2);font-family:var(--ff);font-size:13.5px;line-height:1.6;padding:4px 16px 12px}
+.ed-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-top:1px solid rgba(255,255,255,.08);font-size:11.5px;color:var(--ink3)}
+.ed-del{all:unset;cursor:pointer;color:var(--magenta);font-size:12px;padding:3px 9px;border-radius:8px}
+.ed-del:hover{background:rgba(255,109,176,.15)}
+.ed-del:disabled{opacity:.4;cursor:default}
+
+/* clock / timer */
+.clk{display:flex;flex-direction:column;align-items:center;gap:12px}
+.clk-now{font-size:40px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:1px;margin-top:4px}
+.clk-date{font-size:12.5px;color:var(--ink3);margin-top:-6px}
+.clk-card{width:100%;background:var(--glass2);border:1px solid var(--edge);border-radius:14px;padding:12px 14px;text-align:center}
+.clk-card h4{font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.clk-disp{font-family:var(--mono);font-size:30px;color:var(--ink);font-variant-numeric:tabular-nums}
+.clk-row{display:flex;gap:8px;justify-content:center;margin-top:9px}
+.clk-row button{all:unset;cursor:pointer;padding:7px 14px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--edge);font-size:12.5px;color:var(--ink2)}
+.clk-row button:hover{background:rgba(255,255,255,.1);color:var(--ink)}
 
 /* context menu */
 #ctx{position:fixed;z-index:9600;min-width:190px;border-radius:12px;padding:6px;display:none;
@@ -232,7 +300,7 @@ button{font-family:inherit}
     <div class="mright">
       <span class="vital">cpu <b id="vcpu">—</b></span>
       <span class="vital">mem <b id="vmem">—</b></span>
-      <span class="mr" id="ccBtn" title="Pusat Kontrol">◴</span>
+      <span class="mr" id="ccBtn" title="Pusat Kontrol"></span>
       <span class="mr"><span class="clock" id="clock">--:--</span></span>
     </div>
   </div>
@@ -261,6 +329,7 @@ button{font-family:inherit}
 
   <div id="ctx"></div>
   <div id="hint"></div>
+  <div id="notifs"></div>
 </div>
 
 <div id="lock">
@@ -284,16 +353,35 @@ button{font-family:inherit}
 /* ---------- app registry ---------- */
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
+/* unified monoline icon set (stroke = currentColor, inherits each app accent) */
+const _S='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">';
+const ICON={
+ welcome:_S+'<path d="M12 3l1.7 6.3L20 11l-6.3 1.7L12 19l-1.7-6.3L4 11l6.3-1.7z"/></svg>',
+ realita:_S+'<path d="M5 21V4"/><path d="M5 4h12l-2.2 3.3L17 11H5"/></svg>',
+ roadmap:_S+'<circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8.2 18H14a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h5.8"/></svg>',
+ terminal:_S+'<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9l3 3-3 3"/><path d="M13 15h4"/></svg>',
+ files:_S+'<path d="M3 8a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+ notes:_S+'<rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>',
+ editor:_S+'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/></svg>',
+ calc:_S+'<rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8 7h8"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/></svg>',
+ clock:_S+'<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>',
+ monitor:_S+'<path d="M3 12h3.5l2.2 6 3.6-12 2.4 8 1.3-2H21"/></svg>',
+ guide:_S+'<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19"/><path d="M9 8h6"/></svg>',
+ settings:_S+'<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.1 5.1l2.1 2.1M16.8 16.8l2.1 2.1M18.9 5.1l-2.1 2.1M7.2 16.8l-2.1 2.1"/></svg>',
+ about:_S+'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6h.01"/></svg>',
+ cc:_S+'<path d="M4 8h9M19 8h1M4 16h1M11 16h9"/><circle cx="16" cy="8" r="2.3"/><circle cx="8" cy="16" r="2.3"/></svg>'
+};
+
 const ROAD=[
- [1,'Boot-verify di QEMU','lalu hardware — tanpa ini, "host-tested" belum tervalidasi runtime',0,''],
- [2,'Aktifkan paging + isolasi','page directory, CR3/CR0.PG, #PF handler, higher-half',1,'tersulit #1'],
- [3,'Context switch + scheduler preemptif','save/restore register per-proses, didorong timer',1,'race'],
- [4,'Ring 3 + syscall hidup','TSS (ltr), int 0x80 DPL-3, iret ke user, fault policy',1,'tersulit #2'],
- [5,'Filesystem writable + driver blok','ATA/AHCI/virtio, lalu FS R/W (FAT/ext2)',1,'crash-konsistensi'],
- [6,'libc + POSIX','port newlib/musl → program nyata bisa jalan',0,''],
- [7,'Networking (TCP/IP)','driver NIC (e1000/virtio-net) + stack (lwIP)',0,''],
- [8,'Userland + shell + self-hosting','toolchain jalan di atas THUOS, ala Linux From Scratch',0,''],
- [9,'SMP / multi-core + fitur masa depan','lalu microkernel-ish / Rust',0,''],
+ [1,'Boot-verify di QEMU','lalu hardware — tanpa ini, "host-tested" belum tervalidasi runtime',0,'',''],
+ [2,'Aktifkan paging + isolasi','page directory, CR3/CR0.PG, #PF handler, higher-half',1,'tersulit #1','Begitu MMU dinyalakan, satu salah isi tabel halaman → CPU tak bisa ambil instruksi berikutnya → reboot diam (triple-fault) tanpa pesan error. Rintangan pertama yang paling sering mematikan OS pemula.'],
+ [3,'Context switch + scheduler preemptif','save/restore register per-proses, didorong timer',1,'race','Salah timing/penguncian saat berganti proses → register bocor antar-proses atau stack korup → crash acak yang sangat sulit ditiru ulang ("race condition").'],
+ [4,'Ring 3 + syscall hidup','TSS (ltr), int 0x80 DPL-3, iret ke user, fault policy',1,'tersulit #2','Lompatan pertama dari kernel (ring 0) ke program user (ring 3). Salah sedikit di TSS / level privilege / descriptor → #GP atau triple-fault. Terkenal rewel.'],
+ [5,'Filesystem writable + driver blok','ATA/AHCI/virtio, lalu FS R/W (FAT/ext2)',1,'crash-konsistensi','Kalau mati listrik / crash di tengah menulis, filesystem bisa tertinggal setengah-terupdate → korup. Menjaga urutan penulisan (journaling) supaya tetap konsisten itu sulit.'],
+ [6,'libc + POSIX','port newlib/musl → program nyata bisa jalan',0,'',''],
+ [7,'Networking (TCP/IP)','driver NIC (e1000/virtio-net) + stack (lwIP)',0,'',''],
+ [8,'Userland + shell + self-hosting','toolchain jalan di atas THUOS, ala Linux From Scratch',0,'',''],
+ [9,'SMP / multi-core + fitur masa depan','lalu microkernel-ish / Rust',0,'',''],
 ];
 
 const APPS = {
@@ -301,10 +389,10 @@ const APPS = {
    <h3>Selamat datang di THUOS · Aurora</h3><div class="ps">lingkungan desktop konsep</div>
    <p>Ini <b>desktop</b>, bukan halaman. Buka aplikasi dari <b>dock di bawah</b> — tiap app jadi <b>jendela</b> yang bisa kamu geser (tarik judulnya), tumpuk, perbesar, atau tutup.</p>
    <div class="tiles">
-     <button class="qbtn" data-open="realita"><span class="qi">⚑</span>Apa ini sebenarnya</button>
-     <button class="qbtn" data-open="roadmap"><span class="qi">⤳</span>Roadmap</button>
-     <button class="qbtn" data-open="terminal"><span class="qi">›_</span>Terminal</button>
-     <button class="qbtn" data-open="guide"><span class="qi">⤢</span>Panduan</button>
+     <button class="qbtn" data-open="realita"><span class="qi">${ICON.realita}</span>Apa ini sebenarnya</button>
+     <button class="qbtn" data-open="roadmap"><span class="qi">${ICON.roadmap}</span>Roadmap</button>
+     <button class="qbtn" data-open="terminal"><span class="qi">${ICON.terminal}</span>Terminal</button>
+     <button class="qbtn" data-open="guide"><span class="qi">${ICON.guide}</span>Panduan</button>
    </div>
    <p class="note" style="margin-top:14px">Jujur: ini konsep antarmuka masa depan. Bukan GUI kernel yang di-boot. <b style="color:var(--amber)">BOOT-VERIFIED: tidak ada.</b></p>`},
 
@@ -312,28 +400,29 @@ const APPS = {
    <h3>Apa ini sebenarnya</h3><div class="ps">kejujuran · ground truth</div>
    <p>THUOS = <b>kernel from-scratch + subsistem host-tested</b>, di tahap <b>pra-boot</b>. Arsitektur benar, logika teruji — tapi kemampuan inti OS belum dihidupkan.</p>
    <div class="cols">
-     <div class="card"><h4 style="color:var(--green);margin-bottom:6px">Sudah ada (host-tested)</h4><ul class="list">
-       <li class="yes"><span class="m">✓</span>Boot stub, GDT/IDT, exception, PIC/IRQ, PIT, keyboard</li>
+     <div class="card"><h4 style="color:var(--green);margin-bottom:6px">Sudah ada (build + host-tested)</h4><ul class="list">
+       <li class="yes"><span class="m">✓</span>Multiboot boot, GDT/IDT, exception 0-31</li>
+       <li class="yes"><span class="m">✓</span>PIC/IRQ, PIT, keyboard, serial, VGA, shell</li>
        <li class="yes"><span class="m">✓</span>Physical memory manager (bitmap 4 KiB)</li>
-       <li class="yes"><span class="m">✓</span>Heap, konstruksi tabel paging</li>
-       <li class="yes"><span class="m">✓</span>THUAR initrd + VFS/ramfs (read-only)</li>
-       <li class="yes"><span class="m">✓</span>ABI syscall + 11 handler, validator ELF32</li>
+       <li class="yes"><span class="m">✓</span>Kernel heap kmalloc/kfree <b>(baru — 0.4)</b></li>
+       <li class="yes"><span class="m">✓</span>Build → ELF Multiboot i386 (kamu bisa boot di QEMU)</li>
      </ul></div>
      <div class="card"><h4 style="color:var(--magenta);margin-bottom:6px">Belum hidup</h4><ul class="list">
-       <li class="no"><span class="m">✕</span>Belum pernah di-boot (tak ada QEMU)</li>
-       <li class="no"><span class="m">✕</span>Context switch nyata</li>
-       <li class="no"><span class="m">✕</span>Paging &amp; ring-3 (gated off) → tanpa isolasi</li>
-       <li class="no"><span class="m">✕</span>FS writable, networking, libc</li>
-       <li class="no"><span class="m">✕</span>Userspace dieksekusi</li>
+       <li class="no"><span class="m">✕</span>Belum di-boot di sini (tak ada QEMU) — bisa kamu boot sendiri</li>
+       <li class="no"><span class="m">✕</span>Paging + memori virtual (langkah berikutnya, paling berisiko)</li>
+       <li class="no"><span class="m">✕</span>Context switch + scheduler nyata</li>
+       <li class="no"><span class="m">✕</span>Ring 3 + syscall, VFS + filesystem</li>
+       <li class="no"><span class="m">✕</span>Driver disk, networking, libc, userspace</li>
      </ul></div>
    </div>
    <div class="banner"><span style="font-size:20px">⚑</span><div><b>BOOT-VERIFIED: tidak ada.</b><small>Semua "host-tested" = kode kernel yang sama diuji dgn gcc native, bukan dijalankan sebagai OS.</small></div></div>`},
 
- roadmap:{name:'Roadmap',icon:'⤳',accent:'#2de2c6',w:540,h:480,body:()=>`
+ roadmap:{name:'Roadmap',icon:'⤳',accent:'#2de2c6',w:560,h:500,body:()=>`
    <h3>Roadmap menuju OS nyata</h3><div class="ps">riset §3 · dependency-ordered</div>
-   <p>Jalur berlapis dari "model" → "OS hidup". <b style="color:var(--magenta)">Merah</b> = paling berisiko.</p>
+   <p>Jalur berlapis dari "model" → "OS hidup". Setiap langkah membuka langkah berikutnya.</p>
+   <div class="legend"><span><i style="background:var(--teal)"></i>langkah biasa</span><span><i style="background:var(--magenta)"></i><b style="color:var(--magenta)">merah</b> = paling sulit &amp; berisiko</span></div>
    ${ROAD.map(s=>`<div class="tl${s[3]?' risk':''}"><div class="rail"><div class="dot">${s[0]}</div></div>
-     <div class="body"><h4>${s[1]}</h4><div class="s">${s[2]}</div>${s[3]?`<span class="badge">${s[4]}</span>`:''}</div></div>`).join('')}
+     <div class="body"><h4>${s[1]}</h4><div class="s">${s[2]}</div>${s[3]?`<span class="badge">${s[4]}</span>`:''}${s[3]?`<div class="why"><b>⚠ kenapa berisiko:</b> ${s[5]}</div>`:''}</div></div>`).join('')}
    <p class="note">Sumber: OSDev (What order…, Getting to Ring 3) · xv6 · os.phil-opp · OSTEP. Status di sini: <b>COMPILE-ONLY</b>.</p>`},
 
  terminal:{name:'Terminal',icon:'›_',accent:'#54e6a6',w:560,h:380,body:()=>`
@@ -345,23 +434,23 @@ const APPS = {
      function pr(h){const d=document.createElement('div');d.innerHTML=h;out.appendChild(d);out.scrollTop=out.scrollHeight;}
      const banner=
 '<span class="tp">  ▟▛ THUOS · Aurora — concept shell</span>\n'+
-'  versi 0.3.0 "Memory Foundation" · target i386 · Multiboot 1\n'+
+'  versi 0.4.0 "Kernel Heap" · target i386 · Multiboot 1\n'+
 '  <span class="tw">catatan: ini shell KONSEP. THUOS belum di-boot — BOOT-VERIFIED: tidak ada.</span>\n'+
 "  ketik 'help' untuk daftar perintah.\n";
      pr(banner);
      const CMD={
        help:()=>"perintah: help · status · ver · ls · roadmap · about · neofetch · whoami · clear",
-       ver:()=>"THUOS 0.3.0 \"Memory Foundation\" (i386, Multiboot 1)",
+       ver:()=>"THUOS 0.4.0 \"Kernel Heap\" (i386, Multiboot 1)",
        version:()=>CMD.ver(),
        whoami:()=>"thu",
-       status:()=>'tahap: PRA-boot\nhost-tested: ya (gcc native)\ncontext-switch nyata: belum\npaging/ring-3: gated off\nfilesystem: read-only\n<span class="tw">BOOT-VERIFIED: tidak ada</span>',
+       status:()=>'tahap: PRA-boot\nhost-tested: ya (PMM + kernel heap)\ncontext-switch nyata: belum\npaging + ring-3: langkah berikutnya\nfilesystem: belum ada\n<span class="tw">BOOT-VERIFIED: tidak ada</span>',
        ls:()=>'<span class="tp">bin/</span>  <span class="tp">dev/</span>  <span class="tp">etc/</span>  init  hello   <span class="te">(konsep VFS read-only)</span>',
        roadmap:()=>ROAD.map(s=>(s[3]?'<span class="te">●</span> ':'<span class="tp">●</span> ')+s[0]+'. '+s[1]).join('\n'),
        about:()=>"THUOS: OS hobi x86 dari nol. Bukan distro Linux, bukan skin UI, bukan simulator palsu.\nDibangun jujur, subsistem demi subsistem.",
        neofetch:()=>
 '<span class="tp">      ▟█▙      </span>  thu@aurora\n'+
 '<span class="tp">     ▟███▙     </span>  ----------\n'+
-'<span class="tp">    ▟█▛ ▜█▙    </span>  OS:     THUOS 0.3.0 (konsep)\n'+
+'<span class="tp">    ▟█▛ ▜█▙    </span>  OS:     THUOS 0.4.0 (konsep)\n'+
 '<span class="tp">   ▟█▛   ▜█▙   </span>  Kernel: i386 from-scratch\n'+
 '<span class="tp">   ▜█▙   ▟█▛   </span>  Boot:   <span class="tw">belum (host-tested)</span>\n'+
 '<span class="tp">    ▜█▙ ▟█▛    </span>  UI:     Aurora (desktop konsep)\n'+
@@ -407,10 +496,10 @@ const APPS = {
    </div>
    <div class="card" style="margin-top:12px"><h4>Subsistem (konsep)</h4><ul class="list" style="margin-top:4px">
      <li class="yes"><span class="m" style="color:var(--ink3)">·</span>kernel · idle</li>
-     <li class="yes"><span class="m" style="color:var(--ink3)">·</span>scheduler <span style="color:var(--ink3)">[model]</span></li>
-     <li class="yes"><span class="m" style="color:var(--ink3)">·</span>pmm · frame bitmap</li>
-     <li class="yes"><span class="m" style="color:var(--ink3)">·</span>vfs/ramfs <span style="color:var(--ink3)">[ro]</span></li>
-     <li class="no"><span class="m">✕</span>paging/ring-3 <span style="color:var(--ink3)">[gated off]</span></li>
+     <li class="yes"><span class="m" style="color:var(--ink3)">·</span>pmm · frame bitmap 4 KiB</li>
+     <li class="yes"><span class="m" style="color:var(--ink3)">·</span>kheap · 1 MiB arena <span style="color:var(--green)">[baru]</span></li>
+     <li class="yes"><span class="m" style="color:var(--ink3)">·</span>pit · keyboard · serial · shell</li>
+     <li class="no"><span class="m">✕</span>paging · scheduler · ring-3 <span style="color:var(--ink3)">[belum]</span></li>
    </ul></div>
    <p class="note">angka konsep — bukan dari kernel nyata.</p>`},
 
@@ -436,7 +525,8 @@ const APPS = {
      <div class="sw" style="background:#54e6a6" data-acc="#54e6a6"></div></div></div>
    <div class="card" style="margin-top:12px"><h4>Wallpaper</h4><div class="ccwall" data-bind="wall">
      <button data-wall="">Aurora</button><button data-wall="nebula">Nebula</button><button data-wall="senja">Senja</button></div></div>
-   <p class="note">Pengaturan yang sama juga ada cepat di Pusat Kontrol (◴).</p>`},
+   <p class="note">Pengaturan yang sama juga ada cepat di Pusat Kontrol. Pilihanmu <b>tersimpan</b> di perangkat ini.</p>`,
+   mount:(win)=>syncSettingsUI(win)},
 
  about:{name:'Tentang THUOS',icon:'∗',accent:'#2de2c6',w:480,h:380,body:()=>`
    <h3>Tentang THUOS</h3><div class="ps">dan janji kejujurannya</div>
@@ -449,10 +539,115 @@ const APPS = {
      <li class="no"><span class="m" style="color:var(--amber)">▹</span><b>EXPERIMENTAL-OFF</b></li>
      <li class="no"><span class="m" style="color:var(--amber)">▹</span><b>NOT-VERIFIED-HERE</b></li>
      <li class="no"><span class="m" style="color:var(--magenta)">▹</span><b>BOOT-VERIFIED</b> — tidak ada</li></ul></div></div>
-   <p class="note" style="margin-top:12px">Aurora = konsep visi antarmuka dalam HTML. Laporan riset: <span class="kbd">docs/THUOS_OS_RESEARCH.md</span> · versi 0.3.0.</p>`},
+   <p class="note" style="margin-top:12px">Aurora = konsep visi antarmuka dalam HTML. Laporan riset: <span class="kbd">docs/THUOS_OS_RESEARCH.md</span> · cara boot: <span class="kbd">BOOT_THUOS.md</span> · versi 0.4.0.</p>`},
+
+ notes:{name:'Catatan',icon:'',accent:'#ffcf76',w:440,h:380,body:()=>`
+   <div style="display:flex;flex-direction:column;height:100%;margin:-18px -20px">
+     <div style="padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.07);font-size:11.5px;color:var(--ink3)"><span id="notesStat">tersimpan otomatis di perangkatmu (local-first)</span></div>
+     <textarea id="notesArea" spellcheck="false" placeholder="Tulis apa saja… catatan ini tersimpan di browsermu dan masih ada saat kamu buka lagi." style="flex:1;width:100%;resize:none;border:none;outline:none;background:transparent;color:var(--ink);font-family:var(--ff);font-size:14px;line-height:1.6;padding:14px 16px"></textarea>
+   </div>`,
+   mount:(win)=>{
+     const ta=win.querySelector('#notesArea'), st=win.querySelector('#notesStat');
+     try{ta.value=localStorage.getItem('thuos_notes')||'';}catch(e){}
+     let tmr=null;
+     ta.addEventListener('input',()=>{
+       st.textContent='menyimpan…'; clearTimeout(tmr);
+       tmr=setTimeout(()=>{try{localStorage.setItem('thuos_notes',ta.value);}catch(e){}
+         st.textContent='tersimpan ✓ '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});},350);
+     });
+     setTimeout(()=>ta.focus(),60);
+   }},
+
+ calc:{name:'Kalkulator',icon:'',accent:'#54e6a6',w:280,h:380,body:()=>`
+   <div class="calc"><div class="calc-disp" id="calcDisp">0</div>
+     <div class="calc-grid">
+       <button data-k="C" class="op span2">C</button><button data-k="←" class="op">←</button><button data-k="/" class="op">÷</button>
+       <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="*" class="op">×</button>
+       <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="-" class="op">−</button>
+       <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="+" class="op">+</button>
+       <button data-k="0" class="span2">0</button><button data-k=".">.</button><button data-k="=" class="eq">=</button>
+     </div></div>`,
+   mount:(win)=>{
+     const disp=win.querySelector('#calcDisp');
+     let cur='0',prev=null,op=null,fresh=true;
+     function show(){disp.textContent=(cur.length>12&&!isNaN(Number(cur)))?Number(cur).toPrecision(10):cur;}
+     function ev(a,b,o){a=parseFloat(a);b=parseFloat(b);return o==='+'?a+b:o==='-'?a-b:o==='*'?a*b:o==='/'?(b===0?'∞':a/b):b;}
+     function press(k){
+       if(k==='C'){cur='0';prev=null;op=null;fresh=true;}
+       else if(k==='←'){cur=cur.length>1?cur.slice(0,-1):'0';}
+       else if(k==='.'){if(!cur.includes('.'))cur+='.';}
+       else if('+-*/'.includes(k)){if(op&&!fresh){cur=String(ev(prev,cur,op));}prev=cur;op=k;fresh=true;}
+       else if(k==='='){if(op){cur=String(ev(prev,cur,op));op=null;prev=null;fresh=true;}}
+       else{if(fresh||cur==='0'){cur=k;fresh=false;}else{cur+=k;}}
+       show();
+     }
+     win.querySelectorAll('.calc-grid button').forEach(b=>b.addEventListener('click',()=>press(b.dataset.k)));
+     show();
+   }},
+
+ editor:{name:'Editor',icon:'',accent:'#2de2c6',w:560,h:420,body:()=>`
+   <div class="ed">
+     <div class="ed-side"><button class="ed-new" id="edNew">＋ Dokumen baru</button><div class="ed-list" id="edList"></div></div>
+     <div class="ed-main">
+       <input class="ed-title" id="edTitle" placeholder="Judul…" disabled>
+       <textarea class="ed-body" id="edBody" spellcheck="false" placeholder="Pilih atau buat dokumen…" disabled></textarea>
+       <div class="ed-bar"><span id="edStat">local-first · tersimpan di perangkatmu</span><button class="ed-del" id="edDel" disabled>Hapus</button></div>
+     </div></div>`,
+   mount:(win)=>{
+     const KEY='thuos_docs';
+     const listEl=win.querySelector('#edList'),titleEl=win.querySelector('#edTitle'),
+           bodyEl=win.querySelector('#edBody'),statEl=win.querySelector('#edStat'),delEl=win.querySelector('#edDel');
+     let docs=[],cur=null,tmr=null;
+     function load(){try{docs=JSON.parse(localStorage.getItem(KEY)||'[]');}catch(e){docs=[];}if(!Array.isArray(docs))docs=[];}
+     function persist(){try{localStorage.setItem(KEY,JSON.stringify(docs));}catch(e){}}
+     function fmt(){return new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});}
+     function curDoc(){return docs.find(x=>x.id===cur);}
+     function renderList(){
+       if(!docs.length){listEl.innerHTML='<div class="ed-empty">belum ada dokumen</div>';return;}
+       listEl.innerHTML=docs.map(d=>'<div class="ed-item'+(d.id===cur?' on':'')+'" data-id="'+d.id+'">'+(esc(d.title)||'(tanpa judul)')+'</div>').join('');
+       listEl.querySelectorAll('.ed-item').forEach(it=>it.addEventListener('click',()=>select(Number(it.dataset.id))));
+     }
+     function select(id){const d=docs.find(x=>x.id===id);if(!d)return;cur=id;titleEl.disabled=bodyEl.disabled=delEl.disabled=false;titleEl.value=d.title;bodyEl.value=d.body;renderList();}
+     function saveDoc(){const d=curDoc();if(!d)return;d.title=titleEl.value;d.body=bodyEl.value;persist();statEl.textContent='tersimpan ✓ '+fmt();renderList();}
+     function schedule(){statEl.textContent='menyimpan…';clearTimeout(tmr);tmr=setTimeout(saveDoc,350);}
+     win.querySelector('#edNew').addEventListener('click',()=>{const d={id:Date.now(),title:'Dokumen',body:''};docs.unshift(d);persist();select(d.id);titleEl.focus();titleEl.select();});
+     titleEl.addEventListener('input',schedule);
+     bodyEl.addEventListener('input',schedule);
+     delEl.addEventListener('click',()=>{if(cur==null)return;docs=docs.filter(x=>x.id!==cur);cur=null;persist();titleEl.value='';bodyEl.value='';titleEl.disabled=bodyEl.disabled=delEl.disabled=true;renderList();statEl.textContent='dihapus';});
+     load();renderList();
+   }},
+
+ clock:{name:'Jam',icon:'',accent:'#ff6db0',w:340,h:430,body:()=>`
+   <div class="clk">
+     <div class="clk-now" id="clkNow">--:--:--</div><div class="clk-date" id="clkDate">—</div>
+     <div class="clk-card"><h4>Timer</h4><div class="clk-disp" id="tmDisp">00:00</div>
+       <div class="clk-row"><button data-tm="60">1m</button><button data-tm="300">5m</button><button data-tm="600">10m</button></div>
+       <div class="clk-row"><button id="tmStart">Mulai</button><button id="tmReset">Reset</button></div></div>
+     <div class="clk-card"><h4>Stopwatch</h4><div class="clk-disp" id="swDisp">00:00.0</div>
+       <div class="clk-row"><button id="swStart">Mulai</button><button id="swReset">Reset</button></div></div>
+   </div>`,
+   mount:(win)=>{
+     const pad=n=>String(n).padStart(2,'0');
+     const nowEl=win.querySelector('#clkNow'),dateEl=win.querySelector('#clkDate');
+     function tn(){const d=new Date();nowEl.textContent=pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());dateEl.textContent=d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
+     tn();const ci=setInterval(tn,1000);
+     let tmLeft=0,tmRun=false,tmI=null;const tmDisp=win.querySelector('#tmDisp'),tmStart=win.querySelector('#tmStart');
+     function tmShow(){tmDisp.textContent=pad(Math.floor(tmLeft/60))+':'+pad(tmLeft%60);}
+     win.querySelectorAll('[data-tm]').forEach(b=>b.addEventListener('click',()=>{tmLeft=Number(b.dataset.tm);tmShow();}));
+     tmStart.addEventListener('click',()=>{if(tmRun){tmRun=false;clearInterval(tmI);tmStart.textContent='Mulai';return;}if(tmLeft<=0)return;tmRun=true;tmStart.textContent='Jeda';tmI=setInterval(()=>{if(tmLeft>0){tmLeft--;tmShow();}if(tmLeft<=0){clearInterval(tmI);tmRun=false;tmStart.textContent='Mulai';notify('Timer selesai','Waktu habis','clock');}},1000);});
+     win.querySelector('#tmReset').addEventListener('click',()=>{clearInterval(tmI);tmRun=false;tmLeft=0;tmShow();tmStart.textContent='Mulai';});
+     tmShow();
+     let swMs=0,swRun=false,swI=null,swT0=0;const swDisp=win.querySelector('#swDisp'),swStart=win.querySelector('#swStart');
+     function swFmt(t){return pad(Math.floor(t/60000))+':'+pad(Math.floor((t%60000)/1000))+'.'+Math.floor((t%1000)/100);}
+     function swShow(){swDisp.textContent=swFmt(swMs);}
+     swStart.addEventListener('click',()=>{if(swRun){swRun=false;clearInterval(swI);swMs+=Date.now()-swT0;swStart.textContent='Mulai';swShow();return;}swRun=true;swT0=Date.now();swStart.textContent='Jeda';swI=setInterval(()=>{swDisp.textContent=swFmt(swMs+(Date.now()-swT0));},100);});
+     win.querySelector('#swReset').addEventListener('click',()=>{clearInterval(swI);swRun=false;swMs=0;swT0=0;swShow();swStart.textContent='Mulai';});
+     swShow();
+     win.addEventListener('thuosclose',()=>{clearInterval(ci);clearInterval(tmI);clearInterval(swI);});
+   }},
 };
 
-const DOCK_ORDER=['realita','roadmap','terminal','files','monitor','guide','settings','about'];
+const DOCK_ORDER=['realita','roadmap','terminal','files','notes','editor','calc','clock','monitor','guide','settings','about'];
 
 /* ---------- window manager ---------- */
 const desk=document.getElementById('desk');
@@ -466,7 +661,7 @@ function buildDock(){
     const a=APPS[id];
     const it=document.createElement('div');
     it.className='dockitem'; it.dataset.app=id; it.style.setProperty('--dc',a.accent);
-    it.innerHTML='<div class="di">'+a.icon+'</div><div class="dl">'+a.name+'</div><span class="run"></span>';
+    it.innerHTML='<div class="di">'+(ICON[id]||a.icon)+'</div><div class="dl">'+a.name+'</div><span class="run"></span>';
     it.addEventListener('click',()=>openApp(id));
     dock.appendChild(it);
   });
@@ -497,10 +692,9 @@ function openApp(id){
   top =Math.max(MENUBAR+6,Math.min(top,innerHeight-DOCKSP-80));
   win.style.left=left+'px'; win.style.top=top+'px';
   win.innerHTML=
-    '<div class="titlebar"><span class="wicon">'+a.icon+'</span><span class="wtitle">'+a.name+'</span>'+
-    '<span class="wsp"></span><button class="wbtn min" title="Kecilkan">–</button>'+
-    '<button class="wbtn max" title="Perbesar">▢</button><button class="wbtn close" title="Tutup">✕</button></div>'+
-    '<div class="winbody">'+a.body()+'</div>';
+    '<div class="titlebar"><div class="lights"><button class="wbtn close" title="Tutup"></button><button class="wbtn min" title="Kecilkan"></button><button class="wbtn max" title="Perbesar"></button></div>'+
+    '<span class="wicon">'+(ICON[id]||a.icon)+'</span><span class="wtitle">'+a.name+'</span><span class="wsp"></span></div>'+
+    '<div class="winbody">'+a.body()+'</div><div class="resize-h"></div>';
   desk.appendChild(win);
   wins[id]={el:win,min:false,max:false,prev:null};
   // controls
@@ -510,12 +704,14 @@ function openApp(id){
   win.querySelector('.close').addEventListener('click',e=>{e.stopPropagation();closeApp(id);});
   tb.addEventListener('dblclick',()=>toggleMax(id));
   win.addEventListener('pointerdown',()=>focusWin(id));
-  dragify(win,tb,id);
+  dragify(win,tb,id); resizify(win,id);
   focusWin(id); dockState();
   if(a.mount) a.mount(win);
   hideHint();
 }
-function closeApp(id){ if(!wins[id])return; wins[id].el.remove(); delete wins[id];
+function closeApp(id){ if(!wins[id])return;
+  try{wins[id].el.dispatchEvent(new CustomEvent('thuosclose'));}catch(e){}
+  wins[id].el.remove(); delete wins[id];
   if(activeId===id){activeId=null;document.getElementById('mbApp').textContent='THUOS';} dockState(); }
 function toggleMax(id){
   const w=wins[id]; if(!w)return; const el=w.el;
@@ -545,19 +741,49 @@ function dragify(win,handle,id){
   handle.addEventListener('pointerup',up);
   handle.addEventListener('pointercancel',up);
 }
+function resizify(win,id){
+  const h=win.querySelector('.resize-h'); if(!h)return;
+  let sw,sh,sx,sy,res=false,pid=null;
+  h.addEventListener('pointerdown',e=>{
+    if(wins[id]&&wins[id].max)return;
+    res=true;pid=e.pointerId;sx=e.clientX;sy=e.clientY;sw=win.offsetWidth;sh=win.offsetHeight;
+    h.setPointerCapture(pid);focusWin(id);e.stopPropagation();
+  });
+  h.addEventListener('pointermove',e=>{
+    if(!res||e.pointerId!==pid)return;
+    win.style.width=Math.max(260,Math.min(sw+(e.clientX-sx),innerWidth-20))+'px';
+    win.style.height=Math.max(170,Math.min(sh+(e.clientY-sy),innerHeight-MENUBAR-20))+'px';
+  });
+  function up(e){if(e.pointerId===pid)res=false;}
+  h.addEventListener('pointerup',up);h.addEventListener('pointercancel',up);
+}
 
 /* ---------- settings / control center wiring ---------- */
+function save(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 function setAccent(c){
   document.documentElement.style.setProperty('--accent',c);
   document.documentElement.style.setProperty('--violet',c);
   document.querySelectorAll('[data-acc]').forEach(s=>s.classList.toggle('sel',s.dataset.acc===c));
+  save('thuos_accent',c);
 }
 function setBrightness(v){document.getElementById('dim').style.opacity=(v/100);
-  document.querySelectorAll('[data-bind="brightness"],#brightness').forEach(i=>{if(i.value!=v)i.value=v;});}
+  document.querySelectorAll('[data-bind="brightness"],#brightness').forEach(i=>{if(i.value!=v)i.value=v;});save('thuos_bright',v);}
 function setMotion(on){document.body.classList.toggle('reduce',on);
-  document.querySelectorAll('[data-bind="motion"],#tgMotion').forEach(t=>t.classList.toggle('on',on));}
+  document.querySelectorAll('[data-bind="motion"],#tgMotion').forEach(t=>t.classList.toggle('on',on));save('thuos_motion',on?'1':'0');}
 function setWall(w){const sky=document.getElementById('sky');sky.className=w||'';
-  document.querySelectorAll('[data-wall]').forEach(b=>b.classList.toggle('sel',(b.dataset.wall||'')===(w||'')));}
+  document.querySelectorAll('[data-wall]').forEach(b=>b.classList.toggle('sel',(b.dataset.wall||'')===(w||'')));save('thuos_wall',w||'');}
+function loadSettings(){try{
+  const a=localStorage.getItem('thuos_accent'); if(a)setAccent(a);
+  const b=localStorage.getItem('thuos_bright'); if(b!==null)setBrightness(b);
+  if(localStorage.getItem('thuos_motion')==='1')setMotion(true);
+  const w=localStorage.getItem('thuos_wall'); if(w!==null)setWall(w);
+}catch(e){}}
+function syncSettingsUI(win){try{
+  const a=localStorage.getItem('thuos_accent'); if(a)win.querySelectorAll('[data-acc]').forEach(s=>s.classList.toggle('sel',s.dataset.acc===a));
+  const b=localStorage.getItem('thuos_bright'); if(b!==null){const sl=win.querySelector('[data-bind="brightness"]');if(sl)sl.value=b;}
+  const tg=win.querySelector('[data-bind="motion"]'); if(tg)tg.classList.toggle('on',localStorage.getItem('thuos_motion')==='1');
+  const w=localStorage.getItem('thuos_wall'); win.querySelectorAll('[data-wall]').forEach(x=>x.classList.toggle('sel',(x.dataset.wall||'')===(w||'')));
+}catch(e){}}
 
 document.addEventListener('click',e=>{
   const open=e.target.closest('[data-open]'); if(open){openApp(open.dataset.open);return;}
@@ -571,13 +797,14 @@ document.addEventListener('input',e=>{
 
 /* control center */
 const cc=document.getElementById('cc');
-document.getElementById('ccBtn').addEventListener('click',e=>{e.stopPropagation();cc.classList.toggle('on');});
+const ccBtn=document.getElementById('ccBtn'); ccBtn.innerHTML=ICON.cc;
+ccBtn.addEventListener('click',e=>{e.stopPropagation();cc.classList.toggle('on');});
 document.addEventListener('pointerdown',e=>{if(!e.target.closest('#cc,#ccBtn'))cc.classList.remove('on');});
 
 /* ---------- desktop context menu ---------- */
 const ctx=document.getElementById('ctx');
-const CTX=[['terminal','›_ Terminal'],['files','▦ Berkas'],['settings','⚙ Pengaturan'],['sep'],['guide','⤢ Panduan'],['about','∗ Tentang']];
-ctx.innerHTML=CTX.map(c=>c[0]==='sep'?'<div class="sep"></div>':'<div class="ci" data-open="'+c[0]+'">'+c[1]+'</div>').join('');
+const CTX=[['editor','Editor'],['notes','Catatan'],['terminal','Terminal'],['files','Berkas'],['clock','Jam'],['settings','Pengaturan'],['sep'],['guide','Panduan'],['about','Tentang']];
+ctx.innerHTML=CTX.map(c=>c[0]==='sep'?'<div class="sep"></div>':'<div class="ci" data-open="'+c[0]+'"><span class="ci-ic">'+(ICON[c[0]]||'')+'</span>'+c[1]+'</div>').join('');
 desk.addEventListener('contextmenu',e=>{
   if(e.target.closest('.win,#dock,#menubar,#cc'))return;
   e.preventDefault();
@@ -629,6 +856,14 @@ initStars();requestAnimationFrame(drawStars);
 const hint=document.getElementById('hint');
 function showHint(html){hint.innerHTML=html;hint.classList.add('on');}
 function hideHint(){hint.classList.remove('on');}
+const notifs=document.getElementById('notifs');
+function notify(title,msg,icon){
+  const n=document.createElement('div');n.className='notif';
+  n.innerHTML='<div class="nt"><span class="ni">'+(ICON[icon]||icon||'')+'</span>'+title+'</div>'+(msg?'<div class="nm">'+msg+'</div>':'');
+  notifs.appendChild(n);
+  requestAnimationFrame(()=>n.classList.add('on'));
+  setTimeout(()=>{n.classList.remove('on');setTimeout(()=>n.remove(),420);},4200);
+}
 
 /* ---------- boot + lock ---------- */
 const lock=document.getElementById('lock'); let unlocked=false;
@@ -637,6 +872,7 @@ function unlock(){
   lock.classList.add('gone');
   setTimeout(()=>{lock.style.display='none';
     openApp('welcome');
+    notify('Selamat datang, thu','THUOS Aurora siap. Buka aplikasi dari dock di bawah.','welcome');
     showHint('Buka aplikasi dari <b>dock</b> di bawah ↓ · klik-kanan desktop untuk menu');
     setTimeout(hideHint,5200);
   },520);
@@ -646,7 +882,7 @@ addEventListener('keydown',e=>{
   if(!unlocked){ if(e.key==='Enter'||e.key===' ') unlock(); return; }
   if(e.key==='Escape'){cc.classList.remove('on');ctx.classList.remove('on');}
 });
-buildDock(); dockState();
+buildDock(); dockState(); loadSettings();
 window.addEventListener('load',()=>{
   const b=document.getElementById('boot');
   setTimeout(()=>b.classList.add('gone'),2000);
