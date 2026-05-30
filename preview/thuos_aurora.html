@@ -6,218 +6,212 @@
 <title>THUOS · Aurora</title>
 <style>
 :root{
-  --bg0:#05060f; --ink:#f1f5ff; --ink2:#b9c6e6; --ink3:#7d8cb4;
+  --bg0:#05060f; --ink:#f1f5ff; --ink2:#bcc8e8; --ink3:#7d8cb4;
   --teal:#2de2c6; --violet:#8b6dff; --magenta:#ff6db0; --amber:#ffcf76; --green:#54e6a6;
-  --glass:rgba(255,255,255,.05); --glass2:rgba(255,255,255,.03); --edge:rgba(255,255,255,.12);
+  --accent:#8b6dff;
+  --glass:rgba(18,22,40,.62); --glass2:rgba(255,255,255,.04); --edge:rgba(255,255,255,.12);
   --ff:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,'SF Mono','JetBrains Mono',Menlo,Consolas,monospace;
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg0);color:var(--ink);
-  font-family:var(--ff);-webkit-font-smoothing:antialiased;overflow:hidden}
+html,body{margin:0;height:100%;background:var(--bg0);color:var(--ink);font-family:var(--ff);
+  -webkit-font-smoothing:antialiased;overflow:hidden;user-select:none}
 h1,h2,h3,h4{margin:0;font-weight:650;letter-spacing:.2px}
-a{color:var(--teal)}
-::selection{background:rgba(139,109,255,.35)}
+button{font-family:inherit}
+.reduce *{animation:none !important;transition:none !important}
 
-/* ambient background */
+/* ---- ambient wallpaper ---- */
 #sky{position:fixed;inset:0;z-index:0;background:
-  radial-gradient(1100px 760px at 18% 12%,rgba(45,226,198,.10),transparent 60%),
-  radial-gradient(1000px 820px at 86% 22%,rgba(139,109,255,.13),transparent 62%),
-  radial-gradient(1200px 900px at 64% 102%,rgba(255,109,176,.09),transparent 60%),
+  radial-gradient(1100px 760px at 16% 10%,rgba(45,226,198,.12),transparent 60%),
+  radial-gradient(1000px 820px at 88% 20%,rgba(139,109,255,.15),transparent 62%),
+  radial-gradient(1200px 900px at 62% 104%,rgba(255,109,176,.10),transparent 60%),
   linear-gradient(160deg,#05060f,#080b1a 55%,#06080f)}
-#aurora{position:fixed;inset:-25%;z-index:0;filter:blur(80px) saturate(120%);opacity:.55;pointer-events:none}
-.band{position:absolute;border-radius:50%;mix-blend-mode:screen;animation:drift 30s ease-in-out infinite}
+#sky.nebula{background:
+  radial-gradient(1000px 800px at 20% 20%,rgba(255,109,176,.16),transparent 60%),
+  radial-gradient(1100px 820px at 82% 30%,rgba(120,80,255,.18),transparent 62%),
+  linear-gradient(150deg,#0a0612,#0a0a1e 60%,#070611)}
+#sky.senja{background:
+  radial-gradient(1000px 800px at 30% 90%,rgba(255,180,90,.16),transparent 60%),
+  radial-gradient(1100px 820px at 80% 10%,rgba(140,90,255,.16),transparent 62%),
+  linear-gradient(160deg,#0c0712,#120a18 55%,#08060f)}
+#aurora{position:fixed;inset:-25%;z-index:0;filter:blur(85px) saturate(125%);opacity:.5;pointer-events:none}
+.band{position:absolute;border-radius:50%;mix-blend-mode:screen;animation:drift 32s ease-in-out infinite}
 .b1{width:55vw;height:40vw;left:4%;top:6%;background:radial-gradient(circle,rgba(45,226,198,.85),transparent 65%)}
-.b2{width:52vw;height:44vw;right:0;top:0;background:radial-gradient(circle,rgba(139,109,255,.85),transparent 65%);animation-delay:-9s}
-.b3{width:60vw;height:42vw;left:22%;bottom:-14%;background:radial-gradient(circle,rgba(255,109,176,.7),transparent 65%);animation-delay:-17s}
+.b2{width:52vw;height:44vw;right:0;top:0;background:radial-gradient(circle,rgba(139,109,255,.85),transparent 65%);animation-delay:-10s}
+.b3{width:60vw;height:42vw;left:22%;bottom:-14%;background:radial-gradient(circle,rgba(255,109,176,.7),transparent 65%);animation-delay:-18s}
 @keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(3%,-3%) scale(1.07)}}
 #stars{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.7}
-#vignette{position:fixed;inset:0;z-index:2;pointer-events:none;
-  background:radial-gradient(140% 120% at 50% 40%,transparent 58%,rgba(2,3,8,.6))}
+#vignette{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(140% 120% at 50% 40%,transparent 56%,rgba(2,3,8,.62))}
+#dim{position:fixed;inset:0;z-index:3;pointer-events:none;background:#000;opacity:0;transition:opacity .3s}
 
-/* app shell */
-#app{position:fixed;inset:0;z-index:5;display:grid;
-  grid-template-columns:252px 1fr;grid-template-rows:60px 1fr 44px;
-  grid-template-areas:"head head" "side main" "foot foot"}
+/* ---- desktop ---- */
+#desk{position:fixed;inset:0;z-index:5}
 
-/* header (calm periphery) */
-#topbar{grid-area:head;display:flex;align-items:center;justify-content:space-between;
-  padding:0 22px;border-bottom:1px solid rgba(255,255,255,.07);
-  background:linear-gradient(180deg,rgba(10,13,26,.55),rgba(10,13,26,.2));backdrop-filter:blur(14px)}
-#topbar .brand{display:flex;align-items:center;gap:11px}
-#topbar .logo{width:30px;height:30px;border-radius:9px;background:
-  radial-gradient(circle at 36% 32%,#fff,#bda9ff 32%,#6f4ff0 66%,#241a63);
-  box-shadow:0 0 22px -4px var(--violet)}
-#topbar .brand b{font-size:14.5px;letter-spacing:.7px}
-#topbar .brand .v{font-size:10.5px;color:var(--ink3);font-family:var(--mono);margin-left:2px}
-#topbar .center{text-align:center;line-height:1.15}
-#topbar .clock{font-size:16px;font-weight:650;font-variant-numeric:tabular-nums}
-#topbar .climate{font-size:10.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:1.4px}
-#topbar .right{display:flex;gap:14px;align-items:center}
-#topbar .vital{font-family:var(--mono);font-size:11px;color:var(--ink3)}
-#topbar .vital b{color:var(--teal);font-weight:600}
+/* menubar */
+#menubar{position:fixed;top:0;left:0;right:0;height:42px;z-index:9000;display:flex;align-items:center;
+  justify-content:space-between;padding:0 14px;background:rgba(10,13,26,.5);backdrop-filter:blur(18px) saturate(150%);
+  border-bottom:1px solid rgba(255,255,255,.07);font-size:13px}
+#menubar .mleft{display:flex;align-items:center;gap:14px}
+#menubar .logo{width:22px;height:22px;border-radius:7px;background:radial-gradient(circle at 36% 32%,#fff,#bda9ff 32%,#6f4ff0 66%,#241a63);box-shadow:0 0 16px -3px var(--violet)}
+#menubar .appname{font-weight:650;letter-spacing:.4px}
+#menubar .mitem{color:var(--ink2);opacity:.85}
+#menubar .chip{font-size:10.5px;color:var(--amber);border:1px solid rgba(255,207,118,.35);border-radius:999px;padding:2px 9px;letter-spacing:.4px}
+#menubar .mright{display:flex;align-items:center;gap:14px}
+#menubar .mr{display:flex;align-items:center;gap:6px;color:var(--ink2);cursor:pointer;padding:4px 8px;border-radius:9px}
+#menubar .mr:hover{background:rgba(255,255,255,.08);color:var(--ink)}
+#menubar .clock{font-variant-numeric:tabular-nums;font-weight:600}
+#menubar .vital{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+#menubar .vital b{color:var(--teal)}
 
-/* sidebar */
-#side{grid-area:side;padding:16px 12px;display:flex;flex-direction:column;gap:4px;
-  border-right:1px solid rgba(255,255,255,.07);
-  background:linear-gradient(180deg,rgba(9,12,24,.5),rgba(9,12,24,.25));backdrop-filter:blur(14px);overflow-y:auto}
-#side .grp{font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:1.4px;margin:10px 10px 4px}
-.navitem{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:13px;cursor:pointer;
-  color:var(--ink2);font-size:14px;border:1px solid transparent;transition:.18s;position:relative}
-.navitem .ic{width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;border-radius:8px;
-  background:rgba(255,255,255,.05);border:1px solid var(--edge);font-size:14px;color:var(--ink2)}
-.navitem:hover{background:rgba(255,255,255,.05);color:var(--ink)}
-.navitem.active{background:rgba(139,109,255,.14);border-color:rgba(139,109,255,.4);color:var(--ink)}
-.navitem.active .ic{color:var(--violet);border-color:rgba(139,109,255,.5);box-shadow:0 0 20px -6px var(--violet)}
-.navitem.active::before{content:"";position:absolute;left:-12px;top:50%;transform:translateY(-50%);
-  width:3px;height:22px;border-radius:3px;background:linear-gradient(var(--teal),var(--violet))}
-#side .spacer{flex:1}
-#side .hint{margin:8px 6px;padding:11px 12px;border-radius:12px;background:var(--glass2);border:1px solid var(--edge);
-  font-size:11.5px;color:var(--ink3);line-height:1.5}
+/* windows */
+.win{position:absolute;min-width:280px;min-height:180px;border-radius:16px;overflow:hidden;
+  background:var(--glass);backdrop-filter:blur(22px) saturate(150%);
+  border:1px solid var(--edge);box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);
+  display:flex;flex-direction:column;opacity:0;transform:scale(.97);animation:winin .18s ease forwards}
+@keyframes winin{to{opacity:1;transform:scale(1)}}
+.win.active{box-shadow:0 36px 100px rgba(0,0,0,.6),0 0 0 1px var(--accent),0 0 60px -16px var(--accent)}
+.titlebar{height:42px;flex:0 0 42px;display:flex;align-items:center;gap:10px;padding:0 12px;cursor:grab;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01));border-bottom:1px solid rgba(255,255,255,.06)}
+.titlebar.drag{cursor:grabbing}
+.titlebar .wicon{width:22px;height:22px;display:grid;place-items:center;border-radius:7px;background:rgba(255,255,255,.06);
+  border:1px solid var(--edge);font-size:13px;color:var(--accent)}
+.titlebar .wtitle{font-size:13.5px;font-weight:600}
+.titlebar .wsp{flex:1}
+.wbtn{width:26px;height:26px;display:grid;place-items:center;border-radius:8px;border:1px solid transparent;
+  background:rgba(255,255,255,.05);color:var(--ink3);cursor:pointer;font-size:13px;line-height:1;transition:.15s}
+.wbtn:hover{color:var(--ink);background:rgba(255,255,255,.12)}
+.wbtn.close:hover{background:rgba(255,109,176,.25);color:#fff}
+.winbody{flex:1;overflow:auto;padding:18px 20px;font-size:13.5px;color:var(--ink2);line-height:1.55}
+.winbody h3{color:var(--ink);font-size:16px;margin-bottom:4px}
+.winbody h4{color:var(--ink);font-size:14px}
+.winbody .ps{font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.winbody p{margin:0 0 12px}
+.winbody b{color:var(--ink)}
 
-/* main */
-#main{grid-area:main;overflow-y:auto;padding:26px 30px 40px;scroll-behavior:smooth}
-.panel{display:none;max-width:920px;margin:0 auto;animation:rise .35s ease}
-.panel.show{display:block}
-@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.phead{display:flex;align-items:center;gap:13px;margin-bottom:6px}
-.phead .pic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:19px;
-  background:rgba(255,255,255,.05);border:1px solid var(--edge);color:var(--accent,var(--teal));
-  box-shadow:0 0 26px -8px var(--accent,var(--teal))}
-.phead h2{font-size:21px}
-.phead .ps{font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
-.lead{color:var(--ink2);font-size:14.5px;line-height:1.6;margin:14px 0 20px;max-width:680px}
+/* dock */
+#dock{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:9000;display:flex;gap:6px;
+  padding:8px;border-radius:20px;background:rgba(12,15,30,.55);backdrop-filter:blur(22px) saturate(150%);
+  border:1px solid var(--edge);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.dockitem{position:relative;width:54px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 2px;border-radius:13px;transition:.16s}
+.dockitem:hover{background:rgba(255,255,255,.07);transform:translateY(-3px)}
+.dockitem .di{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;font-size:19px;
+  background:rgba(255,255,255,.06);border:1px solid var(--edge);color:var(--dc,var(--teal));
+  box-shadow:0 6px 18px -8px var(--dc,var(--teal))}
+.dockitem .dl{font-size:9.5px;color:var(--ink3);letter-spacing:.2px;white-space:nowrap}
+.dockitem:hover .dl{color:var(--ink2)}
+.dockitem .run{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:transparent}
+.dockitem.running .run{background:var(--dc,var(--teal));box-shadow:0 0 8px var(--dc,var(--teal))}
+.dockitem.running .di{border-color:var(--dc,var(--teal))}
 
-.card{background:var(--glass);border:1px solid var(--edge);border-radius:18px;padding:18px 20px;
-  box-shadow:0 16px 50px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.06)}
-.grid{display:grid;gap:14px}
-.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
-@media(max-width:720px){.g2,.g3{grid-template-columns:1fr}}
+/* control center */
+#cc{position:fixed;top:48px;right:12px;z-index:9500;width:300px;border-radius:18px;padding:16px;
+  background:rgba(12,15,30,.92);backdrop-filter:blur(24px);border:1px solid var(--edge);
+  box-shadow:0 30px 90px rgba(0,0,0,.6);display:none}
+#cc.on{display:block}
+#cc h4{font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;margin:4px 2px 10px}
+.ccrow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;font-size:13.5px;color:var(--ink2)}
+.toggle{width:42px;height:24px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;cursor:pointer;transition:.2s;border:1px solid var(--edge)}
+.toggle.on{background:linear-gradient(90deg,var(--teal),var(--violet))}
+.toggle i{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+.toggle.on i{left:20px}
+.slider{width:120px;accent-color:var(--violet)}
+.swatches{display:flex;gap:8px;margin:6px 2px}
+.sw{width:26px;height:26px;border-radius:8px;cursor:pointer;border:2px solid transparent}
+.sw.sel{border-color:#fff}
+.ccwall{display:flex;gap:8px;margin:6px 2px}
+.ccwall button{flex:1;all:unset;cursor:pointer;text-align:center;font-size:11.5px;color:var(--ink2);padding:7px 0;border-radius:10px;border:1px solid var(--edge);background:rgba(255,255,255,.03)}
+.ccwall button.sel{border-color:var(--violet);color:var(--ink)}
 
-/* home tiles */
-.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:6px}
-@media(max-width:720px){.tiles{grid-template-columns:1fr 1fr}}
-.tile{cursor:pointer;border-radius:18px;padding:18px;background:var(--glass);border:1px solid var(--edge);
-  transition:.2s;position:relative;overflow:hidden}
-.tile:hover{transform:translateY(-3px);border-color:var(--tc,var(--teal));box-shadow:0 22px 60px -12px rgba(0,0,0,.5),0 0 32px -10px var(--tc,var(--teal))}
-.tile .ti{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:18px;margin-bottom:12px;
-  background:rgba(255,255,255,.06);border:1px solid var(--edge);color:var(--tc,var(--teal))}
-.tile h4{font-size:15px}
-.tile p{margin:5px 0 0;font-size:12.5px;color:var(--ink3);line-height:1.5}
-.tile .go{position:absolute;right:16px;top:18px;color:var(--ink3);transition:.2s}
-.tile:hover .go{color:var(--tc,var(--teal));transform:translateX(3px)}
-
-/* hero */
-.hero{display:flex;align-items:center;gap:20px;margin-bottom:22px}
-.hero .orb{width:72px;height:72px;flex:0 0 72px;border-radius:50%;
-  background:radial-gradient(circle at 38% 34%,#fff,#c3b0ff 30%,#6f4ff0 64%,#241a63);
-  box-shadow:0 0 60px -6px var(--violet),0 0 110px -22px var(--magenta);animation:breathe 5s ease-in-out infinite}
-@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-.hero h1{font-size:26px;letter-spacing:.4px}
-.hero p{margin:6px 0 0;color:var(--ink2);font-size:14px;max-width:520px;line-height:1.55}
-.chip{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.4px;
-  border:1px solid var(--edge);border-radius:999px;padding:4px 11px;color:var(--ink3);margin-top:10px}
-.chip .d{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px var(--amber)}
-
-/* status strip */
-.statusbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
-.stat{flex:1;min-width:150px;background:var(--glass2);border:1px solid var(--edge);border-radius:14px;padding:12px 14px}
-.stat .k{font-size:10.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px}
-.stat .val{font-size:15px;margin-top:3px;font-weight:600}
-.stat .val.warn{color:var(--amber)}.stat .val.ok{color:var(--green)}
-
-/* reality two-col */
+/* reusable bits */
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:720px){.cols{grid-template-columns:1fr}}
+@media(max-width:560px){.cols{grid-template-columns:1fr}}
+.card{background:var(--glass2);border:1px solid var(--edge);border-radius:14px;padding:14px 16px}
 .list{margin:0;padding:0;list-style:none}
-.list li{display:flex;gap:10px;padding:8px 0;font-size:13.5px;color:var(--ink2);line-height:1.45;border-top:1px solid rgba(255,255,255,.05)}
+.list li{display:flex;gap:9px;padding:7px 0;font-size:13px;border-top:1px solid rgba(255,255,255,.05)}
 .list li:first-child{border-top:none}
-.list li .m{flex:0 0 18px;font-weight:700}
-.list .yes .m{color:var(--green)}.list .no .m{color:var(--magenta)}
-.banner{margin-top:18px;border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px;
+.list .yes .m{color:var(--green)}.list .no .m{color:var(--magenta)}.list li .m{flex:0 0 16px;font-weight:700}
+.banner{margin-top:14px;border-radius:14px;padding:14px 16px;display:flex;gap:12px;align-items:center;
   background:linear-gradient(90deg,rgba(255,207,118,.12),rgba(255,109,176,.08));border:1px solid rgba(255,207,118,.3)}
-.banner .bi{font-size:22px}
-.banner b{color:var(--amber)}
-.banner small{display:block;color:var(--ink3);font-size:12px;margin-top:2px}
-
-/* roadmap timeline */
-.timeline{position:relative;margin-top:8px;padding-left:8px}
-.tl{display:flex;gap:16px;padding:4px 0}
-.tl .rail{position:relative;flex:0 0 30px;display:flex;justify-content:center}
-.tl .rail::before{content:"";position:absolute;top:0;bottom:-10px;width:2px;background:rgba(255,255,255,.1)}
+.banner b{color:var(--amber)}.banner small{display:block;color:var(--ink3);font-size:11.5px;margin-top:2px}
+.tl{display:flex;gap:14px;padding:3px 0}
+.tl .rail{flex:0 0 28px;display:flex;justify-content:center;position:relative}
+.tl .rail::before{content:"";position:absolute;top:0;bottom:-8px;width:2px;background:rgba(255,255,255,.1)}
 .tl:last-child .rail::before{display:none}
-.tl .dot{position:relative;z-index:1;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
-  font-family:var(--mono);font-size:12px;font-weight:600;color:var(--bg0);background:var(--teal);
-  box-shadow:0 0 18px -4px var(--teal)}
-.tl.risk .dot{background:var(--magenta);box-shadow:0 0 18px -4px var(--magenta)}
-.tl .body{flex:1;padding-bottom:16px}
-.tl h4{font-size:14.5px}
-.tl .s{font-size:12.5px;color:var(--ink3);margin-top:2px}
-.tl .badge{display:inline-block;margin-top:7px;font-size:10.5px;color:var(--magenta);
-  border:1px solid rgba(255,109,176,.4);border-radius:999px;padding:2px 9px}
-.legend{display:flex;gap:18px;margin:6px 0 14px;font-size:12px;color:var(--ink3)}
-.legend span{display:flex;align-items:center;gap:7px}
-.legend i{width:11px;height:11px;border-radius:50%}
+.tl .dot{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bg0);background:var(--teal);box-shadow:0 0 16px -4px var(--teal)}
+.tl.risk .dot{background:var(--magenta);box-shadow:0 0 16px -4px var(--magenta)}
+.tl .body{flex:1;padding-bottom:12px}.tl h4{font-size:13.5px}.tl .s{font-size:12px;color:var(--ink3);margin-top:2px}
+.tl .badge{display:inline-block;margin-top:6px;font-size:10px;color:var(--magenta);border:1px solid rgba(255,109,176,.4);border-radius:999px;padding:1px 8px}
+.gauge{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12.5px}
+.gauge .lab{width:54px;color:var(--ink3);font-family:var(--mono);font-size:11px}
+.gauge .track{flex:1;height:7px;border-radius:7px;background:rgba(255,255,255,.07);overflow:hidden}
+.gauge .fill{height:100%;border-radius:7px;background:linear-gradient(90deg,var(--teal),var(--violet));transition:width .8s}
+.gauge .val{width:40px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--ink)}
+.note{font-size:11.5px;color:var(--ink3);margin-top:10px;line-height:1.5}
+.kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--edge);border-radius:6px;padding:1px 6px;color:var(--ink2)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.qbtn{all:unset;cursor:pointer;display:flex;align-items:center;gap:9px;padding:11px 13px;border-radius:12px;
+  background:rgba(255,255,255,.04);border:1px solid var(--edge);font-size:13px;color:var(--ink);transition:.16s}
+.qbtn:hover{background:rgba(255,255,255,.09);border-color:var(--accent)}
+.qbtn .qi{width:26px;height:26px;display:grid;place-items:center;border-radius:8px;background:rgba(255,255,255,.06);color:var(--accent)}
 
-/* gauges */
-.gauge{display:flex;align-items:center;gap:10px;margin-top:11px;font-size:13px;color:var(--ink2)}
-.gauge .lab{width:46px;color:var(--ink3);font-family:var(--mono);font-size:11px}
-.gauge .track{flex:1;height:8px;border-radius:8px;background:rgba(255,255,255,.07);overflow:hidden}
-.gauge .fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--teal),var(--violet));transition:width .8s}
-.gauge .val{width:42px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--ink)}
+/* terminal */
+.term{font-family:var(--mono);font-size:12.5px;color:#cfe;background:rgba(0,0,0,.28);border-radius:0;margin:-18px -20px;padding:14px 16px;height:calc(100% + 36px);display:flex;flex-direction:column}
+.term-out{flex:1;overflow:auto;white-space:pre-wrap;line-height:1.5}
+.term-out .tp{color:var(--teal)}
+.term-out .tw{color:var(--amber)}
+.term-out .te{color:var(--magenta)}
+.term-line{display:flex;gap:8px;align-items:center;margin-top:6px}
+.term-line .tp{color:var(--teal)}
+.term-in{flex:1;background:none;border:none;outline:none;color:#dff;font-family:var(--mono);font-size:12.5px}
 
-.note{font-size:12px;color:var(--ink3);margin-top:14px;line-height:1.5}
-.kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--edge);border-radius:6px;padding:2px 7px;color:var(--ink2)}
-.sectitle{font-size:13px;color:var(--ink3);text-transform:uppercase;letter-spacing:1.2px;margin:24px 0 10px}
+/* file tree */
+.tree details{margin:2px 0}
+.tree summary{cursor:pointer;padding:2px 0;color:var(--ink)}
+.tree summary::marker{color:var(--accent)}
+.tree .f{padding:2px 0 2px 18px;color:var(--ink2);font-size:12.5px}
+.tree .f .x{color:var(--ink3);font-size:11px;margin-left:6px}
 
-/* footer / dock */
-#foot{grid-area:foot;display:flex;align-items:center;justify-content:space-between;padding:0 18px;
-  border-top:1px solid rgba(255,255,255,.07);background:rgba(8,11,22,.5);backdrop-filter:blur(12px);
-  font-size:11.5px;color:var(--ink3)}
-#foot .honest b{color:var(--amber)}
-#foot .dock{display:flex;gap:8px}
-#foot .dock button{all:unset;cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;
-  font-size:12px;color:var(--ink2);border:1px solid transparent;transition:.18s}
-#foot .dock button:hover{background:rgba(255,255,255,.07);color:var(--ink);border-color:var(--edge)}
+/* context menu */
+#ctx{position:fixed;z-index:9600;min-width:190px;border-radius:12px;padding:6px;display:none;
+  background:rgba(12,15,30,.95);backdrop-filter:blur(20px);border:1px solid var(--edge);box-shadow:0 24px 70px rgba(0,0,0,.6)}
+#ctx.on{display:block}
+#ctx .ci{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;font-size:13px;color:var(--ink2);cursor:pointer}
+#ctx .ci:hover{background:rgba(139,109,255,.18);color:var(--ink)}
+#ctx .sep{height:1px;background:rgba(255,255,255,.08);margin:4px 6px}
 
-/* tour */
-#tourOverlay{position:fixed;inset:0;z-index:30;background:rgba(3,4,10,.55);display:none}
-#tourOverlay.on{display:block}
-.tour-target{position:relative;z-index:32 !important;box-shadow:0 0 0 3px var(--violet),0 0 46px -4px var(--violet);border-radius:14px}
-#tourTip{position:fixed;z-index:33;width:min(320px,86vw);display:none;
-  background:rgba(12,15,30,.96);border:1px solid var(--edge);border-radius:16px;padding:16px 18px;
-  box-shadow:0 30px 90px rgba(0,0,0,.6),0 0 0 1px rgba(139,109,255,.3)}
-#tourTip.on{display:block}
-#tourTip .tn{font-family:var(--mono);font-size:11px;color:var(--violet);letter-spacing:.5px}
-#tourTip h4{font-size:15px;margin:4px 0 6px}
-#tourTip p{margin:0;font-size:13px;color:var(--ink2);line-height:1.5}
-#tourTip .row{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
-#tourTip .skip{font-size:12px;color:var(--ink3);cursor:pointer}
-#tourTip .next{all:unset;cursor:pointer;background:linear-gradient(90deg,var(--teal),var(--violet));
-  color:#06121a;font-weight:650;font-size:13px;padding:8px 16px;border-radius:11px}
+/* toast hint */
+#hint{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);z-index:9001;
+  background:rgba(12,15,30,.9);border:1px solid var(--edge);border-radius:999px;padding:9px 16px;font-size:12.5px;color:var(--ink2);
+  box-shadow:0 16px 40px rgba(0,0,0,.4);opacity:0;transition:opacity .4s;pointer-events:none}
+#hint.on{opacity:1}
+#hint b{color:var(--teal)}
+
+/* lock screen */
+#lock{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;cursor:pointer;
+  background:rgba(4,5,13,.35);backdrop-filter:blur(3px);transition:opacity .6s}
+#lock.gone{opacity:0;pointer-events:none}
+#lock .lc{text-align:center}
+#lock .lclock{font-size:78px;font-weight:300;letter-spacing:2px;font-variant-numeric:tabular-nums;text-shadow:0 4px 40px rgba(139,109,255,.4)}
+#lock .ldate{font-size:15px;color:var(--ink2);margin-top:-4px;letter-spacing:.5px}
+#lock .luser{margin-top:42px;display:flex;flex-direction:column;align-items:center;gap:12px}
+#lock .lav{width:74px;height:74px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#fff,#c3b0ff 30%,#6f4ff0 64%,#241a63);box-shadow:0 0 50px -6px var(--violet)}
+#lock .lname{font-size:15px;font-weight:600}
+#lock .lhint{font-size:12.5px;color:var(--ink3);margin-top:8px;letter-spacing:.5px}
+#lock .lbadge{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--ink3);letter-spacing:.4px}
+#lock .lbadge b{color:var(--amber)}
 
 /* boot */
-#boot{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:#05060f;transition:opacity .7s}
+#boot{position:fixed;inset:0;z-index:10001;display:grid;place-items:center;background:#05060f;transition:opacity .7s}
 #boot.gone{opacity:0;pointer-events:none}
 #boot .c{text-align:center}
-#boot .borb{width:74px;height:74px;margin:0 auto 20px;border-radius:50%;
-  background:radial-gradient(circle at 38% 34%,#fff,#c3b0ff 30%,#6f4ff0 64%,#241a63);
-  box-shadow:0 0 64px -4px var(--violet),0 0 130px -16px var(--magenta);animation:breathe 3s ease-in-out infinite}
+#boot .borb{width:74px;height:74px;margin:0 auto 20px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#fff,#c3b0ff 30%,#6f4ff0 64%,#241a63);box-shadow:0 0 64px -4px var(--violet),0 0 130px -16px var(--magenta);animation:breathe 3s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 #boot h1{font-size:24px;letter-spacing:3px}
 #boot .t{margin-top:7px;font-size:11px;color:var(--ink3);letter-spacing:2px;text-transform:uppercase}
 #boot .bar{margin:22px auto 0;width:190px;height:3px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
 #boot .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--violet),var(--magenta));animation:load 1.9s ease forwards}
 @keyframes load{to{width:100%}}
-
-/* responsive shell */
-@media(max-width:760px){
-  #app{grid-template-columns:1fr;grid-template-rows:58px auto 1fr 44px;
-    grid-template-areas:"head" "side" "main" "foot"}
-  #side{flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid rgba(255,255,255,.07);padding:10px}
-  #side .grp,#side .spacer,#side .hint{display:none}
-  .navitem{white-space:nowrap}
-  #topbar .center{display:none}
-}
 </style>
 </head>
 <body>
@@ -225,261 +219,385 @@ a{color:var(--teal)}
 <div id="aurora"><div class="band b1"></div><div class="band b2"></div><div class="band b3"></div></div>
 <canvas id="stars"></canvas>
 <div id="vignette"></div>
+<div id="dim"></div>
 
-<div id="app">
-  <header id="topbar">
-    <div class="brand"><span class="logo"></span><b>THUOS · AURORA</b><span class="v">v0.3 · konsep</span></div>
-    <div class="center"><div class="clock" id="clock">--:--</div><div class="climate" id="climate">iklim sistem · tenang</div></div>
-    <div class="right">
+<div id="desk">
+  <div id="menubar">
+    <div class="mleft">
+      <span class="logo"></span>
+      <span class="appname" id="mbApp">THUOS</span>
+      <span class="mitem">Berkas</span><span class="mitem">Tampilan</span><span class="mitem">Bantuan</span>
+      <span class="chip">konsep</span>
+    </div>
+    <div class="mright">
       <span class="vital">cpu <b id="vcpu">—</b></span>
       <span class="vital">mem <b id="vmem">—</b></span>
-      <span class="vital">uptime <b id="vup">0s</b></span>
+      <span class="mr" id="ccBtn" title="Pusat Kontrol">◴</span>
+      <span class="mr"><span class="clock" id="clock">--:--</span></span>
     </div>
-  </header>
+  </div>
 
-  <nav id="side">
-    <div class="grp">Ruang</div>
-    <div class="navitem active" id="nav-beranda" data-go="beranda"><span class="ic">◉</span>Beranda</div>
-    <div class="navitem" id="nav-realita" data-go="realita"><span class="ic">⚑</span>Apa ini sebenarnya</div>
-    <div class="navitem" id="nav-roadmap" data-go="roadmap"><span class="ic">⤳</span>Roadmap</div>
-    <div class="grp">Visi</div>
-    <div class="navitem" id="nav-tampilan" data-go="tampilan"><span class="ic">⤢</span>Tampilan baru</div>
-    <div class="navitem" id="nav-arsitektur" data-go="arsitektur"><span class="ic">◈</span>Arsitektur</div>
-    <div class="grp">Sistem</div>
-    <div class="navitem" id="nav-sistem" data-go="sistem"><span class="ic">❖</span>Sistem</div>
-    <div class="navitem" id="nav-tentang" data-go="tentang"><span class="ic">∗</span>Tentang</div>
-    <div class="spacer"></div>
-    <div class="hint">Tip: klik mana saja di menu untuk pindah ruang. Tekan <span class="kbd">?</span> untuk tur lagi.</div>
-  </nav>
+  <div id="dock"></div>
 
-  <main id="main">
-
-    <!-- BERANDA -->
-    <section class="panel show" data-panel="beranda">
-      <div class="hero">
-        <div class="orb"></div>
-        <div>
-          <h1>Selamat datang di THUOS · Aurora</h1>
-          <p>Ruang kerja yang <b>tenang, spasial, dan milikmu sendiri</b> — sebuah arah antarmuka masa depan yang tidak meniru OS mana pun.</p>
-          <span class="chip"><span class="d"></span>konsep antarmuka · bukan OS yang di-boot</span>
-        </div>
-      </div>
-
-      <div class="sectitle">Mulai dari sini</div>
-      <div class="tiles" id="homeTiles">
-        <div class="tile" data-go="realita" style="--tc:var(--amber)"><div class="ti">⚑</div><span class="go">→</span><h4>Apa ini sebenarnya</h4><p>Status THUOS yang jujur — apa yang sudah ada, apa yang belum.</p></div>
-        <div class="tile" data-go="roadmap" style="--tc:var(--teal)"><div class="ti">⤳</div><span class="go">→</span><h4>Roadmap</h4><p>9 langkah menuju OS yang benar-benar bisa dipakai.</p></div>
-        <div class="tile" data-go="tampilan" style="--tc:var(--violet)"><div class="ti">⤢</div><span class="go">→</span><h4>Tampilan baru</h4><p>Kenapa Aurora: zoomable + calm + local-first.</p></div>
-        <div class="tile" data-go="sistem" style="--tc:var(--green)"><div class="ti">❖</div><span class="go">→</span><h4>Sistem</h4><p>Telemetri konsep — CPU, memori, uptime.</p></div>
-        <div class="tile" data-go="arsitektur" style="--tc:var(--magenta)"><div class="ti">◈</div><span class="go">→</span><h4>Arsitektur</h4><p>Pilihan "masa depan": microkernel, capability, Rust.</p></div>
-        <div class="tile" data-go="tentang" style="--tc:var(--teal)"><div class="ti">∗</div><span class="go">→</span><h4>Tentang</h4><p>Apa itu THUOS, dan janji kejujurannya.</p></div>
-      </div>
-
-      <div class="statusbar">
-        <div class="stat"><div class="k">Tahap</div><div class="val">Pra-boot</div></div>
-        <div class="stat"><div class="k">Subsistem</div><div class="val ok">Host-tested</div></div>
-        <div class="stat"><div class="k">Boot-verified</div><div class="val warn">Tidak ada</div></div>
-        <div class="stat"><div class="k">Arsitektur</div><div class="val">i386 · Multiboot</div></div>
-      </div>
-    </section>
-
-    <!-- REALITA -->
-    <section class="panel" data-panel="realita">
-      <div class="phead" style="--accent:var(--amber)"><div class="pic">⚑</div><div><h2>Apa ini sebenarnya</h2><div class="ps">kejujuran · ground truth</div></div></div>
-      <p class="lead">THUOS hari ini adalah <b>kernel from-scratch yang jujur + subsistem yang host-tested</b>, di tahap <b>pra-boot</b>. Arsitekturnya benar dan logikanya teruji — tapi kemampuan inti OS <b>belum dihidupkan</b>. Berikut keadaannya, apa adanya.</p>
-      <div class="cols">
-        <div class="card">
-          <h4 style="margin-bottom:8px;color:var(--green)">Sudah ada (host-tested)</h4>
-          <ul class="list">
-            <li class="yes"><span class="m">✓</span>Boot stub Multiboot, GDT/IDT, exception, PIC/IRQ, PIT, keyboard</li>
-            <li class="yes"><span class="m">✓</span>Physical memory manager (bitmap frame 4 KiB)</li>
-            <li class="yes"><span class="m">✓</span>Kernel heap (bump), konstruksi tabel paging</li>
-            <li class="yes"><span class="m">✓</span>THUAR initrd + VFS/ramfs (read-only)</li>
-            <li class="yes"><span class="m">✓</span>ABI syscall + 11 handler, validator ELF32</li>
-            <li class="yes"><span class="m">✓</span>Model proses/scheduler/fd/gfx — semua diuji di host</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h4 style="margin-bottom:8px;color:var(--magenta)">Belum hidup</h4>
-          <ul class="list">
-            <li class="no"><span class="m">✕</span>Belum pernah di-boot (tak ada QEMU di sini)</li>
-            <li class="no"><span class="m">✕</span>Context switch nyata (scheduler masih model)</li>
-            <li class="no"><span class="m">✕</span>Paging &amp; ring-3 di-<i>gate off</i> → belum ada isolasi memori</li>
-            <li class="no"><span class="m">✕</span>Filesystem writable, driver disk</li>
-            <li class="no"><span class="m">✕</span>Networking, libc/POSIX</li>
-            <li class="no"><span class="m">✕</span>Userspace dieksekusi (dimuat ke READY, tak jalan)</li>
-          </ul>
-        </div>
-      </div>
-      <div class="banner"><span class="bi">⚑</span><div><b>BOOT-VERIFIED: tidak ada.</b><small>Tak ada yang di-boot di lingkungan ini. Semua "host-tested" = kode kernel yang sama dikompilasi & diuji dengan gcc native, bukan dijalankan sebagai OS.</small></div></div>
-      <p class="note">Di Aurora, OS menunjukkan keadaannya yang sebenarnya — transparansi adalah bagian dari desain, bukan cacat yang disembunyikan.</p>
-    </section>
-
-    <!-- ROADMAP -->
-    <section class="panel" data-panel="roadmap">
-      <div class="phead" style="--accent:var(--teal)"><div class="pic">⤳</div><div><h2>Roadmap menuju OS nyata</h2><div class="ps">riset §3 · dependency-ordered</div></div></div>
-      <p class="lead">Jalur berlapis dari "model host-tested" → "OS yang hidup". Setiap langkah membuka langkah berikutnya. Empat langkah <b style="color:var(--magenta)">merah</b> adalah yang paling berisiko menurut semua sumber OS-dev.</p>
-      <div class="legend">
-        <span><i style="background:var(--teal)"></i>langkah biasa</span>
-        <span><i style="background:var(--magenta)"></i>paling berisiko</span>
-      </div>
-      <div class="timeline" id="timeline"></div>
-      <p class="note">Sumber: OSDev <i>What order should I make things in</i> · <i>Getting to Ring 3</i> · MIT xv6 · os.phil-opp · OSTEP. Semua langkah harus dijalankan & diverifikasi di mesin ber-QEMU dulu — di sini statusnya tetap <b>COMPILE-ONLY</b>.</p>
-    </section>
-
-    <!-- TAMPILAN -->
-    <section class="panel" data-panel="tampilan">
-      <div class="phead" style="--accent:var(--violet)"><div class="pic">⤢</div><div><h2>Kenapa tampilan ini baru</h2><div class="ps">visi · bukan meniru siapa pun</div></div></div>
-      <p class="lead">Metafora "desktop" lahir di Xerox PARC ~1970 dan kini terasa membatasi. Aurora memilih tiga ide yang lebih jujur untuk era milik-sendiri:</p>
-      <div class="grid g3">
-        <div class="card"><h4 style="color:var(--teal)">⤢ Zoomable (ZUI)</h4><p style="color:var(--ink2);font-size:13px;line-height:1.55;margin-top:8px">Konten hidup di kanvas, navigasi lewat zoom &amp; "lompat" (cari-niat), bukan tumpukan window &amp; folder. <i style="color:var(--ink3)">Raskin Archy, Pad++.</i></p></div>
-        <div class="card"><h4 style="color:var(--green)">☁ Calm / ambient</h4><p style="color:var(--ink2);font-size:13px;line-height:1.55;margin-top:8px">Info tinggal di tepi (jam, sistem), datang ke pusat hanya saat perlu. Tenang, bukan berisik. <i style="color:var(--ink3)">Weiser &amp; Brown, 1995.</i></p></div>
-        <div class="card"><h4 style="color:var(--violet)">⬡ Local-first</h4><p style="color:var(--ink2);font-size:13px;line-height:1.55;margin-top:8px">Datamu hidup di perangkatmu, sinkron lewat CRDT, tetap milikmu &amp; jalan offline. <i style="color:var(--ink3)">Ink &amp; Switch, 2019.</i></p></div>
-      </div>
-      <div class="card" style="margin-top:16px">
-        <h4>Shell ini = perwujudan "calm + jelas"</h4>
-        <p style="color:var(--ink2);font-size:13.5px;line-height:1.6;margin-top:8px">Versi pertama Aurora memakai kanvas spasial murni — indah, tapi membingungkan. Pelajaran: ide baru tetap harus <b>langsung bisa dipahami</b>. Maka shell ini menaruh struktur jelas di depan (menu, beranda, panel), sambil tetap menyimpan jiwa zoomable/calm/local-first.</p>
-      </div>
-    </section>
-
-    <!-- ARSITEKTUR -->
-    <section class="panel" data-panel="arsitektur">
-      <div class="phead" style="--accent:var(--magenta)"><div class="pic">◈</div><div><h2>Pilihan arsitektur "masa depan"</h2><div class="ps">riset §4 · trade-off, bukan slogan</div></div></div>
-      <p class="lead">Apa yang membuat sebuah OS terasa "frontier" — dan apa biayanya. Semua ini relevan <b>setelah</b> dasar real-OS hidup.</p>
-      <div class="grid g2">
-        <div class="card"><h4 style="color:var(--violet)">Microkernel + capability</h4><p style="color:var(--ink2);font-size:13px;line-height:1.55;margin-top:8px">Inti minimal (IPC, scheduling, address-space) di ring 0; driver/FS/net di server user-space → TCB kecil. seL4 punya bukti formal ~8.700 baris C — tapi <b style="color:var(--amber)">bukan</b> "tak bisa diretas" (asumsi HW/timing). Fuchsia/Zircon: ~100 syscall, tanpa konsep "user".</p></div>
-        <div class="card"><h4 style="color:var(--teal)">Memory-safety (Rust)</h4><p style="color:var(--ink2);font-size:13px;line-height:1.55;margin-top:8px">~70% bug keamanan serius = memory-safety (Google/Microsoft). Redox OS = microkernel Rust. Bukan peluru perak: <span style="font-family:var(--mono)">unsafe</span> di batas HW, tak menutup bug logika/side-channel.</p></div>
-      </div>
-      <div class="card" style="margin-top:14px">
-        <h4>Saran realistis untuk THUOS</h4>
-        <ol style="color:var(--ink2);font-size:13.5px;line-height:1.7;margin:8px 0 0;padding-left:18px">
-          <li>Isolasi MMU sungguhan dulu (prasyarat segalanya).</li>
-          <li>Syscall ber-rasa capability + TCB kecil.</li>
-          <li>Jangka jauh: split microkernel-ish &amp;/atau bagian aman ditulis Rust.</li>
-        </ol>
-        <p class="note" style="margin-top:10px"><b>Hindari</b> menjanjikan "verified microkernel ala seL4" — itu upaya riset besar bertahun-tahun.</p>
-      </div>
-    </section>
-
-    <!-- SISTEM -->
-    <section class="panel" data-panel="sistem">
-      <div class="phead" style="--accent:var(--green)"><div class="pic">❖</div><div><h2>Sistem</h2><div class="ps">telemetri konsep</div></div></div>
-      <p class="lead">Gambaran tenang tentang "kondisi" sistem. Di OS jujur, panel ini menampilkan keadaan sebenarnya dari kernel — di konsep ini, angkanya simulasi.</p>
-      <div class="grid g2">
-        <div class="card">
-          <h4>Beban</h4>
-          <div class="gauge"><span class="lab">cpu</span><span class="track"><i class="fill" id="gcpu"></i></span><span class="val" id="tcpu">0%</span></div>
-          <div class="gauge"><span class="lab">memori</span><span class="track"><i class="fill" id="gmem"></i></span><span class="val" id="tmem">0%</span></div>
-          <div class="gauge"><span class="lab">i/o</span><span class="track"><i class="fill" id="gio"></i></span><span class="val" id="tio">0%</span></div>
-          <p class="note">angka konsep — bukan dari kernel nyata.</p>
-        </div>
-        <div class="card">
-          <h4>Informasi</h4>
-          <ul class="list" style="margin-top:6px">
-            <li class="yes"><span class="m" style="color:var(--ink3)">·</span>Versi: <b style="color:var(--ink)">THUOS 0.3.0 "Memory Foundation"</b></li>
-            <li class="yes"><span class="m" style="color:var(--ink3)">·</span>Target: i386 (32-bit) · Multiboot 1</li>
-            <li class="yes"><span class="m" style="color:var(--ink3)">·</span>Toolchain: gcc -m32 -ffreestanding</li>
-            <li class="yes"><span class="m" style="color:var(--ink3)">·</span>Uptime konsep: <b id="vup2" style="color:var(--ink)">0s</b></li>
-            <li class="no"><span class="m">✕</span>Boot nyata: belum (BOOT-VERIFIED: tidak ada)</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- TENTANG -->
-    <section class="panel" data-panel="tentang">
-      <div class="phead" style="--accent:var(--teal)"><div class="pic">∗</div><div><h2>Tentang THUOS</h2><div class="ps">dan janji kejujurannya</div></div></div>
-      <p class="lead">THUOS adalah OS hobi x86 <b>dari nol</b> (bukan distro Linux, bukan skin UI, bukan simulator palsu). Dibangun pelan-pelan, subsistem demi subsistem, dengan satu aturan keras: <b>tidak melebih-lebihkan.</b></p>
-      <div class="card">
-        <h4>Label kejujuran yang dipakai</h4>
-        <div class="grid g2" style="margin-top:10px">
-          <ul class="list">
-            <li class="yes"><span class="m" style="color:var(--teal)">▹</span><b style="color:var(--ink)">HOST-TESTED</b> — diuji dengan gcc native</li>
-            <li class="yes"><span class="m" style="color:var(--teal)">▹</span><b style="color:var(--ink)">COMPILE-ONLY</b> — dikompilasi, belum dijalankan</li>
-            <li class="yes"><span class="m" style="color:var(--teal)">▹</span><b style="color:var(--ink)">DESIGN-ONLY</b> — masih rancangan</li>
-          </ul>
-          <ul class="list">
-            <li class="no"><span class="m" style="color:var(--amber)">▹</span><b style="color:var(--ink)">EXPERIMENTAL-OFF</b> — ada tapi gated off</li>
-            <li class="no"><span class="m" style="color:var(--amber)">▹</span><b style="color:var(--ink)">NOT-VERIFIED-HERE</b> — tak terbukti di sini</li>
-            <li class="no"><span class="m" style="color:var(--magenta)">▹</span><b style="color:var(--ink)">BOOT-VERIFIED</b> — <b style="color:var(--amber)">tidak ada</b></li>
-          </ul>
-        </div>
-      </div>
-      <p class="note">Aurora ini adalah <b>konsep visi antarmuka</b> dalam HTML — interaktif, tapi bukan GUI kernel dan bukan OS yang di-boot. Laporan riset lengkap ada di <span class="kbd">docs/THUOS_OS_RESEARCH.md</span>.</p>
-    </section>
-
-  </main>
-
-  <footer id="foot">
-    <div class="honest">konsep visi masa depan · bukan GUI kernel · bukan OS yang di-boot · <b>BOOT-VERIFIED: tidak ada</b></div>
-    <div class="dock">
-      <button id="btnTour">◷ Tur</button>
-      <button data-go="beranda">◉ Beranda</button>
+  <div id="cc">
+    <h4>Pusat Kontrol</h4>
+    <div class="ccrow"><span>Kecerahan</span><input type="range" min="0" max="60" value="0" class="slider" id="brightness"></div>
+    <div class="ccrow"><span>Kurangi gerak</span><div class="toggle" id="tgMotion"><i></i></div></div>
+    <h4 style="margin-top:12px">Aksen</h4>
+    <div class="swatches" id="swatches">
+      <div class="sw sel" style="background:#8b6dff" data-acc="#8b6dff"></div>
+      <div class="sw" style="background:#2de2c6" data-acc="#2de2c6"></div>
+      <div class="sw" style="background:#ff6db0" data-acc="#ff6db0"></div>
+      <div class="sw" style="background:#ffcf76" data-acc="#ffcf76"></div>
+      <div class="sw" style="background:#54e6a6" data-acc="#54e6a6"></div>
     </div>
-  </footer>
+    <h4 style="margin-top:12px">Wallpaper</h4>
+    <div class="ccwall" id="ccwall">
+      <button class="sel" data-wall="">Aurora</button>
+      <button data-wall="nebula">Nebula</button>
+      <button data-wall="senja">Senja</button>
+    </div>
+  </div>
+
+  <div id="ctx"></div>
+  <div id="hint"></div>
 </div>
 
-<!-- tour -->
-<div id="tourOverlay"></div>
-<div id="tourTip">
-  <div class="tn" id="tourN">TUR 1/5</div>
-  <h4 id="tourH">—</h4>
-  <p id="tourP">—</p>
-  <div class="row"><span class="skip" id="tourSkip">Lewati</span><button class="next" id="tourNext">Lanjut ▸</button></div>
+<div id="lock">
+  <div class="lc">
+    <div class="lclock" id="lclock">--:--</div>
+    <div class="ldate" id="ldate">—</div>
+    <div class="luser"><div class="lav"></div><div class="lname">thu</div></div>
+    <div class="lhint">klik di mana saja · atau tekan Enter untuk masuk</div>
+  </div>
+  <div class="lbadge">THUOS · Aurora — konsep antarmuka · <b>BOOT-VERIFIED: tidak ada</b></div>
 </div>
 
-<!-- boot -->
-<div id="boot"><div class="c"><div class="borb"></div><h1>THUOS</h1><div class="t">aurora · ruang kerja yang tenang</div><div class="bar"><i></i></div></div></div>
+<div id="boot"><div class="c"><div class="borb"></div><h1>THUOS</h1><div class="t">aurora · menyalakan ruang kerja</div><div class="bar"><i></i></div></div></div>
 
 <script>
 "use strict";
-/* THUOS · Aurora — a clear, guided futuristic OS shell.
-   Realizes the research UI thesis (zoomable spirit + calm + local-first)
-   but with a legible structure: header, sidebar, panels, first-run tour.
-   NOT a booted OS. NOT the kernel GUI. An honest interactive concept. */
+/* THUOS · Aurora — a futuristic, original DESKTOP ENVIRONMENT.
+   Boot -> lock -> desktop -> dock -> windows you open, drag, stack.
+   Research lives here as honest APPS. NOT a booted OS, NOT the kernel GUI. */
 
-/* ---- navigation ---- */
-const panels = document.querySelectorAll('.panel');
-const navs = document.querySelectorAll('.navitem');
-function go(id){
-  panels.forEach(p=>p.classList.toggle('show', p.dataset.panel===id));
-  navs.forEach(n=>n.classList.toggle('active', n.dataset.go===id));
-  const main=document.getElementById('main'); if(main) main.scrollTop=0;
+/* ---------- app registry ---------- */
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+const ROAD=[
+ [1,'Boot-verify di QEMU','lalu hardware — tanpa ini, "host-tested" belum tervalidasi runtime',0,''],
+ [2,'Aktifkan paging + isolasi','page directory, CR3/CR0.PG, #PF handler, higher-half',1,'tersulit #1'],
+ [3,'Context switch + scheduler preemptif','save/restore register per-proses, didorong timer',1,'race'],
+ [4,'Ring 3 + syscall hidup','TSS (ltr), int 0x80 DPL-3, iret ke user, fault policy',1,'tersulit #2'],
+ [5,'Filesystem writable + driver blok','ATA/AHCI/virtio, lalu FS R/W (FAT/ext2)',1,'crash-konsistensi'],
+ [6,'libc + POSIX','port newlib/musl → program nyata bisa jalan',0,''],
+ [7,'Networking (TCP/IP)','driver NIC (e1000/virtio-net) + stack (lwIP)',0,''],
+ [8,'Userland + shell + self-hosting','toolchain jalan di atas THUOS, ala Linux From Scratch',0,''],
+ [9,'SMP / multi-core + fitur masa depan','lalu microkernel-ish / Rust',0,''],
+];
+
+const APPS = {
+ welcome:{name:'Selamat datang',icon:'✦',accent:'#8b6dff',w:480,h:330,dock:false,body:()=>`
+   <h3>Selamat datang di THUOS · Aurora</h3><div class="ps">lingkungan desktop konsep</div>
+   <p>Ini <b>desktop</b>, bukan halaman. Buka aplikasi dari <b>dock di bawah</b> — tiap app jadi <b>jendela</b> yang bisa kamu geser (tarik judulnya), tumpuk, perbesar, atau tutup.</p>
+   <div class="tiles">
+     <button class="qbtn" data-open="realita"><span class="qi">⚑</span>Apa ini sebenarnya</button>
+     <button class="qbtn" data-open="roadmap"><span class="qi">⤳</span>Roadmap</button>
+     <button class="qbtn" data-open="terminal"><span class="qi">›_</span>Terminal</button>
+     <button class="qbtn" data-open="guide"><span class="qi">⤢</span>Panduan</button>
+   </div>
+   <p class="note" style="margin-top:14px">Jujur: ini konsep antarmuka masa depan. Bukan GUI kernel yang di-boot. <b style="color:var(--amber)">BOOT-VERIFIED: tidak ada.</b></p>`},
+
+ realita:{name:'Realita',icon:'⚑',accent:'#ffcf76',w:560,h:440,body:()=>`
+   <h3>Apa ini sebenarnya</h3><div class="ps">kejujuran · ground truth</div>
+   <p>THUOS = <b>kernel from-scratch + subsistem host-tested</b>, di tahap <b>pra-boot</b>. Arsitektur benar, logika teruji — tapi kemampuan inti OS belum dihidupkan.</p>
+   <div class="cols">
+     <div class="card"><h4 style="color:var(--green);margin-bottom:6px">Sudah ada (host-tested)</h4><ul class="list">
+       <li class="yes"><span class="m">✓</span>Boot stub, GDT/IDT, exception, PIC/IRQ, PIT, keyboard</li>
+       <li class="yes"><span class="m">✓</span>Physical memory manager (bitmap 4 KiB)</li>
+       <li class="yes"><span class="m">✓</span>Heap, konstruksi tabel paging</li>
+       <li class="yes"><span class="m">✓</span>THUAR initrd + VFS/ramfs (read-only)</li>
+       <li class="yes"><span class="m">✓</span>ABI syscall + 11 handler, validator ELF32</li>
+     </ul></div>
+     <div class="card"><h4 style="color:var(--magenta);margin-bottom:6px">Belum hidup</h4><ul class="list">
+       <li class="no"><span class="m">✕</span>Belum pernah di-boot (tak ada QEMU)</li>
+       <li class="no"><span class="m">✕</span>Context switch nyata</li>
+       <li class="no"><span class="m">✕</span>Paging &amp; ring-3 (gated off) → tanpa isolasi</li>
+       <li class="no"><span class="m">✕</span>FS writable, networking, libc</li>
+       <li class="no"><span class="m">✕</span>Userspace dieksekusi</li>
+     </ul></div>
+   </div>
+   <div class="banner"><span style="font-size:20px">⚑</span><div><b>BOOT-VERIFIED: tidak ada.</b><small>Semua "host-tested" = kode kernel yang sama diuji dgn gcc native, bukan dijalankan sebagai OS.</small></div></div>`},
+
+ roadmap:{name:'Roadmap',icon:'⤳',accent:'#2de2c6',w:540,h:480,body:()=>`
+   <h3>Roadmap menuju OS nyata</h3><div class="ps">riset §3 · dependency-ordered</div>
+   <p>Jalur berlapis dari "model" → "OS hidup". <b style="color:var(--magenta)">Merah</b> = paling berisiko.</p>
+   ${ROAD.map(s=>`<div class="tl${s[3]?' risk':''}"><div class="rail"><div class="dot">${s[0]}</div></div>
+     <div class="body"><h4>${s[1]}</h4><div class="s">${s[2]}</div>${s[3]?`<span class="badge">${s[4]}</span>`:''}</div></div>`).join('')}
+   <p class="note">Sumber: OSDev (What order…, Getting to Ring 3) · xv6 · os.phil-opp · OSTEP. Status di sini: <b>COMPILE-ONLY</b>.</p>`},
+
+ terminal:{name:'Terminal',icon:'›_',accent:'#54e6a6',w:560,h:380,body:()=>`
+   <div class="term"><div class="term-out" id="termOut"></div>
+   <div class="term-line"><span class="tp">thu@aurora</span>:~$ <input class="term-in" id="termIn" autocomplete="off" spellcheck="false" placeholder="ketik 'help'"></div></div>`,
+   mount:(win)=>{
+     const out=win.querySelector('#termOut'), inp=win.querySelector('#termIn');
+     const P='<span class="tp">thu@aurora</span>:~$ ';
+     function pr(h){const d=document.createElement('div');d.innerHTML=h;out.appendChild(d);out.scrollTop=out.scrollHeight;}
+     const banner=
+'<span class="tp">  ▟▛ THUOS · Aurora — concept shell</span>\n'+
+'  versi 0.3.0 "Memory Foundation" · target i386 · Multiboot 1\n'+
+'  <span class="tw">catatan: ini shell KONSEP. THUOS belum di-boot — BOOT-VERIFIED: tidak ada.</span>\n'+
+"  ketik 'help' untuk daftar perintah.\n";
+     pr(banner);
+     const CMD={
+       help:()=>"perintah: help · status · ver · ls · roadmap · about · neofetch · whoami · clear",
+       ver:()=>"THUOS 0.3.0 \"Memory Foundation\" (i386, Multiboot 1)",
+       version:()=>CMD.ver(),
+       whoami:()=>"thu",
+       status:()=>'tahap: PRA-boot\nhost-tested: ya (gcc native)\ncontext-switch nyata: belum\npaging/ring-3: gated off\nfilesystem: read-only\n<span class="tw">BOOT-VERIFIED: tidak ada</span>',
+       ls:()=>'<span class="tp">bin/</span>  <span class="tp">dev/</span>  <span class="tp">etc/</span>  init  hello   <span class="te">(konsep VFS read-only)</span>',
+       roadmap:()=>ROAD.map(s=>(s[3]?'<span class="te">●</span> ':'<span class="tp">●</span> ')+s[0]+'. '+s[1]).join('\n'),
+       about:()=>"THUOS: OS hobi x86 dari nol. Bukan distro Linux, bukan skin UI, bukan simulator palsu.\nDibangun jujur, subsistem demi subsistem.",
+       neofetch:()=>
+'<span class="tp">      ▟█▙      </span>  thu@aurora\n'+
+'<span class="tp">     ▟███▙     </span>  ----------\n'+
+'<span class="tp">    ▟█▛ ▜█▙    </span>  OS:     THUOS 0.3.0 (konsep)\n'+
+'<span class="tp">   ▟█▛   ▜█▙   </span>  Kernel: i386 from-scratch\n'+
+'<span class="tp">   ▜█▙   ▟█▛   </span>  Boot:   <span class="tw">belum (host-tested)</span>\n'+
+'<span class="tp">    ▜█▙ ▟█▛    </span>  UI:     Aurora (desktop konsep)\n'+
+'<span class="tp">     ▜███▛     </span>  Shell:  concept\n'+
+'<span class="tp">      ▜█▛      </span>  Status: pra-boot',
+       clear:()=>{out.innerHTML='';return null;}
+     };
+     function run(c){
+       if(!c)return;
+       const key=c.split(/\s+/)[0].toLowerCase();
+       if(CMD[key]){const r=CMD[key]();if(r!==null&&r!==undefined)pr(r);}
+       else pr('<span class="te">perintah tak dikenal:</span> '+esc(key)+" — coba 'help'");
+     }
+     inp.addEventListener('keydown',e=>{
+       if(e.key==='Enter'){const c=inp.value;pr(P+esc(c));run(c.trim());inp.value='';}
+     });
+     setTimeout(()=>inp.focus(),60);
+     win.addEventListener('pointerdown',()=>setTimeout(()=>inp.focus(),0));
+   }},
+
+ files:{name:'Berkas',icon:'▦',accent:'#2de2c6',w:440,h:420,body:()=>`
+   <h3>Berkas</h3><div class="ps">pohon sumber THUOS · konsep read-only</div>
+   <div class="tree">
+     <details open><summary>kernel/</summary>
+       <details><summary>arch/i386/</summary><div class="f">boot.S<span class="x">multiboot stub</span></div><div class="f">gdt.c · idt.c · isr.c</div><div class="f">tss.c<span class="x">gated</span></div></details>
+       <details><summary>mm/</summary><div class="f">frame_bitmap.c<span class="x">PMM</span></div><div class="f">kheap.c · paging.c<span class="x">off</span></div></details>
+       <details><summary>fs/</summary><div class="f">thuar.c · vfs.c · ramfs.c<span class="x">RO</span></div></details>
+       <details><summary>syscall/</summary><div class="f">syscall.c<span class="x">11 handler</span></div></details>
+       <div class="f">main.c · panic.c</div>
+     </details>
+     <details><summary>docs/</summary><div class="f">THUOS_OS_RESEARCH.md<span class="x">laporan riset</span></div></details>
+     <details><summary>preview/</summary><div class="f">thuos_aurora.html<span class="x">kamu di sini</span></div></details>
+     <div class="f">Makefile · linker.ld · grub.cfg</div>
+   </div>
+   <p class="note">Ilustrasi struktur — bukan filesystem nyata yang ter-mount.</p>`},
+
+ monitor:{name:'Monitor Sistem',icon:'❖',accent:'#54e6a6',w:480,h:380,body:()=>`
+   <h3>Monitor Sistem</h3><div class="ps">telemetri konsep</div>
+   <div class="card"><h4>Beban</h4>
+     <div class="gauge"><span class="lab">cpu</span><span class="track"><i class="fill" id="gcpu"></i></span><span class="val" id="tcpu">0%</span></div>
+     <div class="gauge"><span class="lab">memori</span><span class="track"><i class="fill" id="gmem"></i></span><span class="val" id="tmem">0%</span></div>
+     <div class="gauge"><span class="lab">i/o</span><span class="track"><i class="fill" id="gio"></i></span><span class="val" id="tio">0%</span></div>
+   </div>
+   <div class="card" style="margin-top:12px"><h4>Subsistem (konsep)</h4><ul class="list" style="margin-top:4px">
+     <li class="yes"><span class="m" style="color:var(--ink3)">·</span>kernel · idle</li>
+     <li class="yes"><span class="m" style="color:var(--ink3)">·</span>scheduler <span style="color:var(--ink3)">[model]</span></li>
+     <li class="yes"><span class="m" style="color:var(--ink3)">·</span>pmm · frame bitmap</li>
+     <li class="yes"><span class="m" style="color:var(--ink3)">·</span>vfs/ramfs <span style="color:var(--ink3)">[ro]</span></li>
+     <li class="no"><span class="m">✕</span>paging/ring-3 <span style="color:var(--ink3)">[gated off]</span></li>
+   </ul></div>
+   <p class="note">angka konsep — bukan dari kernel nyata.</p>`},
+
+ guide:{name:'Panduan Aurora',icon:'⤢',accent:'#8b6dff',w:520,h:440,body:()=>`
+   <h3>Panduan Aurora</h3><div class="ps">cara pakai · &amp; kenapa tampilannya begini</div>
+   <div class="card"><h4>Cara pakai</h4><ul class="list" style="margin-top:4px">
+     <li class="yes"><span class="m" style="color:var(--teal)">▹</span>Buka app dari <b>dock</b> di bawah</li>
+     <li class="yes"><span class="m" style="color:var(--teal)">▹</span>Geser jendela: <b>tarik judulnya</b></li>
+     <li class="yes"><span class="m" style="color:var(--teal)">▹</span>Tombol kanan-atas jendela: – kecilkan · ▢ besarkan · ✕ tutup</li>
+     <li class="yes"><span class="m" style="color:var(--teal)">▹</span><b>Klik-kanan</b> desktop → menu cepat · <b>◴</b> di kanan-atas → Pusat Kontrol</li>
+   </ul></div>
+   <div class="card" style="margin-top:12px"><h4>Kenapa tampilan ini</h4>
+   <p style="margin-top:6px">Risetnya memilih tiga ide yang tak meniru OS mana pun: <b>Zoomable</b> (ZUI/Raskin), <b>Calm</b> (info tenang di tepi — Weiser), <b>Local-first</b> (datamu milikmu — Ink &amp; Switch).</p>
+   <p>Tapi sebuah OS harus <b>terasa seperti lingkungan yang dihuni</b>: ada desktop, jendela, dock. Maka Aurora memadukan keduanya — rasa OS yang familiar, dengan jiwa calm/local-first.</p></div>`},
+
+ settings:{name:'Pengaturan',icon:'⚙',accent:'#bcc8e8',w:460,h:380,body:()=>`
+   <h3>Pengaturan</h3><div class="ps">satu app — bukan keseluruhan OS</div>
+   <div class="card"><div class="ccrow"><span>Kecerahan</span><input type="range" min="0" max="60" value="0" class="slider" data-bind="brightness"></div>
+     <div class="ccrow"><span>Kurangi gerak</span><div class="toggle" data-bind="motion"><i></i></div></div></div>
+   <div class="card" style="margin-top:12px"><h4>Aksen</h4><div class="swatches" data-bind="swatches">
+     <div class="sw" style="background:#8b6dff" data-acc="#8b6dff"></div><div class="sw" style="background:#2de2c6" data-acc="#2de2c6"></div>
+     <div class="sw" style="background:#ff6db0" data-acc="#ff6db0"></div><div class="sw" style="background:#ffcf76" data-acc="#ffcf76"></div>
+     <div class="sw" style="background:#54e6a6" data-acc="#54e6a6"></div></div></div>
+   <div class="card" style="margin-top:12px"><h4>Wallpaper</h4><div class="ccwall" data-bind="wall">
+     <button data-wall="">Aurora</button><button data-wall="nebula">Nebula</button><button data-wall="senja">Senja</button></div></div>
+   <p class="note">Pengaturan yang sama juga ada cepat di Pusat Kontrol (◴).</p>`},
+
+ about:{name:'Tentang THUOS',icon:'∗',accent:'#2de2c6',w:480,h:380,body:()=>`
+   <h3>Tentang THUOS</h3><div class="ps">dan janji kejujurannya</div>
+   <p>OS hobi x86 <b>dari nol</b> — bukan distro Linux, bukan skin UI, bukan simulator palsu. Dibangun pelan-pelan dengan satu aturan keras: <b>tidak melebih-lebihkan</b>.</p>
+   <div class="cols"><div class="card"><ul class="list">
+     <li class="yes"><span class="m" style="color:var(--teal)">▹</span><b>HOST-TESTED</b></li>
+     <li class="yes"><span class="m" style="color:var(--teal)">▹</span><b>COMPILE-ONLY</b></li>
+     <li class="yes"><span class="m" style="color:var(--teal)">▹</span><b>DESIGN-ONLY</b></li></ul></div>
+     <div class="card"><ul class="list">
+     <li class="no"><span class="m" style="color:var(--amber)">▹</span><b>EXPERIMENTAL-OFF</b></li>
+     <li class="no"><span class="m" style="color:var(--amber)">▹</span><b>NOT-VERIFIED-HERE</b></li>
+     <li class="no"><span class="m" style="color:var(--magenta)">▹</span><b>BOOT-VERIFIED</b> — tidak ada</li></ul></div></div>
+   <p class="note" style="margin-top:12px">Aurora = konsep visi antarmuka dalam HTML. Laporan riset: <span class="kbd">docs/THUOS_OS_RESEARCH.md</span> · versi 0.3.0.</p>`},
+};
+
+const DOCK_ORDER=['realita','roadmap','terminal','files','monitor','guide','settings','about'];
+
+/* ---------- window manager ---------- */
+const desk=document.getElementById('desk');
+const wins={}; let zTop=100; let activeId=null;
+const MENUBAR=42, DOCKSP=104;
+
+function buildDock(){
+  const dock=document.getElementById('dock');
+  dock.innerHTML='';
+  DOCK_ORDER.forEach(id=>{
+    const a=APPS[id];
+    const it=document.createElement('div');
+    it.className='dockitem'; it.dataset.app=id; it.style.setProperty('--dc',a.accent);
+    it.innerHTML='<div class="di">'+a.icon+'</div><div class="dl">'+a.name+'</div><span class="run"></span>';
+    it.addEventListener('click',()=>openApp(id));
+    dock.appendChild(it);
+  });
 }
-document.addEventListener('click', e=>{
-  const t = e.target.closest('[data-go]');
-  if(t){ go(t.dataset.go); }
+function dockState(){
+  document.querySelectorAll('.dockitem').forEach(it=>{
+    const id=it.dataset.app;
+    it.classList.toggle('running', !!wins[id]);
+  });
+}
+function focusWin(id){
+  if(!wins[id])return;
+  if(activeId&&wins[activeId]) wins[activeId].el.classList.remove('active');
+  activeId=id; const w=wins[id];
+  w.el.style.zIndex=(++zTop); w.el.classList.add('active');
+  document.getElementById('mbApp').textContent=APPS[id].name;
+}
+function openApp(id){
+  const a=APPS[id]; if(!a) return;
+  if(wins[id]){ const w=wins[id]; if(w.min){w.el.style.display='flex';w.min=false;} focusWin(id); return; }
+  const win=document.createElement('div');
+  win.className='win'; win.style.setProperty('--accent',a.accent);
+  win.style.width=a.w+'px'; win.style.height=a.h+'px';
+  const n=Object.keys(wins).length;
+  let left=(innerWidth-a.w)/2 + (n%5)*28 - 56;
+  let top =MENUBAR+18 + (n%5)*24 + Math.max(0,(innerHeight-MENUBAR-DOCKSP-a.h)/2 - 30);
+  left=Math.max(8,Math.min(left,innerWidth-a.w-8));
+  top =Math.max(MENUBAR+6,Math.min(top,innerHeight-DOCKSP-80));
+  win.style.left=left+'px'; win.style.top=top+'px';
+  win.innerHTML=
+    '<div class="titlebar"><span class="wicon">'+a.icon+'</span><span class="wtitle">'+a.name+'</span>'+
+    '<span class="wsp"></span><button class="wbtn min" title="Kecilkan">–</button>'+
+    '<button class="wbtn max" title="Perbesar">▢</button><button class="wbtn close" title="Tutup">✕</button></div>'+
+    '<div class="winbody">'+a.body()+'</div>';
+  desk.appendChild(win);
+  wins[id]={el:win,min:false,max:false,prev:null};
+  // controls
+  const tb=win.querySelector('.titlebar');
+  win.querySelector('.min').addEventListener('click',e=>{e.stopPropagation();wins[id].el.style.display='none';wins[id].min=true;dockState();});
+  win.querySelector('.max').addEventListener('click',e=>{e.stopPropagation();toggleMax(id);});
+  win.querySelector('.close').addEventListener('click',e=>{e.stopPropagation();closeApp(id);});
+  tb.addEventListener('dblclick',()=>toggleMax(id));
+  win.addEventListener('pointerdown',()=>focusWin(id));
+  dragify(win,tb,id);
+  focusWin(id); dockState();
+  if(a.mount) a.mount(win);
+  hideHint();
+}
+function closeApp(id){ if(!wins[id])return; wins[id].el.remove(); delete wins[id];
+  if(activeId===id){activeId=null;document.getElementById('mbApp').textContent='THUOS';} dockState(); }
+function toggleMax(id){
+  const w=wins[id]; if(!w)return; const el=w.el;
+  if(!w.max){ w.prev={left:el.style.left,top:el.style.top,width:el.style.width,height:el.style.height};
+    el.style.left='8px'; el.style.top=(MENUBAR+6)+'px';
+    el.style.width=(innerWidth-16)+'px'; el.style.height=(innerHeight-MENUBAR-DOCKSP-2)+'px'; w.max=true;
+  } else { Object.assign(el.style,w.prev); w.max=false; }
+  focusWin(id);
+}
+function dragify(win,handle,id){
+  let sx,sy,ox,oy,drag=false,pid=null;
+  handle.addEventListener('pointerdown',e=>{
+    if(e.target.closest('.wbtn'))return;
+    if(wins[id].max)return;
+    drag=true;pid=e.pointerId;sx=e.clientX;sy=e.clientY;
+    ox=parseFloat(win.style.left);oy=parseFloat(win.style.top);
+    handle.classList.add('drag');handle.setPointerCapture(pid);focusWin(id);
+  });
+  handle.addEventListener('pointermove',e=>{
+    if(!drag||e.pointerId!==pid)return;
+    let nx=ox+(e.clientX-sx), ny=oy+(e.clientY-sy);
+    nx=Math.max(-(win.offsetWidth-80),Math.min(nx,innerWidth-80));
+    ny=Math.max(MENUBAR+2,Math.min(ny,innerHeight-60));
+    win.style.left=nx+'px';win.style.top=ny+'px';
+  });
+  function up(e){if(e.pointerId===pid){drag=false;handle.classList.remove('drag');}}
+  handle.addEventListener('pointerup',up);
+  handle.addEventListener('pointercancel',up);
+}
+
+/* ---------- settings / control center wiring ---------- */
+function setAccent(c){
+  document.documentElement.style.setProperty('--accent',c);
+  document.documentElement.style.setProperty('--violet',c);
+  document.querySelectorAll('[data-acc]').forEach(s=>s.classList.toggle('sel',s.dataset.acc===c));
+}
+function setBrightness(v){document.getElementById('dim').style.opacity=(v/100);
+  document.querySelectorAll('[data-bind="brightness"],#brightness').forEach(i=>{if(i.value!=v)i.value=v;});}
+function setMotion(on){document.body.classList.toggle('reduce',on);
+  document.querySelectorAll('[data-bind="motion"],#tgMotion').forEach(t=>t.classList.toggle('on',on));}
+function setWall(w){const sky=document.getElementById('sky');sky.className=w||'';
+  document.querySelectorAll('[data-wall]').forEach(b=>b.classList.toggle('sel',(b.dataset.wall||'')===(w||'')));}
+
+document.addEventListener('click',e=>{
+  const open=e.target.closest('[data-open]'); if(open){openApp(open.dataset.open);return;}
+  const acc=e.target.closest('[data-acc]'); if(acc){setAccent(acc.dataset.acc);return;}
+  const wall=e.target.closest('[data-wall]'); if(wall){setWall(wall.dataset.wall);return;}
+  const tg=e.target.closest('.toggle'); if(tg&&(tg.id==='tgMotion'||tg.dataset.bind==='motion')){setMotion(!tg.classList.contains('on'));return;}
+});
+document.addEventListener('input',e=>{
+  if(e.target.matches('[data-bind="brightness"],#brightness')) setBrightness(e.target.value);
 });
 
-/* ---- roadmap data ---- */
-const STEPS = [
-  {n:1,t:'Boot-verify di QEMU',s:'lalu hardware — tanpa ini, semua "host-tested" belum tervalidasi runtime',risk:false},
-  {n:2,t:'Aktifkan paging + isolasi',s:'page directory, CR3/CR0.PG, #PF handler, lalu higher-half',risk:true,badge:'tersulit #1'},
-  {n:3,t:'Context switch + scheduler preemptif',s:'save/restore register per-proses, didorong timer',risk:true,badge:'race'},
-  {n:4,t:'Ring 3 + syscall hidup',s:'TSS (ltr), gerbang int 0x80 DPL-3, iret ke user, fault policy',risk:true,badge:'tersulit #2'},
-  {n:5,t:'Filesystem writable + driver blok',s:'ATA/AHCI/virtio, lalu FS R/W (FAT/ext2)',risk:true,badge:'crash-konsistensi'},
-  {n:6,t:'libc + POSIX',s:'port newlib/musl → program nyata bisa jalan',risk:false},
-  {n:7,t:'Networking (TCP/IP)',s:'driver NIC (e1000/virtio-net) + stack (lwIP)',risk:false},
-  {n:8,t:'Userland + shell + self-hosting',s:'toolchain jalan di atas THUOS, ala Linux From Scratch',risk:false},
-  {n:9,t:'SMP / multi-core + fitur masa depan',s:'lalu microkernel-ish / Rust (lihat Arsitektur)',risk:false},
-];
-const tl = document.getElementById('timeline');
-if(tl) tl.innerHTML = STEPS.map(s=>
-  '<div class="tl'+(s.risk?' risk':'')+'"><div class="rail"><div class="dot">'+s.n+'</div></div>'+
-  '<div class="body"><h4>'+s.t+'</h4><div class="s">'+s.s+'</div>'+
-  (s.risk?'<span class="badge">'+(s.badge||'risiko')+'</span>':'')+'</div></div>').join('');
+/* control center */
+const cc=document.getElementById('cc');
+document.getElementById('ccBtn').addEventListener('click',e=>{e.stopPropagation();cc.classList.toggle('on');});
+document.addEventListener('pointerdown',e=>{if(!e.target.closest('#cc,#ccBtn'))cc.classList.remove('on');});
 
-/* ---- clock + vitals (calm) ---- */
-const t0 = Date.now();
-const climates = ['tenang','jernih','fokus','damai','hening'];
-function fmtUp(){const up=Math.floor((Date.now()-t0)/1000);return up<60?up+'s':Math.floor(up/60)+'m '+(up%60)+'s';}
+/* ---------- desktop context menu ---------- */
+const ctx=document.getElementById('ctx');
+const CTX=[['terminal','›_ Terminal'],['files','▦ Berkas'],['settings','⚙ Pengaturan'],['sep'],['guide','⤢ Panduan'],['about','∗ Tentang']];
+ctx.innerHTML=CTX.map(c=>c[0]==='sep'?'<div class="sep"></div>':'<div class="ci" data-open="'+c[0]+'">'+c[1]+'</div>').join('');
+desk.addEventListener('contextmenu',e=>{
+  if(e.target.closest('.win,#dock,#menubar,#cc'))return;
+  e.preventDefault();
+  ctx.style.left=Math.min(e.clientX,innerWidth-210)+'px';
+  ctx.style.top=Math.min(e.clientY,innerHeight-220)+'px';
+  ctx.classList.add('on');
+});
+document.addEventListener('pointerdown',e=>{if(!e.target.closest('#ctx'))ctx.classList.remove('on');});
+ctx.addEventListener('click',()=>ctx.classList.remove('on'));
+
+/* ---------- clock + vitals ---------- */
+const t0=Date.now();
+const DAYS=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const MON=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+function hhmm(d){return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 function tick(){
   const d=new Date();
-  const c=document.getElementById('clock');
-  if(c) c.textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
-  const u=document.getElementById('vup'); if(u)u.textContent=fmtUp();
-  const u2=document.getElementById('vup2'); if(u2)u2.textContent=fmtUp();
-  const cl=document.getElementById('climate'); if(cl)cl.textContent='iklim sistem · '+climates[Math.floor((Date.now()/9000)%climates.length)];
+  const c=document.getElementById('clock'); if(c)c.textContent=hhmm(d);
+  const lc=document.getElementById('lclock'); if(lc)lc.textContent=hhmm(d);
+  const ld=document.getElementById('ldate'); if(ld)ld.textContent=DAYS[d.getDay()]+', '+d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear();
 }
 let gv={cpu:14,mem:36,io:9};
 function clamp(v,a,b){return v<a?a:v>b?b:v;}
@@ -487,14 +605,14 @@ function vitals(){
   gv.cpu=clamp(gv.cpu+(Math.random()*16-8),5,74);
   gv.mem=clamp(gv.mem+(Math.random()*6-3),24,70);
   gv.io =clamp(gv.io +(Math.random()*22-11),0,58);
-  const set=(id,v,bar)=>{const e=document.getElementById(id);if(e){if(bar)e.style.width=v+'%';else e.textContent=Math.round(v)+'%';}};
-  set('vcpu',gv.cpu);set('vmem',gv.mem);
-  set('tcpu',gv.cpu);set('tmem',gv.mem);set('tio',gv.io);
-  set('gcpu',gv.cpu,1);set('gmem',gv.mem,1);set('gio',gv.io,1);
+  const tx=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=Math.round(v)+'%';};
+  const bw=(id,v)=>{const e=document.getElementById(id);if(e)e.style.width=v+'%';};
+  tx('vcpu',gv.cpu);tx('vmem',gv.mem);tx('tcpu',gv.cpu);tx('tmem',gv.mem);tx('tio',gv.io);
+  bw('gcpu',gv.cpu);bw('gmem',gv.mem);bw('gio',gv.io);
 }
 tick();vitals();setInterval(tick,1000);setInterval(vitals,1500);
 
-/* ---- starfield (subtle) ---- */
+/* ---------- starfield ---------- */
 const sc=document.getElementById('stars'),sx=sc.getContext('2d');
 let stars=[],vw=innerWidth,vh=innerHeight;
 function initStars(){sc.width=vw=innerWidth;sc.height=vh=innerHeight;stars=[];
@@ -507,64 +625,32 @@ function drawStars(now){sx.clearRect(0,0,vw,vh);
 addEventListener('resize',initStars);
 initStars();requestAnimationFrame(drawStars);
 
-/* ---- first-run guided tour ---- */
-const TOUR=[
-  {sel:'#side', h:'Ini menumu', p:'Semua bagian THUOS ada di sini — tinggal klik untuk pindah ruang. Tak perlu menebak.'},
-  {sel:'#nav-realita', h:'Mulai dari kejujuran', p:'"Apa ini sebenarnya" menjelaskan keadaan THUOS apa adanya — yang sudah ada dan yang belum.'},
-  {sel:'#nav-roadmap', h:'Peta menuju OS nyata', p:'"Roadmap" = 9 langkah berurutan menuju OS yang benar-benar bisa dipakai, dengan langkah berisikonya ditandai.'},
-  {sel:'#topbar', h:'Info yang tenang', p:'Jam & kondisi sistem hidup lembut di tepi atas — hadir saat kamu butuh, tidak mengganggu.'},
-  {sel:'#homeTiles', h:'Pintasan cepat', p:'Dan ini jalan pintas ke bagian penting. Selesai — selamat menjelajah Aurora!'},
-];
-let ti=0;
-const ov=document.getElementById('tourOverlay'),tip=document.getElementById('tourTip');
-let curTarget=null;
-function clearSpot(){if(curTarget){curTarget.classList.remove('tour-target');curTarget=null;}}
-function showStep(i){
-  ti=i;
-  if(i>=TOUR.length){endTour();return;}
-  go('beranda');
-  const step=TOUR[i];
-  clearSpot();
-  const target=document.querySelector(step.sel);
-  document.getElementById('tourN').textContent='TUR '+(i+1)+'/'+TOUR.length;
-  document.getElementById('tourH').textContent=step.h;
-  document.getElementById('tourP').textContent=step.p;
-  document.getElementById('tourNext').textContent=(i===TOUR.length-1)?'Selesai ✓':'Lanjut ▸';
-  ov.classList.add('on');tip.classList.add('on');
-  if(target){
-    curTarget=target;target.classList.add('tour-target');
-    const r=target.getBoundingClientRect();
-    const tw=Math.min(320,innerWidth*.86),th=tip.offsetHeight||150;
-    let left=r.right+14, top=r.top;
-    if(left+tw>innerWidth-12) left=Math.max(12,r.left- tw-14);
-    if(left<12) left=Math.min(innerWidth-tw-12, Math.max(12,r.left));
-    if(top+th>innerHeight-12) top=Math.max(12,innerHeight-th-12);
-    if(top<12) top=12;
-    // if target is wide (sidebar/topbar), prefer placing tip just inside viewport
-    if(r.width>innerWidth*.6){ left=(innerWidth-tw)/2; top=Math.min(innerHeight-th-16, r.bottom+14); }
-    tip.style.left=left+'px';tip.style.top=top+'px';
-  } else {
-    tip.style.left=(innerWidth-320)/2+'px';tip.style.top='120px';
-  }
-}
-function endTour(){clearSpot();ov.classList.remove('on');tip.classList.remove('on');
-  try{localStorage.setItem('thuos_aurora_tour','1');}catch(e){}}
-document.getElementById('tourNext').addEventListener('click',()=>showStep(ti+1));
-document.getElementById('tourSkip').addEventListener('click',endTour);
-ov.addEventListener('click',endTour);
-document.getElementById('btnTour').addEventListener('click',()=>{go('beranda');setTimeout(()=>showStep(0),60);});
-addEventListener('keydown',e=>{if(e.key==='?'){go('beranda');setTimeout(()=>showStep(0),60);}
-  else if(e.key==='Escape'){endTour();}});
-addEventListener('resize',()=>{if(ov.classList.contains('on'))showStep(ti);});
+/* ---------- hint toast ---------- */
+const hint=document.getElementById('hint');
+function showHint(html){hint.innerHTML=html;hint.classList.add('on');}
+function hideHint(){hint.classList.remove('on');}
 
-/* ---- boot then maybe tour ---- */
+/* ---------- boot + lock ---------- */
+const lock=document.getElementById('lock'); let unlocked=false;
+function unlock(){
+  if(unlocked)return; unlocked=true;
+  lock.classList.add('gone');
+  setTimeout(()=>{lock.style.display='none';
+    openApp('welcome');
+    showHint('Buka aplikasi dari <b>dock</b> di bawah ↓ · klik-kanan desktop untuk menu');
+    setTimeout(hideHint,5200);
+  },520);
+}
+lock.addEventListener('click',unlock);
+addEventListener('keydown',e=>{
+  if(!unlocked){ if(e.key==='Enter'||e.key===' ') unlock(); return; }
+  if(e.key==='Escape'){cc.classList.remove('on');ctx.classList.remove('on');}
+});
+buildDock(); dockState();
 window.addEventListener('load',()=>{
   const b=document.getElementById('boot');
   setTimeout(()=>b.classList.add('gone'),2000);
-  setTimeout(()=>{b.style.display='none';
-    let seen=false; try{seen=localStorage.getItem('thuos_aurora_tour')==='1';}catch(e){}
-    if(!seen) showStep(0);
-  },2900);
+  setTimeout(()=>b.style.display='none',2900);
 });
 </script>
 </body>
