@@ -13,6 +13,7 @@
 #include "pmm.h"
 #include "kheap.h"
 #include "vmm.h"
+#include "sched.h"
 
 #define LINE_MAX 128
 
@@ -73,6 +74,8 @@ static void cmd_help(void) {
     kprintf("  kmalloc N  Allocate N bytes from the kernel heap\n");
     kprintf("  kfree A    Free a kmalloc pointer (hex address)\n");
     kprintf("  vmm [A]    Paging info; translate virtual addr A (hex)\n");
+    kprintf("  ps         List scheduler tasks and states\n");
+    kprintf("  sched      Run the round-robin scheduler (live demo)\n");
     kprintf("  echo       Print the rest of the line\n");
     kprintf("  banner     Show the THUOS banner\n");
     kprintf("  color N    Set text color (0-15)\n");
@@ -105,9 +108,10 @@ static void cmd_status(void) {
     kprintf("  [done]    Panic/assert system\n");
     kprintf("  [done]    Physical memory manager (Milestone 0.3)\n");
     kprintf("  [done]    Kernel heap kmalloc/kfree (Milestone 0.4)\n");
-    kprintf("  [wip]     Paging tables + translation (0.5, staged - not enabled)\n");
-    kprintf("  [plan]    Enable paging (QEMU), then processes + ring 3\n");
-    kprintf("  [plan]    VFS + initrd, then userspace + syscalls\n");
+    kprintf("  [wip]     Paging tables + translation (0.5, staged)\n");
+    kprintf("  [done]    Round-robin scheduler policy core (0.6)\n");
+    kprintf("  [plan]    Context switch + ring 3 + syscall (needs boot)\n");
+    kprintf("  [plan]    VFS + initrd, then userspace + libc\n");
 }
 
 static void cmd_sysinfo(void) {
@@ -305,6 +309,8 @@ static void execute(char *line) {
     else if (strcmp(line, "kmalloc") == 0)   cmd_kmalloc(args);
     else if (strcmp(line, "kfree") == 0)     cmd_kfree(args);
     else if (strcmp(line, "vmm") == 0)       cmd_vmm(args);
+    else if (strcmp(line, "ps") == 0)        sched_klist();
+    else if (strcmp(line, "sched") == 0)     sched_kdemo();
     else if (strcmp(line, "echo") == 0)      kprintf("%s\n", args);
     else if (strcmp(line, "banner") == 0)    print_banner();
     else if (strcmp(line, "color") == 0)     cmd_color(args);

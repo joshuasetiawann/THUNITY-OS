@@ -1,6 +1,6 @@
 # THUOS — Project Status
 
-**Milestone:** 0.5 "Paging" — page tables + translation (staged; enable not boot-verified)
+**Milestone:** 0.6 "Scheduler" — round-robin policy core (host-tested; context switch staged)
 **Date of this status:** 2026-06-06
 **Honesty rule:** every "Implemented" item is backed by a source file and passes
 the build + structural verification in [`BUILD_VERIFICATION.txt`](BUILD_VERIFICATION.txt).
@@ -27,7 +27,8 @@ Nothing here claims a QEMU boot, ISO, or install that was not actually performed
 | PIT timer @ 100 Hz + uptime | Implemented | `kernel/arch/x86/pit.c` |
 | PS/2 keyboard (IRQ1) | Implemented | `kernel/drivers/keyboard.c` |
 | Panic / assert | Implemented | `kernel/core/panic.c` |
-| Shell (`thuos>`, 25 commands) | Implemented | `kernel/shell/shell.c` |
+| Shell (`thuos>`, 27 commands) | Implemented | `kernel/shell/shell.c` |
+| **Scheduler (round-robin policy)** | **Implemented (policy core)** | `kernel/sched/sched_core.c`, `sched.c`; unit test `tests/test_sched.c`; context switch staged |
 | Freestanding `mem*`/`str*` | Implemented | `kernel/lib/string.c` |
 | **Multiboot memory-map parsing** | **Implemented** | `kernel/mm/multiboot.h`, `pmm.c` |
 | **Physical memory manager (4 KiB frames)** | **Implemented** | `kernel/mm/pmm.c`, `frame_bitmap.c`; unit test `tests/test_pmm.c` |

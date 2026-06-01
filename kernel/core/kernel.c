@@ -16,6 +16,7 @@
 #include "pmm.h"
 #include "kheap.h"
 #include "vmm.h"
+#include "sched.h"
 #include "shell.h"
 
 static void ok_line(const char *label) {
@@ -56,6 +57,9 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
 
     vmm_init();
     ok_line("Paging tables: identity map low 8 MiB (staged, not enabled)");
+
+    sched_kinit();
+    ok_line("Scheduler: round-robin policy core (context switch staged)");
 
     __asm__ volatile("sti");   /* interrupts on: timer + keyboard now live */
 
