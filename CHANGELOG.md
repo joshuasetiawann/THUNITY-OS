@@ -3,6 +3,35 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.5.0] — "Paging" — 2026-06-06
+
+Milestone 0.5: x86 paging tables + address translation, informed by a study of
+how Linux, macOS (XNU), Windows (NT) and seL4 build virtual memory
+(`docs/THUOS_ARCHITECTURE.md`). **Staged, not enabled:** the page directory and
+tables are constructed and inspectable, but CR0.PG is not flipped because that
+cannot be verified without QEMU here, and enabling an unverified mapping risks a
+silent triple-fault.
+
+### Added — kernel (virtual memory)
+- `kernel/mm/vmm_core.{c,h}` — pure 2-level paging logic (PD/PT index split,
+  PDE/PTE encode/decode, identity-map construction, address translation), free
+  of kernel deps so it is unit-tested on the host.
+- `kernel/mm/vmm.{c,h}` — glue: builds a 4 KiB-aligned page directory + page
+  tables that identity-map the low 8 MiB; exposes translate/inspect helpers.
+  `vmm_enable()` (load CR3 + set CR0.PG) is compiled in only under
+  `THUOS_ENABLE_PAGING_EXPERIMENTAL` and must be boot-verified before use.
+- `kernel_main` builds the tables at boot (staged); shell gains `vmm [addr]`.
+
+### Added — docs & verification
+- `docs/THUOS_ARCHITECTURE.md` — comparative study of Linux/XNU/NT/seL4 and a
+  THUOS architecture (capability-secured ramping hybrid, local-first, honest).
+- `tests/test_vmm.c` + `make test`: address split, entry encode/decode,
+  identity map, translate==identity, unmapped→0, arbitrary va→pa. Host-tested.
+
+### Honesty
+- BOOT-VERIFIED: none here. Page-table logic is HOST-TESTED; paging enable is
+  STAGED and unverified. Verify on QEMU/hardware via `BOOT_THUOS.md`.
+
 ## [0.4.0] — "Kernel Heap" — 2026-06-06
 
 Milestone 0.4: a kernel heap (`kmalloc`/`kfree`). On top of the physical memory

@@ -1,6 +1,6 @@
 # THUOS — Project Status
 
-**Milestone:** 0.4 "Kernel Heap" — kmalloc/kfree on the PMM
+**Milestone:** 0.5 "Paging" — page tables + translation (staged; enable not boot-verified)
 **Date of this status:** 2026-06-06
 **Honesty rule:** every "Implemented" item is backed by a source file and passes
 the build + structural verification in [`BUILD_VERIFICATION.txt`](BUILD_VERIFICATION.txt).
@@ -27,13 +27,13 @@ Nothing here claims a QEMU boot, ISO, or install that was not actually performed
 | PIT timer @ 100 Hz + uptime | Implemented | `kernel/arch/x86/pit.c` |
 | PS/2 keyboard (IRQ1) | Implemented | `kernel/drivers/keyboard.c` |
 | Panic / assert | Implemented | `kernel/core/panic.c` |
-| Shell (`thuos>`, 24 commands) | Implemented | `kernel/shell/shell.c` |
+| Shell (`thuos>`, 25 commands) | Implemented | `kernel/shell/shell.c` |
 | Freestanding `mem*`/`str*` | Implemented | `kernel/lib/string.c` |
 | **Multiboot memory-map parsing** | **Implemented** | `kernel/mm/multiboot.h`, `pmm.c` |
 | **Physical memory manager (4 KiB frames)** | **Implemented** | `kernel/mm/pmm.c`, `frame_bitmap.c`; unit test `tests/test_pmm.c` |
 | **Protected-region reservation** | **Implemented** | low 1 MiB + kernel image + Multiboot structs, in `pmm.c` |
 | **Memory shell commands** (`memmap`,`pages`,`allocpage`,`freepage`) | **Implemented** | `kernel/shell/shell.c` |
-| Paging (identity map, kernel VM) | Designed | `docs/10_PAGING_PLAN.md` |
+| **Paging tables + translation** | **Implemented (staged)** | `kernel/mm/vmm_core.c`, `vmm.c`; unit test `tests/test_vmm.c`; enable gated/NOT boot-verified |
 | **Kernel heap (`kmalloc`/`kfree`)** | **Implemented** | `kernel/mm/kheap_core.c`, `kheap.c`; unit test `tests/test_kheap.c` |
 | VFS + initrd | Planned (0.4) | `docs/design/FILESYSTEM.md` |
 | Userspace, syscalls, ELF loader | Planned (0.5) | `docs/08_ROADMAP.md` |
