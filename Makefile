@@ -39,7 +39,7 @@ SRCS_S  := $(shell find kernel -name '*.S' | sort)
 OBJS    := $(patsubst kernel/%,$(OBJDIR)/%,$(SRCS_C:.c=.o)) \
            $(patsubst kernel/%,$(OBJDIR)/%,$(SRCS_S:.S=.o))
 
-.PHONY: all kernel verify status test iso run run-serial demo clean
+.PHONY: all kernel verify status test boottest iso run run-serial demo clean
 
 all: kernel
 
@@ -104,6 +104,10 @@ run-serial: kernel
 	  echo "[skip] qemu-system-i386 not installed; cannot boot THUOS here."; \
 	  echo "       Install with: sudo apt-get install qemu-system-x86"; \
 	fi
+
+# Real boot verification: boot in QEMU, capture COM1 serial, check boot markers.
+boottest: kernel
+	@bash scripts/boottest.sh $(KERNEL)
 
 demo:
 	@echo "==> THU Desktop demo: http://localhost:8080/preview/thuos_preview.html"
