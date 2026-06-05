@@ -1,6 +1,6 @@
 THUOS BUILD VERIFICATION
 ------------------------------------------------------------
-Generated : 2026-06-05 16:12:49Z
+Generated : 2026-06-05 16:41:42Z
 Host      : Linux 6.18.5 x86_64
 Toolchain : gcc=13 ld=2.42 make=GNU Make 4.3
 Helpers   : python3=3.11.15 node=v22.22.2
@@ -15,7 +15,7 @@ Helpers   : python3=3.11.15 node=v22.22.2
       Class:                             ELF32
       Type:                              EXEC (Executable file)
       Machine:                           Intel 80386
-      Entry point address:               0x1021df
+      Entry point address:               0x102d03
   [PASS] Class is ELF32
   [PASS] Machine is Intel 80386
   [PASS] Type is EXEC
@@ -36,15 +36,27 @@ Helpers   : python3=3.11.15 node=v22.22.2
   [PASS] symbol irq_handler present
     [ ok ] shell_run
   [PASS] symbol shell_run present
+    [ ok ] pmm_init
+  [PASS] symbol pmm_init present
+    [ ok ] pmm_alloc_frame
+  [PASS] symbol pmm_alloc_frame present
+    [ ok ] pmm_free_frame
+  [PASS] symbol pmm_free_frame present
 ------------------------------------------------------------
 5) Section sizes — size(1)
        text	   data	    bss	    dec	    hex	filename
-      13412	      8	  18976	  32396	   7e8c	build/kernel.elf
+      17298	      8	 150176	 167482	  28e3a	build/kernel.elf
+------------------------------------------------------------
+6) Memory allocator — host unit test (tests/test_pmm.c)
+    PMM allocator test: OK
+      init/used/free, region reserve, alloc-skips-reserved,
+      free+realloc reuse, exhaustion->FB_NONE, last-frame boundary
+  [PASS] frame allocator unit test
 ------------------------------------------------------------
 NOT VERIFIED IN THIS ENVIRONMENT (honest):
   - QEMU boot: qemu-system-i386 not installed here, so boot is NOT verified.
   - Bootable ISO: grub-mkrescue/xorriso not installed here, so no ISO was built.
 ------------------------------------------------------------
-SUMMARY: 12 passed, 0 failed.
+SUMMARY: 16 passed, 0 failed.
 RESULT : VERIFICATION PASSED (build + structure).
 ------------------------------------------------------------

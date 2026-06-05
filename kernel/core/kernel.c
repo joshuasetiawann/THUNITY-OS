@@ -1,6 +1,7 @@
 /* THUOS — kernel entry point.
  * Brings up diagnostics, the descriptor tables, interrupt controllers, the
- * timer and the keyboard, then hands control to the THUOS shell. */
+ * timer, the keyboard, and the physical memory manager, then hands control to
+ * the THUOS shell. */
 #include "types.h"
 #include "version.h"
 #include "vga.h"
@@ -12,17 +13,8 @@
 #include "irq.h"
 #include "pit.h"
 #include "keyboard.h"
+#include "pmm.h"
 #include "shell.h"
-
-#define MULTIBOOT_BOOTLOADER_MAGIC 0x2BADB002
-#define MB_FLAG_MEM 0x00000001
-
-struct multiboot_info {
-    uint32_t flags;
-    uint32_t mem_lower;   /* KiB */
-    uint32_t mem_upper;   /* KiB */
-    /* ... further fields exist but are not needed at this milestone ... */
-} __attribute__((packed));
 
 static void ok_line(const char *label) {
     vga_set_color(VGA_LIGHT_GREEN, VGA_BLACK);
@@ -53,17 +45,9 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
     pit_init(100);     ok_line("PIT timer @ 100 Hz");
     keyboard_init();   ok_line("PS/2 keyboard (IRQ1)");
 
-    /* Record memory hints from the bootloader if the magic checks out. */
-    if (magic == MULTIBOOT_BOOTLOADER_MAGIC && mb_info_addr) {
-        struct multiboot_info *mbi = (struct multiboot_info *)mb_info_addr;
-        if (mbi->flags & MB_FLAG_MEM) {
-            shell_set_memory(mbi->mem_lower, mbi->mem_upper);
-            kprintf("  [info] Multiboot memory: %u KiB low, %u KiB high\n",
-                    mbi->mem_lower, mbi->mem_upper);
-        }
-    } else {
-        kprintf("  [info] No valid Multiboot info (magic=0x%08x)\n", magic);
-    }
+    pmm_init(magic, mb_info_addr);
+    ok_line("Physical memory manager (4 KiB frames)");
+    pmm_print_stats();
 
     __asm__ volatile("sti");   /* interrupts on: timer + keyboard now live */
 

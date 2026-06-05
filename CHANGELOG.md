@@ -3,6 +3,58 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.3.0] — "Memory Foundation" — 2026-06-05
+
+Milestone 0.3: the physical memory manager. THUOS can now parse the Multiboot
+memory map and hand out / reclaim physical memory one 4 KiB frame at a time,
+with the protected regions reserved.
+
+### Added — kernel (memory management)
+- `kernel/mm/multiboot.h` — full Multiboot info + memory-map entry structures.
+- `kernel/mm/frame_bitmap.{c,h}` — pure page-frame bitmap (1 bit/frame), free of
+  kernel/hardware dependencies so it can be unit-tested on the host.
+- `kernel/mm/pmm.{c,h}` — physical memory manager: parse the map, build a 4 GiB
+  bitmap in `.bss`, mark `AVAILABLE` regions free, reserve protected regions,
+  and allocate/free frames with statistics.
+- Reserved regions: low 1 MiB (BIOS/IVT/EBDA/VGA), the kernel image
+  (`thuos_kernel_start..end`, including the 16 KiB stack and the PMM bitmap),
+  the Multiboot info structure, and the memory-map buffer.
+- `pmm_alloc_frame` / `pmm_free_frame` (with protected-region refusal) and
+  statistics: usable / reserved / free / used frames and usable bytes.
+- `kernel_main` now calls `pmm_init` and prints memory statistics at boot.
+
+### Added — shell commands
+- `memmap` — dump the Multiboot memory map (base / length / type).
+- `pages` — page-frame statistics.
+- `allocpage` — allocate one 4 KiB physical frame and print its address.
+- `freepage <hex>` — free a frame by physical address (refuses protected/unaligned).
+- `mem` now reports the PMM summary; `sysinfo` shows usable memory + free frames.
+- Shell command count: 17 → **21**.
+
+### Added — verification & build
+- `tests/test_pmm.c` — host unit test of the allocator core (native gcc, no QEMU):
+  init/used/free, region reserve, alloc-skips-reserved, free+realloc reuse,
+  exhaustion → `FB_NONE`, last-frame boundary.
+- `make test` target; `make verify` now also checks `pmm_*` symbols and runs the
+  allocator test. Verification: **16 checks passed, 0 failed**.
+
+### Added — documentation
+- `docs/09_MEMORY_FOUNDATION.md` (implemented PMM),
+  `docs/10_PAGING_PLAN.md` and `docs/11_KERNEL_HEAP_PLAN.md` (design only).
+
+### Changed
+- Version bumped to 0.3.0 "Memory Foundation". `status`/`PROJECT_STATUS` updated.
+
+### Not implemented (clearly planned)
+- **Paging** and the **kernel heap** are design documents only (`docs/10`, `docs/11`),
+  not code — they will be implemented when they can be boot-verified.
+
+### Known limitations (honest)
+- Still **not booted** here: `qemu-system-i386` is not installed in this
+  environment, so the PMM's behavior on a real Multiboot map is unverified
+  locally (the allocator core is, however, host unit-tested). No ISO built
+  (`grub-mkrescue`/`xorriso` absent). No faked boot/ISO/screenshot results.
+
 ## [0.2.0] — "Boot Seed" — 2026-06-05
 
 Milestone 0.2: Kernel Stability, Diagnostics, Timer, and Preview. This is the

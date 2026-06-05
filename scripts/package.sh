@@ -5,7 +5,7 @@
 set -eu
 cd "$(dirname "$0")/.."
 
-NAME="thuos_milestone_0_2"
+NAME="thuos_milestone_0_3"
 OUT="${NAME}.tar.gz"
 
 # Refresh verification log so the archive carries current, real results.
@@ -16,6 +16,6 @@ tar czf "$OUT" \
   --transform "s,^,${NAME}/," \
   README.md PROJECT_STATUS.md CHANGELOG.md BUILD_VERIFICATION.txt \
   Makefile linker.ld grub.cfg .gitignore \
-  kernel docs preview scripts
+  kernel tests docs preview scripts
 
 echo "Created $OUT ($(du -h "$OUT" | cut -f1))"

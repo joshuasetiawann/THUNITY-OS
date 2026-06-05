@@ -10,7 +10,7 @@ built incrementally toward a calm, local-first desktop OS tomorrow.
 
 - **Project:** THUOS · **Kernel:** THU Kernel · **Desktop:** THU Desktop
 - **Filesystem (planned):** THUFS · **Package manager (planned):** thupkg
-- **Version:** `0.2.0` "Boot Seed" · **Arch:** x86 (i386, 32-bit) · **Boot:** Multiboot 1 (GRUB-compatible)
+- **Version:** `0.3.0` "Memory Foundation" · **Arch:** x86 (i386, 32-bit) · **Boot:** Multiboot 1 (GRUB-compatible)
 
 ---
 
@@ -31,8 +31,11 @@ following subsystems are implemented and wired into `kernel_main()`:
 | PIT timer @ 100 Hz + uptime | ✅ Implemented | `kernel/arch/x86/pit.c` |
 | PS/2 keyboard (IRQ1, scancode set 1, shift) | ✅ Implemented | `kernel/drivers/keyboard.c` |
 | Panic / assert system | ✅ Implemented | `kernel/core/panic.c` |
-| Interactive shell (`thuos>`, 17 commands) | ✅ Implemented | `kernel/shell/shell.c` |
+| Interactive shell (`thuos>`, 21 commands) | ✅ Implemented | `kernel/shell/shell.c` |
 | Freestanding `mem*`/`str*` lib | ✅ Implemented | `kernel/lib/string.c` |
+| Multiboot memory-map parsing | ✅ Implemented | `kernel/mm/multiboot.h`, `pmm.c` |
+| Physical memory manager (4 KiB frames) + protected-region reservation | ✅ Implemented | `kernel/mm/pmm.c`, `frame_bitmap.c` (unit-tested: `tests/test_pmm.c`) |
+| Memory shell commands (`memmap`, `pages`, `allocpage`, `freepage`) | ✅ Implemented | `kernel/shell/shell.c` |
 
 > **What "Implemented" means here:** the code compiles, links, and is integrated,
 > and the kernel passes structural verification (valid Multiboot header, correct
@@ -43,9 +46,9 @@ following subsystems are implemented and wired into `kernel_main()`:
 
 ## Planned (not done yet)
 
-Memory manager (0.3) · VFS + initrd (0.4) · userspace + syscalls (0.5) ·
-framebuffer graphics (0.6) · in-kernel THU Desktop (0.7) · real `thupkg`
-backend · installer ISO. See [`docs/08_ROADMAP.md`](docs/08_ROADMAP.md).
+Paging + kernel heap (designed: `docs/10`, `docs/11`) · VFS + initrd (0.4) ·
+userspace + syscalls (0.5) · framebuffer graphics (0.6) · in-kernel THU Desktop
+(0.7) · real `thupkg` backend · installer ISO. See [`docs/08_ROADMAP.md`](docs/08_ROADMAP.md).
 
 ---
 
@@ -53,7 +56,8 @@ backend · installer ISO. See [`docs/08_ROADMAP.md`](docs/08_ROADMAP.md).
 
 ```bash
 make kernel     # build build/kernel.elf (freestanding 32-bit)
-make verify     # check ELF class, Multiboot header+checksum, symbols -> BUILD_VERIFICATION.txt
+make verify     # ELF class, Multiboot header+checksum, symbols, allocator test -> BUILD_VERIFICATION.txt
+make test       # host unit test of the page-frame allocator (native gcc, no QEMU)
 make status     # one-screen honest project status
 make demo       # serve the THU Desktop preview at http://localhost:8080
 make clean      # remove build artifacts
@@ -106,6 +110,9 @@ docs/          Milestone documentation (00–08) + docs/design/ deep specs
 | [06_THU_DESKTOP_PREVIEW](docs/06_THU_DESKTOP_PREVIEW.md) | The web concept preview, honestly framed |
 | [07_LIMITATIONS_AND_NEXT_STEPS](docs/07_LIMITATIONS_AND_NEXT_STEPS.md) | What is unverified and why |
 | [08_ROADMAP](docs/08_ROADMAP.md) | Release roadmap 0.2 → 1.0 |
+| [09_MEMORY_FOUNDATION](docs/09_MEMORY_FOUNDATION.md) | Physical memory manager (implemented) |
+| [10_PAGING_PLAN](docs/10_PAGING_PLAN.md) | Paging design (planned) |
+| [11_KERNEL_HEAP_PLAN](docs/11_KERNEL_HEAP_PLAN.md) | Kernel heap design (planned) |
 | [PROJECT_STATUS](PROJECT_STATUS.md) | Subsystem status board |
 
 ## Principles

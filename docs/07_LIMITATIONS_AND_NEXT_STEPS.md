@@ -22,9 +22,11 @@ command instead of failing confusingly or pretending to succeed.
 
 ## Functional limitations (by design, this milestone)
 
-THUOS 0.2.0 is a kernel *foundation*. It does **not** yet have:
+THUOS 0.3.0 is an early kernel. It does **not** yet have:
 
-- a memory manager (no `kmalloc`/paging beyond the loader's identity map);
+- paging or a kernel heap (the physical **frame** allocator is implemented — see
+  [`09_MEMORY_FOUNDATION.md`](09_MEMORY_FOUNDATION.md) — but there is no `kmalloc`
+  and paging is disabled; both are designs in `docs/10`/`docs/11`);
 - a filesystem or storage driver (no `ls`/`cat`/files yet);
 - userspace, processes, scheduling, or syscalls (kernel runs in ring 0 only);
 - graphics/framebuffer, mouse, or a real GUI (text mode only);
@@ -52,16 +54,28 @@ qemu-system-i386 -kernel build/kernel.elf -serial stdio -display none
 # expect the [ OK ] bring-up lines and a 'thuos>' prompt
 ```
 
-## Next steps — THUOS Milestone 0.3 (Memory Foundation)
+## Milestone 0.3 — done
 
-1. Parse and display the Multiboot memory map safely.
-2. Add a physical page (frame) allocator over 4 KiB pages; reserve the kernel
-   image, boot structures, and VGA memory.
-3. Add identity paging and a simple virtual-memory layout.
-4. Add a kernel heap (`kmalloc`/`kfree`) with basic diagnostics.
-5. Add shell commands: `memmap`, `pages`, `heap`.
-6. Keep `make clean && make kernel && make verify` green; update docs and
-   `PROJECT_STATUS.md`.
+Implemented and verified this milestone: Multiboot memory-map parsing, a 4 KiB
+physical frame allocator with protected-region reservation, the `memmap` /
+`pages` / `allocpage` / `freepage` commands, and a host unit test of the
+allocator (`make test`). See [`09_MEMORY_FOUNDATION.md`](09_MEMORY_FOUNDATION.md).
+
+Deliberately deferred (design only, because they need boot verification):
+**paging** ([`10_PAGING_PLAN.md`](10_PAGING_PLAN.md)) and the **kernel heap**
+([`11_KERNEL_HEAP_PLAN.md`](11_KERNEL_HEAP_PLAN.md)).
+
+## Next steps — THUOS Milestone 0.4 (Filesystem Foundation)
+
+1. Add an initrd/ramdisk that can carry static files at boot.
+2. Design a VFS abstraction (inode, file, directory, mountpoint).
+3. Add shell commands: `ls`, `cat`, `pwd`.
+4. Begin THUFS design (`docs/design/FILESYSTEM.md`).
+5. In parallel, implement **Stage A** of the kernel heap (a host-testable bump
+   allocator on top of the PMM) and a first **identity-paging** bring-up — each
+   landing only when it can be boot-verified.
+6. Keep `make clean && make kernel && make verify && make test` green; update docs
+   and `PROJECT_STATUS.md`.
 
 Rules carried forward: no libc in the kernel, no faked success, do not rewrite
 working boot code, build after each step, and report exact verified commands.

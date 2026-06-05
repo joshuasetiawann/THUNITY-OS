@@ -3,8 +3,8 @@
 set -u
 cd "$(dirname "$0")/.."
 
-ver="0.2.0"
-code="Boot Seed"
+ver="0.3.0"
+code="Memory Foundation"
 
 cfiles=$(find kernel -name '*.c'  2>/dev/null | wc -l | tr -d ' ')
 hfiles=$(find kernel -name '*.h'  2>/dev/null | wc -l | tr -d ' ')
@@ -30,14 +30,16 @@ cat <<EOF
 ------------------------------------------------------
  Implemented : boot, VGA, serial, kprintf, GDT, IDT,
                exceptions 0-31, PIC, IRQ, PIT, keyboard,
-               panic, shell (17 cmds), freestanding libc
- In progress : memory manager (Milestone 0.3)
+               panic, shell (21 cmds), freestanding libc,
+               physical memory manager (4 KiB frames)
+ In progress : paging + kernel heap (designed, not built)
  Planned     : VFS/initrd, userspace, graphics, THU Desktop,
                thupkg backend, installer
 ------------------------------------------------------
  Toolchain   : qemu = ${qemu}
                iso  = ${iso}
  Verify      : make verify   ->  BUILD_VERIFICATION.txt
+               make test     ->  page-frame allocator unit test
  Preview     : make demo     ->  preview/thuos_preview.html
 ======================================================
 EOF

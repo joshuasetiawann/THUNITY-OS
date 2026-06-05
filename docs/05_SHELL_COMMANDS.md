@@ -23,7 +23,11 @@ ignored; unknown commands print `Unknown command: <x> (try 'help')`.
 | `sysinfo` | One-screen summary: arch, kernel, timer Hz, uptime, memory, build. |
 | `uptime` | Uptime in PIT ticks and approximate seconds. |
 | `ticks` | Raw PIT tick counter. |
-| `mem` | Multiboot memory hint (lower/upper KiB) + note that the full memory manager is planned for 0.3. |
+| `mem` | Memory summary from the physical memory manager (hint + frame stats). |
+| `memmap` | Dump the Multiboot memory map (base / length / type). |
+| `pages` | Page-frame statistics (usable / reserved / free / used). |
+| `allocpage` | Allocate one 4 KiB physical frame; prints its physical address. |
+| `freepage <hex>` | Free a frame by physical address (refuses protected/unaligned). |
 | `echo <text>` | Print the rest of the line. |
 | `banner` | Print the THUOS ASCII banner. |
 | `color <0-15>` | Set the VGA text foreground color. |
@@ -33,8 +37,9 @@ ignored; unknown commands print `Unknown command: <x> (try 'help')`.
 | `reboot` | Reboot via the 8042 keyboard-controller reset pulse. |
 | `halt` | Disable interrupts and halt the CPU. |
 
-That is **17 commands** (counting `crash`, `reboot`, `halt`). The list is printed
-by `help` and kept in sync with the dispatcher in `shell.c`.
+That is **21 commands** (including the four memory commands and `crash`,
+`reboot`, `halt`). The list is printed by `help` and kept in sync with the
+dispatcher in `shell.c`.
 
 ## Examples
 
@@ -78,5 +83,6 @@ Note: thupkg is a design preview; no real install backend yet.
 ## Future commands (planned)
 
 Reserved for later milestones: `ls`, `cat`, `cd`, `pwd`, `mkdir`, `ps`, `kill`,
-`mount`, `memmap`, `pages`, `heap`, `dmesg`, `startx`. These appear in the
-roadmap and the preview terminal but are **not** in the kernel shell yet.
+`mount`, `heap`, `dmesg`, `startx`. These appear in the roadmap but are **not**
+in the kernel shell yet. (`memmap`, `pages`, `allocpage`, `freepage` graduated
+from planned to implemented in Milestone 0.3.)

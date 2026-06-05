@@ -215,7 +215,7 @@
   <div class="boot-inner">
     <div class="boot-logo">TH</div>
     <div class="boot-title">THUOS</div>
-    <div class="boot-sub">THU Kernel 0.2.0 "Boot Seed" · x86 (i386, 32-bit)</div>
+    <div class="boot-sub">THU Kernel 0.3.0 "Memory Foundation" · x86 (i386, 32-bit)</div>
     <div class="boot-bar"><i id="bootbar"></i></div>
     <div class="boot-log" id="bootlog"></div>
     <div class="boot-skip">click anywhere to skip →</div>
@@ -240,7 +240,7 @@
     <div class="tb-left">
       <div class="tb-logo">TH</div>
       <div class="tb-name">THUOS</div>
-      <div class="tb-mile">THU Desktop · Milestone 0.2 — Boot Seed</div>
+      <div class="tb-mile">THU Desktop · Milestone 0.3 — Memory Foundation</div>
     </div>
     <div class="tb-right">
       <div class="chip hide-sm"><span class="dot"></span>Local-first</div>
@@ -275,7 +275,7 @@ const ICON = {
 
 /* ---- boot sequence ---- */
 const bootLines = [
-  'THU Kernel 0.2.0 "Boot Seed" — x86 (i386, 32-bit)',
+  'THU Kernel 0.3.0 "Memory Foundation" — x86 (i386, 32-bit)',
   'From-scratch OS foundation. Booting...',
   '[ <b>OK</b> ] Serial COM1 debug channel',
   '[ <b>OK</b> ] Global Descriptor Table',
@@ -284,6 +284,7 @@ const bootLines = [
   '[ <b>OK</b> ] PIC remap + IRQ routing',
   '[ <b>OK</b> ] PIT timer @ 100 Hz',
   '[ <b>OK</b> ] PS/2 keyboard (IRQ1)',
+  '[ <b>OK</b> ] Physical memory manager (4 KiB frames)',
   'Welcome to THUOS.',
 ];
 const bootlog = document.getElementById('bootlog');
@@ -517,18 +518,18 @@ function renderEditor(body){
 function renderAbout(body){
   body.innerHTML='<div class="about">'
     +'<div class="about-logo">TH</div>'
-    +'<h2>THUOS <span class="muted" style="font-size:15px">0.2.0</span></h2>'
+    +'<h2>THUOS <span class="muted" style="font-size:15px">0.3.0</span></h2>'
     +'<p>A from-scratch personal operating system: a real bootable kernel today, a calm local-first desktop tomorrow. Built with honest engineering and verified builds.</p>'
     +'<div class="kv">'
     +'<b>Kernel</b><span>THU Kernel · x86 (i386, 32-bit)</span>'
-    +'<b>Codename</b><span>Boot Seed</span>'
+    +'<b>Codename</b><span>Memory Foundation</span>'
     +'<b>Boot</b><span>Multiboot 1 (GRUB-compatible)</span>'
     +'<b>Verified</b><span class="ok">build + link + multiboot header ✓</span>'
     +'<b>Not yet</b><span class="muted">QEMU boot (no emulator in build env)</span>'
     +'<b>Desktop</b><span>THU Desktop — concept preview</span>'
     +'</div>'
     +'<div style="margin-top:14px"><span class="tag ok">Kernel foundation</span>'
-    +'<span class="tag wip">Memory manager</span><span class="tag plan">Filesystem</span>'
+    +'<span class="tag ok">Memory manager</span><span class="tag plan">Paging</span><span class="tag plan">Filesystem</span>'
     +'<span class="tag plan">GUI</span></div></div>';
 }
 
@@ -540,7 +541,7 @@ function renderKStatus(body){
     +'<b class="warn">Notice:</b> Preview UI is web-based; kernel boot not verified '
     +'here because QEMU is unavailable.</div>'
     +'<div class="kv" style="margin-top:14px">'
-    +'<b>Kernel</b><span>THU Kernel 0.2.0 &quot;Boot Seed&quot;</span>'
+    +'<b>Kernel</b><span>THU Kernel 0.3.0 &quot;Memory Foundation&quot;</span>'
     +'<b>Build</b><span class="ok">compiles + links to Multiboot ELF ✓</span>'
     +'<b>Boot</b><span class="warn">not run here (no qemu-system-i386)</span>'
     +'<b>To boot</b><span>qemu-system-i386 -kernel build/kernel.elf</span>'
@@ -549,7 +550,7 @@ function renderKStatus(body){
     +'<span class="tag ok">boot</span><span class="tag ok">VGA</span><span class="tag ok">serial</span>'
     +'<span class="tag ok">GDT/IDT</span><span class="tag ok">exceptions</span><span class="tag ok">PIC/IRQ</span>'
     +'<span class="tag ok">PIT</span><span class="tag ok">keyboard</span><span class="tag ok">shell</span>'
-    +'<span class="tag wip">memory</span><span class="tag plan">filesystem</span>'
+    +'<span class="tag ok">memory</span><span class="tag plan">paging</span><span class="tag plan">filesystem</span>'
     +'<span class="tag plan">userspace</span><span class="tag plan">GUI</span>';
 }
 
@@ -565,6 +566,8 @@ function renderBuild(body){
     ['Symbol isr_handler','present',true],
     ['Symbol irq_handler','present',true],
     ['Symbol shell_run','present',true],
+    ['Symbol pmm_init / pmm_alloc_frame','present',true],
+    ['Allocator unit test','make test — passed',true],
     ['QEMU boot','not verified here (no emulator)',false],
     ['Bootable ISO','not built here (no grub-mkrescue)',false],
   ];
@@ -573,7 +576,7 @@ function renderBuild(body){
     +'BUILD_VERIFICATION.txt (regenerate with <span class="acc">make verify</span>).</div>'
     +rows.map(r=>'<div class="statline"><span>'+r[0]+'</span>'
       +'<span class="'+(r[2]?'ok':'warn')+'">'+(r[2]?'✓ ':'— ')+r[1]+'</span></div>').join('')
-    +'<div style="margin-top:12px;font-size:12px" class="muted">12 checks passed, 0 failed in the '
+    +'<div style="margin-top:12px;font-size:12px" class="muted">16 checks passed, 0 failed in the '
     +'recorded run. These are structural checks (build + format), not a boot.</div>';
 }
 
@@ -591,7 +594,7 @@ function renderTerminal(body){
     w('  ######  ##  ##  ##  ##   ####    #####','acc');
     w('    ##    ######  ##  ##  ##  ##   ####','acc');
     w('    ##    ##  ##   ####    ####   #####','acc');
-    w('THUOS 0.2.0 "Boot Seed" — THU Kernel · x86 (i386, 32-bit)','muted');
+    w('THUOS 0.3.0 "Memory Foundation" — THU Kernel · x86 (i386, 32-bit)','muted');
   };
   banner();
   w('THU Terminal — a browser simulation of the THUOS kernel shell.','muted');
@@ -608,28 +611,41 @@ function renderTerminal(body){
       "  <span class='acc'>thupkg</span>   package design preview   <span class='acc'>roadmap</span>  release roadmap",
       "  <span class='acc'>neofetch</span> system art              <span class='acc'>echo X</span>   print text",
       "  <span class='acc'>clear</span>    clear screen            <span class='acc'>banner</span>   THUOS banner",
-      "  <span class='acc'>mem</span>      memory hint             <span class='acc'>panic</span>    simulated kernel panic",
-      "  <span class='acc'>reboot</span>   simulated reboot        <span class='acc'>halt</span>     simulated halt",
+      "  <span class='acc'>mem</span>      memory summary          <span class='acc'>memmap</span>   multiboot memory map",
+      "  <span class='acc'>pages</span>    frame statistics        <span class='acc'>allocpage</span> alloc a 4 KiB frame",
+      "  <span class='acc'>panic</span>    simulated kernel panic   <span class='acc'>reboot</span>   simulated reboot",
+      "  <span class='acc'>halt</span>     simulated halt",
     ];},
     about(){return['THUOS — a from-scratch personal operating system.',
       'Kernel : THU Kernel','Goal   : local-first, privacy-first, honest engineering.',
       'Built incrementally from a bootable kernel toward THU Desktop.'];},
-    version(){return['THU Kernel 0.2.0 "Boot Seed"',
-      'Milestone 0.2 — Kernel Stability, Diagnostics, Timer, Preview'];},
+    version(){return['THU Kernel 0.3.0 "Memory Foundation"',
+      'Milestone 0.3 — Memory Foundation (physical memory manager)'];},
     status(){return['THUOS subsystem status (honest):',
       "  [<span class='ok'>done</span>]  Multiboot boot, VGA console, serial COM1",
       "  [<span class='ok'>done</span>]  GDT, IDT, CPU exceptions 0-31",
       "  [<span class='ok'>done</span>]  PIC remap, PIT timer, keyboard IRQ, shell",
       "  [<span class='ok'>done</span>]  Panic / assert system",
-      "  [<span class='warn'>wip</span>]   Memory manager (Milestone 0.3)",
+      "  [<span class='ok'>done</span>]  Physical memory manager (4 KiB frames)",
+      "  [<span class='warn'>plan</span>] Paging + kernel heap (designed, not built)",
       "  [<span class='muted'>plan</span>]  VFS + initrd (0.4), userspace (0.5), GUI (0.6+)"];},
-    sysinfo(){return['THUOS 0.2.0 "Boot Seed"','Arch    : x86 (i386, 32-bit)',
-      'Kernel  : THU Kernel','Timer   : PIT @ 100 Hz','Uptime  : '+uptimeStr()+' (demo)',
-      'Boot    : Multiboot 1 ELF (verified)'];},
+    sysinfo(){return['THUOS 0.3.0 "Memory Foundation"','Arch    : x86 (i386, 32-bit)',
+      'Kernel  : THU Kernel','Timer   : PIT @ 100 Hz','Memory  : PMM, 4 KiB frames',
+      'Uptime  : '+uptimeStr()+' (demo)','Boot    : Multiboot 1 ELF (verified)'];},
     uptime(){return['Demo uptime: '+uptimeStr()+'  (browser preview session)'];},
-    mem(){return['Multiboot memory hint (preview values):',
-      '  lower :    640 KiB','  upper : 130048 KiB','  total : ~130688 KiB (~127 MiB)',
-      'Full physical memory manager is planned for Milestone 0.3.'];},
+    mem(){return['Memory summary (preview values):',
+      '  usable : ~130048 KiB  (32512 frames)','  free   : 32194 frames',
+      '  used   : 318 frames (reserved + allocated)',
+      'Physical memory manager active (4 KiB frames).'];},
+    memmap(){return['Multiboot memory map (base / length / type) — preview:',
+      '  0x00000000  0x0009fc00  available','  0x0009fc00  0x00000400  reserved',
+      '  0x000f0000  0x00010000  reserved','  0x00100000  0x07ee0000  available'];},
+    pages(){return['Physical memory (4 KiB frames):',
+      '  usable RAM : ~130048 KiB (32512 frames)',
+      '  reserved   : 318 frames (low 1 MiB + kernel + boot structs)',
+      '  free       : 32194 frames','  used       : 318 frames (reserved + allocated)'];},
+    allocpage(){return['Allocated frame at physical 0x0012a000 (free now: 32193 frames)',
+      'Free it with: freepage 0x0012a000','(preview simulation of pmm_alloc_frame)'];},
     panic(){
       w("<span style='color:#ff6b6b;font-weight:700'>*** THUOS KERNEL PANIC (simulated) ***</span>");
       w("panic: user-requested panic test",'warn');
@@ -660,12 +676,13 @@ function renderTerminal(body){
       '  0.7  THU Desktop   in-kernel window manager',
       '  1.0  Dev Preview   bootable ISO + docs'];},
     neofetch(){return[
-      "  <span class='acc'>TH</span>   THUOS 0.2.0 \"Boot Seed\"",
+      "  <span class='acc'>TH</span>   THUOS 0.3.0 \"Memory Foundation\"",
       "  <span class='acc'>██</span>   ---------------------",
       "  <span class='acc'>██</span>   kernel : THU Kernel (i386)",
       "       boot   : Multiboot 1 ELF ✓",
       "       timer  : PIT 100 Hz",
-      "       shell  : thuos>  (17 commands)",
+      "       memory : PMM, 4 KiB frames",
+      "       shell  : thuos>  (21 commands)",
       "       gui    : THU Desktop (concept)"];},
     banner(){return["  ######  ##  ##  ##  ##   ####    #####",
       "    ##    ######  ##  ##  ##  ##   ####",
