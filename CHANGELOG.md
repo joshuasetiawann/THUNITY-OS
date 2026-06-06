@@ -3,6 +3,27 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.11.0] — "Syscalls" — 2026-06-06
+
+A system-call interface (`int 0x80`) — the ABI boundary that userspace will use.
+For now it is exercised from the kernel (ring 0); the same DPL-3 gate will serve
+ring-3 processes once they exist. **Boot-verified in QEMU.**
+
+### Added — kernel (syscalls)
+- `kernel/arch/x86/syscall_core.{c,h}` — pure dispatch table (register/route,
+  unknown → `ENOSYS`, bounds), free of kernel deps → host-tested.
+- `kernel/arch/x86/syscall_stub.S` — `int 0x80` entry building the shared
+  `registers_t` frame; the result is written to the saved `eax` (restored by
+  `popa`), so the caller gets it in `eax` (number in eax, args in ebx/ecx/edx).
+- `kernel/arch/x86/syscall.c` — handlers `SYS_UPTIME`, `SYS_WRITE`, `SYS_GETPID`,
+  `SYS_VERSION`; installs the gate (DPL 3); `syscall_invoke()` for callers.
+- `kernel_main` runs a syscall self-test at boot (real `int 0x80`); shell gains `sys`.
+
+### Verification
+- `tests/test_syscall.c` (+ `make test`, now 7 host suites): routing, ENOSYS,
+  bounds, overwrite. `scripts/boottest.sh` asserts the `Syscall interface` marker
+  — so CI proves `int 0x80` actually traps, dispatches, and returns. BOOT-VERIFIED.
+
 ## [0.10.0] — "Filesystem" — 2026-06-06
 
 A real, usable **in-RAM filesystem** — the local-first storage foundation from

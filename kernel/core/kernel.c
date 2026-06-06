@@ -20,6 +20,7 @@
 #include "task.h"
 #include "coop.h"
 #include "fs.h"
+#include "syscall.h"
 #include "shell.h"
 
 static void ok_line(const char *label) {
@@ -93,6 +94,10 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
 
     kfs_init();
     ok_line("RAM filesystem ready (local-first, in-kernel files)");
+
+    syscall_init();
+    syscall_selftest();
+    ok_line("Syscall interface (int 0x80, ABI for userspace)");
 
     __asm__ volatile("sti");   /* interrupts on: timer + keyboard now live */
 
