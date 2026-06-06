@@ -1,6 +1,6 @@
 # THUOS — Project Status
 
-**Milestone:** 0.7 "Virtual Memory" — paging ENABLED (CR0.PG), boot-verified in QEMU (CI)
+**Milestone:** 0.8 "Context Switch" — cooperative task switch (real stack/register swap), boot-verified in QEMU (CI)
 **Date of this status:** 2026-06-06
 **Honesty rule:** every "Implemented" item is backed by a source file and passes
 the build + structural verification in [`BUILD_VERIFICATION.txt`](BUILD_VERIFICATION.txt).
@@ -32,6 +32,7 @@ what is actually run/tested.
 | Shell (`thuos>`, 27 commands) | Implemented | `kernel/shell/shell.c` |
 | **Scheduler (round-robin policy)** | **Implemented (policy core)** | `kernel/sched/sched_core.c`, `sched.c`; unit test `tests/test_sched.c`; context switch staged |
 | **Boot in QEMU (serial smoke-test)** | **Boot-verified (CI)** | `scripts/boottest.sh`; CI `boot-smoke` job; reaches `thuos>` over COM1 |
+| **Cooperative context switch** | **Boot-verified (QEMU/CI)** | `kernel/sched/context.S`, `task.c` (`tests/test_task.c`); boot asserts `Context switch OK` |
 | Freestanding `mem*`/`str*` | Implemented | `kernel/lib/string.c` |
 | **Multiboot memory-map parsing** | **Implemented** | `kernel/mm/multiboot.h`, `pmm.c` |
 | **Physical memory manager (4 KiB frames)** | **Implemented** | `kernel/mm/pmm.c`, `frame_bitmap.c`; unit test `tests/test_pmm.c` |
