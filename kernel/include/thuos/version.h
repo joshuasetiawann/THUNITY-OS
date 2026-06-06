@@ -8,9 +8,9 @@
 #define THUOS_FS_NAME      "THUFS"
 #define THUOS_PKG_NAME     "thupkg"
 
-#define THUOS_VERSION      "0.4.0"
-#define THUOS_CODENAME     "Kernel Heap"
-#define THUOS_MILESTONE    "Milestone 0.4 - Kernel Heap (kmalloc/kfree)"
+#define THUOS_VERSION      "0.5.0"
+#define THUOS_CODENAME     "Paging"
+#define THUOS_MILESTONE    "Milestone 0.5 - Paging tables + translation (staged; enable not boot-verified)"
 #define THUOS_ARCH         "x86 (i386, 32-bit)"
 
 #define THUOS_BUILD_DATE   __DATE__

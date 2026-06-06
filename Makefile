@@ -72,6 +72,8 @@ test:
 	@./$(BUILD)/test_pmm
 	@gcc -O2 -std=gnu11 -Wall -Wextra -o $(BUILD)/test_kheap tests/test_kheap.c
 	@./$(BUILD)/test_kheap
+	@gcc -O2 -std=gnu11 -Wall -Wextra -o $(BUILD)/test_vmm tests/test_vmm.c
+	@./$(BUILD)/test_vmm
 
 iso: kernel
 	@if command -v grub-mkrescue >/dev/null 2>&1 && command -v xorriso >/dev/null 2>&1; then \

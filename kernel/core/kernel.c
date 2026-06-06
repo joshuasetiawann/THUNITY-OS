@@ -15,6 +15,7 @@
 #include "keyboard.h"
 #include "pmm.h"
 #include "kheap.h"
+#include "vmm.h"
 #include "shell.h"
 
 static void ok_line(const char *label) {
@@ -52,6 +53,9 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
 
     kheap_init();
     ok_line("Kernel heap (1 MiB fixed arena, kmalloc/kfree)");
+
+    vmm_init();
+    ok_line("Paging tables: identity map low 8 MiB (staged, not enabled)");
 
     __asm__ volatile("sti");   /* interrupts on: timer + keyboard now live */
 

@@ -12,6 +12,7 @@
 #include "pit.h"
 #include "pmm.h"
 #include "kheap.h"
+#include "vmm.h"
 
 #define LINE_MAX 128
 
@@ -71,6 +72,7 @@ static void cmd_help(void) {
     kprintf("  heap       Kernel heap stats (kmalloc arena)\n");
     kprintf("  kmalloc N  Allocate N bytes from the kernel heap\n");
     kprintf("  kfree A    Free a kmalloc pointer (hex address)\n");
+    kprintf("  vmm [A]    Paging info; translate virtual addr A (hex)\n");
     kprintf("  echo       Print the rest of the line\n");
     kprintf("  banner     Show the THUOS banner\n");
     kprintf("  color N    Set text color (0-15)\n");
@@ -103,7 +105,8 @@ static void cmd_status(void) {
     kprintf("  [done]    Panic/assert system\n");
     kprintf("  [done]    Physical memory manager (Milestone 0.3)\n");
     kprintf("  [done]    Kernel heap kmalloc/kfree (Milestone 0.4)\n");
-    kprintf("  [plan]    Paging + virtual memory (next, highest risk)\n");
+    kprintf("  [wip]     Paging tables + translation (0.5, staged - not enabled)\n");
+    kprintf("  [plan]    Enable paging (QEMU), then processes + ring 3\n");
     kprintf("  [plan]    VFS + initrd, then userspace + syscalls\n");
 }
 
@@ -199,6 +202,28 @@ static void cmd_kfree(const char *args) {
             addr, (uint32_t)kheap_free(), kheap_check() ? "OK" : "CORRUPT");
 }
 
+static void cmd_vmm(const char *args) {
+    if (!vmm_is_ready()) {
+        kprintf("vmm: page tables were not built\n");
+        return;
+    }
+    uint32_t va;
+    if (parse_hex(args, &va)) {
+        uint32_t p = vmm_phys_of(va);
+        if (p == 0xFFFFFFFFu) kprintf("vmm: va 0x%08x is NOT mapped\n", va);
+        else                  kprintf("vmm: va 0x%08x -> pa 0x%08x\n", va, p);
+        return;
+    }
+    kprintf("Virtual memory (paging) - STAGED, not enabled:\n");
+    kprintf("  page directory : phys 0x%08x\n", vmm_dir_phys());
+    kprintf("  identity map   : low %u KiB built\n", vmm_mapped_bytes() / 1024u);
+    kprintf("  va 0x00000000  -> pa 0x%08x\n", vmm_phys_of(0x00000000u));
+    kprintf("  va 0x00100000  -> pa 0x%08x\n", vmm_phys_of(0x00100000u));
+    kprintf("  va 0x00400000  -> pa 0x%08x\n", vmm_phys_of(0x00400000u));
+    kprintf("  paging enable (CR0.PG): EXPERIMENTAL, NOT boot-verified here.\n");
+    kprintf("  usage: vmm <hex-va>  to translate an address\n");
+}
+
 static void cmd_thupkg(const char *args) {
     if (strcmp(args, "list") == 0) {
         kprintf("thupkg - installed/known packages (design preview):\n");
@@ -279,6 +304,7 @@ static void execute(char *line) {
     else if (strcmp(line, "heap") == 0)      cmd_heap();
     else if (strcmp(line, "kmalloc") == 0)   cmd_kmalloc(args);
     else if (strcmp(line, "kfree") == 0)     cmd_kfree(args);
+    else if (strcmp(line, "vmm") == 0)       cmd_vmm(args);
     else if (strcmp(line, "echo") == 0)      kprintf("%s\n", args);
     else if (strcmp(line, "banner") == 0)    print_banner();
     else if (strcmp(line, "color") == 0)     cmd_color(args);
