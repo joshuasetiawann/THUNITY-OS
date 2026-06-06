@@ -1,0 +1,26 @@
+name: CI
+
+# Honest CI for THUOS: it builds the freestanding i386 kernel and runs the
+# host unit tests (PMM + kernel heap). It does NOT boot the kernel — there is
+# no QEMU step here, so a green check means "builds + structure + allocator
+# logic verified", never "boot-verified".
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install 32-bit toolchain
+        run: sudo apt-get update && sudo apt-get install -y gcc-multilib
+
+      - name: Host unit tests (PMM + kernel heap)
+        run: make test
+
+      - name: Build kernel + structural verification
+        run: make verify
