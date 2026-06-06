@@ -2,699 +2,569 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>THUOS · Aurora — Kanvas Spasial</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THUOS · Aurora</title>
 <style>
 :root{
-  --bg0:#04050d; --bg1:#070a18; --ink:#eaf0ff; --ink2:#9fb0d8; --ink3:#62719b;
-  --teal:#2de2c6; --violet:#7b5cff; --magenta:#ff5cae; --amber:#ffce6b; --green:#5cffb0;
-  --glass:rgba(255,255,255,.045); --edge:rgba(255,255,255,.12);
+  --bg0:#05060f; --ink:#f1f5ff; --ink2:#b9c6e6; --ink3:#7d8cb4;
+  --teal:#2de2c6; --violet:#8b6dff; --magenta:#ff6db0; --amber:#ffcf76; --green:#54e6a6;
+  --glass:rgba(255,255,255,.05); --glass2:rgba(255,255,255,.03); --edge:rgba(255,255,255,.12);
   --ff:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,'SF Mono','JetBrains Mono',Menlo,Consolas,monospace;
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;overflow:hidden;background:var(--bg0);color:var(--ink);
-  font-family:var(--ff);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-body{cursor:default;user-select:none;touch-action:none}
+html,body{margin:0;height:100%;background:var(--bg0);color:var(--ink);
+  font-family:var(--ff);-webkit-font-smoothing:antialiased;overflow:hidden}
+h1,h2,h3,h4{margin:0;font-weight:650;letter-spacing:.2px}
+a{color:var(--teal)}
+::selection{background:rgba(139,109,255,.35)}
 
-/* ---------- ambient background layers ---------- */
+/* ambient background */
 #sky{position:fixed;inset:0;z-index:0;background:
-  radial-gradient(1200px 800px at 22% 18%, rgba(45,226,198,.10), transparent 60%),
-  radial-gradient(1100px 900px at 82% 30%, rgba(123,92,255,.12), transparent 62%),
-  radial-gradient(1300px 1000px at 60% 96%, rgba(255,92,174,.10), transparent 60%),
-  linear-gradient(160deg,#04050d 0%,#070a18 55%,#05070f 100%);}
-#aurora{position:fixed;inset:-25%;z-index:0;filter:blur(70px) saturate(125%);opacity:.7;pointer-events:none}
-.band{position:absolute;border-radius:50%;mix-blend-mode:screen;opacity:.55;animation:drift 26s ease-in-out infinite}
-.b1{width:60vw;height:42vw;left:6%;top:8%;background:radial-gradient(circle,rgba(45,226,198,.9),transparent 65%);animation-delay:0s}
-.b2{width:55vw;height:48vw;right:2%;top:2%;background:radial-gradient(circle,rgba(123,92,255,.9),transparent 65%);animation-delay:-7s}
-.b3{width:64vw;height:46vw;left:24%;bottom:-12%;background:radial-gradient(circle,rgba(255,92,174,.8),transparent 65%);animation-delay:-13s}
-.b4{width:40vw;height:34vw;right:18%;bottom:-6%;background:radial-gradient(circle,rgba(92,255,176,.55),transparent 65%);animation-delay:-19s}
-@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(4%,-3%) scale(1.08)}66%{transform:translate(-3%,4%) scale(.96)}}
-#stars{position:fixed;inset:0;z-index:1;pointer-events:none}
-#grain{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.04;mix-blend-mode:overlay;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
-#vignette{position:fixed;inset:0;z-index:3;pointer-events:none;
-  background:radial-gradient(140% 120% at 50% 45%,transparent 55%,rgba(2,3,8,.66) 100%)}
+  radial-gradient(1100px 760px at 18% 12%,rgba(45,226,198,.10),transparent 60%),
+  radial-gradient(1000px 820px at 86% 22%,rgba(139,109,255,.13),transparent 62%),
+  radial-gradient(1200px 900px at 64% 102%,rgba(255,109,176,.09),transparent 60%),
+  linear-gradient(160deg,#05060f,#080b1a 55%,#06080f)}
+#aurora{position:fixed;inset:-25%;z-index:0;filter:blur(80px) saturate(120%);opacity:.55;pointer-events:none}
+.band{position:absolute;border-radius:50%;mix-blend-mode:screen;animation:drift 30s ease-in-out infinite}
+.b1{width:55vw;height:40vw;left:4%;top:6%;background:radial-gradient(circle,rgba(45,226,198,.85),transparent 65%)}
+.b2{width:52vw;height:44vw;right:0;top:0;background:radial-gradient(circle,rgba(139,109,255,.85),transparent 65%);animation-delay:-9s}
+.b3{width:60vw;height:42vw;left:22%;bottom:-14%;background:radial-gradient(circle,rgba(255,109,176,.7),transparent 65%);animation-delay:-17s}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(3%,-3%) scale(1.07)}}
+#stars{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.7}
+#vignette{position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(140% 120% at 50% 40%,transparent 58%,rgba(2,3,8,.6))}
 
-/* ---------- the spatial canvas ---------- */
-#stage{position:fixed;inset:0;z-index:4;overflow:hidden;cursor:grab}
-#stage.panning{cursor:grabbing}
-#world{position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;will-change:transform}
-#links{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
-#links line{stroke:rgba(159,176,216,.16);stroke-width:1.4;vector-effect:non-scaling-stroke}
-#links line.path{stroke:rgba(45,226,198,.30);stroke-dasharray:2 7;stroke-width:2}
+/* app shell */
+#app{position:fixed;inset:0;z-index:5;display:grid;
+  grid-template-columns:252px 1fr;grid-template-rows:60px 1fr 44px;
+  grid-template-areas:"head head" "side main" "foot foot"}
 
-.node{position:absolute;transform:translate(-50%,-50%);padding:18px 20px;border-radius:20px;
-  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
-  border:1px solid var(--edge);backdrop-filter:blur(14px) saturate(140%);
-  box-shadow:0 18px 60px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08);
-  transition:box-shadow .35s,border-color .35s,transform .12s;cursor:pointer;
-  --accent:var(--teal)}
-.node::before{content:"";position:absolute;inset:-1px;border-radius:21px;padding:1px;pointer-events:none;
-  background:linear-gradient(140deg,var(--accent),transparent 55%);
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor;mask-composite:exclude;opacity:.55}
-.node:hover{box-shadow:0 22px 80px rgba(0,0,0,.55),0 0 0 1px var(--accent),0 0 44px -8px var(--accent)}
-.node.sel{box-shadow:0 26px 90px rgba(0,0,0,.6),0 0 0 1.5px var(--accent),0 0 70px -6px var(--accent)}
-.node .kick{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.node .glyph{font-size:18px;width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:11px;
-  background:rgba(255,255,255,.06);border:1px solid var(--edge);color:var(--accent);
-  box-shadow:0 0 22px -6px var(--accent)}
-.node h3{margin:0;font-size:15px;letter-spacing:.2px;font-weight:600}
-.node .sub{font-size:11.5px;color:var(--ink3);letter-spacing:.4px;text-transform:uppercase;margin-top:1px}
-.node .detail{margin-top:6px;font-size:13px;line-height:1.5;color:var(--ink2);max-width:340px}
-.node .detail b{color:var(--ink);font-weight:600}
-.node .detail .warn{color:var(--amber)}
-.node .detail ul{margin:8px 0 0;padding-left:16px}
-.node .detail li{margin:3px 0}
-.node .tagrow{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
-.node .tag{font-size:10.5px;color:var(--ink3);border:1px solid var(--edge);border-radius:999px;padding:2px 8px;letter-spacing:.3px}
-
-/* core node special */
-.node.core{--accent:var(--violet);text-align:center;padding:26px 30px}
-.node.core .ring{position:absolute;inset:-26px;border-radius:50%;border:1px solid rgba(123,92,255,.25);animation:spin 30s linear infinite}
-.node.core .ring.r2{inset:-46px;border-color:rgba(45,226,198,.18);animation-duration:46s;animation-direction:reverse}
-@keyframes spin{to{transform:rotate(360deg)}}
-.node.core .orb{width:64px;height:64px;margin:0 auto 12px;border-radius:50%;
-  background:radial-gradient(circle at 38% 34%,#fff,#bfa9ff 30%,#6f4ff0 64%,#2a1c6e 100%);
-  box-shadow:0 0 60px -6px var(--violet),0 0 120px -20px var(--magenta);animation:breathe 5s ease-in-out infinite}
-@keyframes breathe{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.06);filter:brightness(1.15)}}
-.node.core h2{margin:0;font-size:21px;font-weight:700;letter-spacing:.4px}
-.node.core .tag-core{margin-top:6px;font-size:12px;color:var(--ink2)}
-
-/* step nodes (roadmap path) */
-.node.step{padding:12px 14px;--accent:var(--teal);min-width:170px}
-.node.step .num{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:1px}
-.node.step h3{font-size:13px;margin-top:2px}
-.node.step .meta{font-size:11px;color:var(--ink3);margin-top:5px}
-.node.step.risk{--accent:var(--magenta)}
-.node.step.risk .badge{display:inline-block;margin-top:6px;font-size:10px;color:var(--magenta);
-  border:1px solid rgba(255,92,174,.4);border-radius:999px;padding:1px 7px}
-
-/* gauges in system node */
-.gauge{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:12px;color:var(--ink2)}
-.gauge .lab{width:42px;color:var(--ink3);font-family:var(--mono);font-size:11px}
-.gauge .track{flex:1;height:6px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden}
-.gauge .fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--violet));transition:width .8s}
-.gauge .val{width:38px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--ink)}
-
-/* semantic zoom tiers: control what shows at each zoom */
-[data-zoom="overview"] .node .detail,[data-zoom="overview"] .node .tagrow,[data-zoom="overview"] .node.step .meta{display:none}
-[data-zoom="overview"] .node .sub{opacity:.6}
-[data-zoom="mid"] .node .detail{max-height:0;opacity:0;overflow:hidden;margin-top:0}
-[data-zoom="detail"] .node .detail{opacity:1}
-.node .detail{transition:opacity .3s}
-
-/* ---------- calm periphery overlays ---------- */
-#topbar{position:fixed;top:0;left:0;right:0;z-index:7;display:flex;justify-content:space-between;align-items:center;
-  padding:16px 22px;pointer-events:none;font-size:12.5px;color:var(--ink2);letter-spacing:.3px}
-#topbar .brand{display:flex;align-items:center;gap:10px;pointer-events:auto}
-#topbar .dot{width:9px;height:9px;border-radius:50%;background:var(--teal);box-shadow:0 0 14px var(--teal)}
-#topbar .brand b{color:var(--ink);font-weight:600;letter-spacing:.6px}
-#topbar .center{display:flex;flex-direction:column;align-items:center;line-height:1.25}
-#topbar .clock{font-size:15px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
-#topbar .climate{font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:1.2px}
+/* header (calm periphery) */
+#topbar{grid-area:head;display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px;border-bottom:1px solid rgba(255,255,255,.07);
+  background:linear-gradient(180deg,rgba(10,13,26,.55),rgba(10,13,26,.2));backdrop-filter:blur(14px)}
+#topbar .brand{display:flex;align-items:center;gap:11px}
+#topbar .logo{width:30px;height:30px;border-radius:9px;background:
+  radial-gradient(circle at 36% 32%,#fff,#bda9ff 32%,#6f4ff0 66%,#241a63);
+  box-shadow:0 0 22px -4px var(--violet)}
+#topbar .brand b{font-size:14.5px;letter-spacing:.7px}
+#topbar .brand .v{font-size:10.5px;color:var(--ink3);font-family:var(--mono);margin-left:2px}
+#topbar .center{text-align:center;line-height:1.15}
+#topbar .clock{font-size:16px;font-weight:650;font-variant-numeric:tabular-nums}
+#topbar .climate{font-size:10.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:1.4px}
 #topbar .right{display:flex;gap:14px;align-items:center}
 #topbar .vital{font-family:var(--mono);font-size:11px;color:var(--ink3)}
-#topbar .vital b{color:var(--teal)}
+#topbar .vital b{color:var(--teal);font-weight:600}
 
-/* leap / intent bar */
-#leapWrap{position:fixed;z-index:9;left:50%;top:38%;transform:translate(-50%,-50%) scale(.96);
-  width:min(560px,90vw);opacity:0;pointer-events:none;transition:opacity .22s,transform .22s}
-#leapWrap.open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
-#leap{display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:18px;
-  background:rgba(10,13,28,.72);backdrop-filter:blur(22px) saturate(150%);
-  border:1px solid var(--edge);box-shadow:0 30px 90px rgba(0,0,0,.6),0 0 0 1px rgba(123,92,255,.25)}
-#leap .ico{color:var(--violet);font-size:18px}
-#leap input{flex:1;background:none;border:none;outline:none;color:var(--ink);font-size:17px;font-family:var(--ff)}
-#leap input::placeholder{color:var(--ink3)}
-#leap kbd{font-family:var(--mono);font-size:10.5px;color:var(--ink3);border:1px solid var(--edge);border-radius:6px;padding:2px 6px}
-#leapList{margin-top:8px;border-radius:16px;overflow:hidden;border:1px solid var(--edge);
-  background:rgba(8,11,24,.82);backdrop-filter:blur(22px)}
-#leapList .row{display:flex;align-items:center;gap:12px;padding:11px 16px;font-size:13.5px;color:var(--ink2);cursor:pointer}
-#leapList .row .g{width:24px;height:24px;display:grid;place-items:center;border-radius:8px;background:rgba(255,255,255,.05);color:var(--teal);font-size:13px}
-#leapList .row b{color:var(--ink);font-weight:600}
-#leapList .row small{color:var(--ink3);margin-left:auto;font-size:11px}
-#leapList .row.active,#leapList .row:hover{background:rgba(123,92,255,.16);color:var(--ink)}
+/* sidebar */
+#side{grid-area:side;padding:16px 12px;display:flex;flex-direction:column;gap:4px;
+  border-right:1px solid rgba(255,255,255,.07);
+  background:linear-gradient(180deg,rgba(9,12,24,.5),rgba(9,12,24,.25));backdrop-filter:blur(14px);overflow-y:auto}
+#side .grp{font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:1.4px;margin:10px 10px 4px}
+.navitem{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:13px;cursor:pointer;
+  color:var(--ink2);font-size:14px;border:1px solid transparent;transition:.18s;position:relative}
+.navitem .ic{width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;border-radius:8px;
+  background:rgba(255,255,255,.05);border:1px solid var(--edge);font-size:14px;color:var(--ink2)}
+.navitem:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.navitem.active{background:rgba(139,109,255,.14);border-color:rgba(139,109,255,.4);color:var(--ink)}
+.navitem.active .ic{color:var(--violet);border-color:rgba(139,109,255,.5);box-shadow:0 0 20px -6px var(--violet)}
+.navitem.active::before{content:"";position:absolute;left:-12px;top:50%;transform:translateY(-50%);
+  width:3px;height:22px;border-radius:3px;background:linear-gradient(var(--teal),var(--violet))}
+#side .spacer{flex:1}
+#side .hint{margin:8px 6px;padding:11px 12px;border-radius:12px;background:var(--glass2);border:1px solid var(--edge);
+  font-size:11.5px;color:var(--ink3);line-height:1.5}
 
-/* dock of jump-chips (calm, bottom) */
-#dock{position:fixed;z-index:7;bottom:18px;left:50%;transform:translateX(-50%);
-  display:flex;gap:8px;padding:8px;border-radius:18px;
-  background:rgba(10,13,28,.5);backdrop-filter:blur(18px) saturate(140%);
-  border:1px solid var(--edge);box-shadow:0 18px 50px rgba(0,0,0,.45)}
-#dock button{all:unset;cursor:pointer;display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:12px;
-  font-size:12.5px;color:var(--ink2);transition:background .2s,color .2s}
-#dock button .g{font-size:14px}
-#dock button:hover{background:rgba(255,255,255,.07);color:var(--ink)}
+/* main */
+#main{grid-area:main;overflow-y:auto;padding:26px 30px 40px;scroll-behavior:smooth}
+.panel{display:none;max-width:920px;margin:0 auto;animation:rise .35s ease}
+.panel.show{display:block}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.phead{display:flex;align-items:center;gap:13px;margin-bottom:6px}
+.phead .pic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:19px;
+  background:rgba(255,255,255,.05);border:1px solid var(--edge);color:var(--accent,var(--teal));
+  box-shadow:0 0 26px -8px var(--accent,var(--teal))}
+.phead h2{font-size:21px}
+.phead .ps{font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.lead{color:var(--ink2);font-size:14.5px;line-height:1.6;margin:14px 0 20px;max-width:680px}
 
-/* zoom controls + minimap (corner ambient) */
-#zoomctl{position:fixed;z-index:7;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px}
-#zoomctl button{all:unset;cursor:pointer;width:40px;height:40px;display:grid;place-items:center;border-radius:12px;
-  background:rgba(10,13,28,.55);backdrop-filter:blur(14px);border:1px solid var(--edge);
-  color:var(--ink2);font-size:18px;transition:.2s}
-#zoomctl button:hover{color:var(--ink);background:rgba(255,255,255,.08)}
-#mini{position:fixed;z-index:7;left:18px;bottom:18px;width:188px;height:124px;border-radius:14px;
-  background:rgba(8,11,24,.55);backdrop-filter:blur(14px);border:1px solid var(--edge);
-  box-shadow:0 14px 40px rgba(0,0,0,.4);cursor:pointer;overflow:hidden}
-#mini canvas{width:100%;height:100%;display:block}
-#mini .cap{position:absolute;top:6px;left:9px;font-size:9.5px;color:var(--ink3);letter-spacing:.6px;text-transform:uppercase}
+.card{background:var(--glass);border:1px solid var(--edge);border-radius:18px;padding:18px 20px;
+  box-shadow:0 16px 50px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.06)}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:720px){.g2,.g3{grid-template-columns:1fr}}
 
-/* honest footer */
-#honest{position:fixed;z-index:7;bottom:64px;left:50%;transform:translateX(-50%);
-  font-size:11px;color:var(--ink3);letter-spacing:.5px;text-align:center;pointer-events:none;
-  background:rgba(4,5,13,.4);padding:4px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.06)}
-#honest b{color:var(--amber)}
+/* home tiles */
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:6px}
+@media(max-width:720px){.tiles{grid-template-columns:1fr 1fr}}
+.tile{cursor:pointer;border-radius:18px;padding:18px;background:var(--glass);border:1px solid var(--edge);
+  transition:.2s;position:relative;overflow:hidden}
+.tile:hover{transform:translateY(-3px);border-color:var(--tc,var(--teal));box-shadow:0 22px 60px -12px rgba(0,0,0,.5),0 0 32px -10px var(--tc,var(--teal))}
+.tile .ti{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:18px;margin-bottom:12px;
+  background:rgba(255,255,255,.06);border:1px solid var(--edge);color:var(--tc,var(--teal))}
+.tile h4{font-size:15px}
+.tile p{margin:5px 0 0;font-size:12.5px;color:var(--ink3);line-height:1.5}
+.tile .go{position:absolute;right:16px;top:18px;color:var(--ink3);transition:.2s}
+.tile:hover .go{color:var(--tc,var(--teal));transform:translateX(3px)}
 
-/* help overlay */
-#help{position:fixed;inset:0;z-index:12;display:none;place-items:center;background:rgba(3,4,10,.66);backdrop-filter:blur(8px)}
-#help.open{display:grid}
-#help .card{width:min(540px,92vw);padding:26px 28px;border-radius:22px;
-  background:rgba(10,13,28,.9);border:1px solid var(--edge);box-shadow:0 40px 120px rgba(0,0,0,.7)}
-#help h3{margin:0 0 4px;font-size:18px}
-#help p.s{margin:0 0 18px;color:var(--ink3);font-size:13px}
-#help .kv{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid rgba(255,255,255,.06);font-size:13.5px;color:var(--ink2)}
-#help kbd{font-family:var(--mono);font-size:11px;color:var(--ink);border:1px solid var(--edge);border-radius:7px;padding:3px 8px;background:rgba(255,255,255,.04)}
-#help .close{margin-top:18px;text-align:center;color:var(--ink3);font-size:12px}
+/* hero */
+.hero{display:flex;align-items:center;gap:20px;margin-bottom:22px}
+.hero .orb{width:72px;height:72px;flex:0 0 72px;border-radius:50%;
+  background:radial-gradient(circle at 38% 34%,#fff,#c3b0ff 30%,#6f4ff0 64%,#241a63);
+  box-shadow:0 0 60px -6px var(--violet),0 0 110px -22px var(--magenta);animation:breathe 5s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.hero h1{font-size:26px;letter-spacing:.4px}
+.hero p{margin:6px 0 0;color:var(--ink2);font-size:14px;max-width:520px;line-height:1.55}
+.chip{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.4px;
+  border:1px solid var(--edge);border-radius:999px;padding:4px 11px;color:var(--ink3);margin-top:10px}
+.chip .d{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px var(--amber)}
 
-/* boot intro */
-#boot{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:#04050d;transition:opacity .8s}
+/* status strip */
+.statusbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.stat{flex:1;min-width:150px;background:var(--glass2);border:1px solid var(--edge);border-radius:14px;padding:12px 14px}
+.stat .k{font-size:10.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px}
+.stat .val{font-size:15px;margin-top:3px;font-weight:600}
+.stat .val.warn{color:var(--amber)}.stat .val.ok{color:var(--green)}
+
+/* reality two-col */
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:720px){.cols{grid-template-columns:1fr}}
+.list{margin:0;padding:0;list-style:none}
+.list li{display:flex;gap:10px;padding:8px 0;font-size:13.5px;color:var(--ink2);line-height:1.45;border-top:1px solid rgba(255,255,255,.05)}
+.list li:first-child{border-top:none}
+.list li .m{flex:0 0 18px;font-weight:700}
+.list .yes .m{color:var(--green)}.list .no .m{color:var(--magenta)}
+.banner{margin-top:18px;border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px;
+  background:linear-gradient(90deg,rgba(255,207,118,.12),rgba(255,109,176,.08));border:1px solid rgba(255,207,118,.3)}
+.banner .bi{font-size:22px}
+.banner b{color:var(--amber)}
+.banner small{display:block;color:var(--ink3);font-size:12px;margin-top:2px}
+
+/* roadmap timeline */
+.timeline{position:relative;margin-top:8px;padding-left:8px}
+.tl{display:flex;gap:16px;padding:4px 0}
+.tl .rail{position:relative;flex:0 0 30px;display:flex;justify-content:center}
+.tl .rail::before{content:"";position:absolute;top:0;bottom:-10px;width:2px;background:rgba(255,255,255,.1)}
+.tl:last-child .rail::before{display:none}
+.tl .dot{position:relative;z-index:1;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--mono);font-size:12px;font-weight:600;color:var(--bg0);background:var(--teal);
+  box-shadow:0 0 18px -4px var(--teal)}
+.tl.risk .dot{background:var(--magenta);box-shadow:0 0 18px -4px var(--magenta)}
+.tl .body{flex:1;padding-bottom:16px}
+.tl h4{font-size:14.5px}
+.tl .s{font-size:12.5px;color:var(--ink3);margin-top:2px}
+.tl .badge{display:inline-block;margin-top:7px;font-size:10.5px;color:var(--magenta);
+  border:1px solid rgba(255,109,176,.4);border-radius:999px;padding:2px 9px}
+.legend{display:flex;gap:18px;margin:6px 0 14px;font-size:12px;color:var(--ink3)}
+.legend span{display:flex;align-items:center;gap:7px}
+.legend i{width:11px;height:11px;border-radius:50%}
+
+/* gauges */
+.gauge{display:flex;align-items:center;gap:10px;margin-top:11px;font-size:13px;color:var(--ink2)}
+.gauge .lab{width:46px;color:var(--ink3);font-family:var(--mono);font-size:11px}
+.gauge .track{flex:1;height:8px;border-radius:8px;background:rgba(255,255,255,.07);overflow:hidden}
+.gauge .fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--teal),var(--violet));transition:width .8s}
+.gauge .val{width:42px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--ink)}
+
+.note{font-size:12px;color:var(--ink3);margin-top:14px;line-height:1.5}
+.kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--edge);border-radius:6px;padding:2px 7px;color:var(--ink2)}
+.sectitle{font-size:13px;color:var(--ink3);text-transform:uppercase;letter-spacing:1.2px;margin:24px 0 10px}
+
+/* footer / dock */
+#foot{grid-area:foot;display:flex;align-items:center;justify-content:space-between;padding:0 18px;
+  border-top:1px solid rgba(255,255,255,.07);background:rgba(8,11,22,.5);backdrop-filter:blur(12px);
+  font-size:11.5px;color:var(--ink3)}
+#foot .honest b{color:var(--amber)}
+#foot .dock{display:flex;gap:8px}
+#foot .dock button{all:unset;cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;
+  font-size:12px;color:var(--ink2);border:1px solid transparent;transition:.18s}
+#foot .dock button:hover{background:rgba(255,255,255,.07);color:var(--ink);border-color:var(--edge)}
+
+/* tour */
+#tourOverlay{position:fixed;inset:0;z-index:30;background:rgba(3,4,10,.55);display:none}
+#tourOverlay.on{display:block}
+.tour-target{position:relative;z-index:32 !important;box-shadow:0 0 0 3px var(--violet),0 0 46px -4px var(--violet);border-radius:14px}
+#tourTip{position:fixed;z-index:33;width:min(320px,86vw);display:none;
+  background:rgba(12,15,30,.96);border:1px solid var(--edge);border-radius:16px;padding:16px 18px;
+  box-shadow:0 30px 90px rgba(0,0,0,.6),0 0 0 1px rgba(139,109,255,.3)}
+#tourTip.on{display:block}
+#tourTip .tn{font-family:var(--mono);font-size:11px;color:var(--violet);letter-spacing:.5px}
+#tourTip h4{font-size:15px;margin:4px 0 6px}
+#tourTip p{margin:0;font-size:13px;color:var(--ink2);line-height:1.5}
+#tourTip .row{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+#tourTip .skip{font-size:12px;color:var(--ink3);cursor:pointer}
+#tourTip .next{all:unset;cursor:pointer;background:linear-gradient(90deg,var(--teal),var(--violet));
+  color:#06121a;font-weight:650;font-size:13px;padding:8px 16px;border-radius:11px}
+
+/* boot */
+#boot{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:#05060f;transition:opacity .7s}
 #boot.gone{opacity:0;pointer-events:none}
-#boot .bcore{text-align:center}
-#boot .borb{width:78px;height:78px;margin:0 auto 22px;border-radius:50%;
-  background:radial-gradient(circle at 38% 34%,#fff,#bfa9ff 30%,#6f4ff0 64%,#221761 100%);
-  box-shadow:0 0 70px -4px var(--violet),0 0 140px -16px var(--magenta);animation:breathe 3s ease-in-out infinite}
-#boot h1{margin:0;font-size:24px;letter-spacing:3px;font-weight:700}
-#boot .tag{margin-top:8px;font-size:12px;color:var(--ink3);letter-spacing:2px;text-transform:uppercase}
-#boot .bar{margin:22px auto 0;width:200px;height:3px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
-#boot .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--violet),var(--magenta));animation:load 2.1s ease forwards}
+#boot .c{text-align:center}
+#boot .borb{width:74px;height:74px;margin:0 auto 20px;border-radius:50%;
+  background:radial-gradient(circle at 38% 34%,#fff,#c3b0ff 30%,#6f4ff0 64%,#241a63);
+  box-shadow:0 0 64px -4px var(--violet),0 0 130px -16px var(--magenta);animation:breathe 3s ease-in-out infinite}
+#boot h1{font-size:24px;letter-spacing:3px}
+#boot .t{margin-top:7px;font-size:11px;color:var(--ink3);letter-spacing:2px;text-transform:uppercase}
+#boot .bar{margin:22px auto 0;width:190px;height:3px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
+#boot .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--violet),var(--magenta));animation:load 1.9s ease forwards}
 @keyframes load{to{width:100%}}
-@media (max-width:640px){.node .detail{max-width:240px}#mini{display:none}#topbar .right .vital:nth-child(2){display:none}}
+
+/* responsive shell */
+@media(max-width:760px){
+  #app{grid-template-columns:1fr;grid-template-rows:58px auto 1fr 44px;
+    grid-template-areas:"head" "side" "main" "foot"}
+  #side{flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid rgba(255,255,255,.07);padding:10px}
+  #side .grp,#side .spacer,#side .hint{display:none}
+  .navitem{white-space:nowrap}
+  #topbar .center{display:none}
+}
 </style>
 </head>
 <body>
 <div id="sky"></div>
-<div id="aurora"><div class="band b1"></div><div class="band b2"></div><div class="band b3"></div><div class="band b4"></div></div>
+<div id="aurora"><div class="band b1"></div><div class="band b2"></div><div class="band b3"></div></div>
 <canvas id="stars"></canvas>
-<div id="grain"></div>
 <div id="vignette"></div>
 
-<div id="stage">
-  <div id="world">
-    <svg id="links"></svg>
-  </div>
+<div id="app">
+  <header id="topbar">
+    <div class="brand"><span class="logo"></span><b>THUOS · AURORA</b><span class="v">v0.3 · konsep</span></div>
+    <div class="center"><div class="clock" id="clock">--:--</div><div class="climate" id="climate">iklim sistem · tenang</div></div>
+    <div class="right">
+      <span class="vital">cpu <b id="vcpu">—</b></span>
+      <span class="vital">mem <b id="vmem">—</b></span>
+      <span class="vital">uptime <b id="vup">0s</b></span>
+    </div>
+  </header>
+
+  <nav id="side">
+    <div class="grp">Ruang</div>
+    <div class="navitem active" id="nav-beranda" data-go="beranda"><span class="ic">◉</span>Beranda</div>
+    <div class="navitem" id="nav-realita" data-go="realita"><span class="ic">⚑</span>Apa ini sebenarnya</div>
+    <div class="navitem" id="nav-roadmap" data-go="roadmap"><span class="ic">⤳</span>Roadmap</div>
+    <div class="grp">Visi</div>
+    <div class="navitem" id="nav-tampilan" data-go="tampilan"><span class="ic">⤢</span>Tampilan baru</div>
+    <div class="navitem" id="nav-arsitektur" data-go="arsitektur"><span class="ic">◈</span>Arsitektur</div>
+    <div class="grp">Sistem</div>
+    <div class="navitem" id="nav-sistem" data-go="sistem"><span class="ic">❖</span>Sistem</div>
+    <div class="navitem" id="nav-tentang" data-go="tentang"><span class="ic">∗</span>Tentang</div>
+    <div class="spacer"></div>
+    <div class="hint">Tip: klik mana saja di menu untuk pindah ruang. Tekan <span class="kbd">?</span> untuk tur lagi.</div>
+  </nav>
+
+  <main id="main">
+
+    <!-- BERANDA -->
+    <section class="panel show" data-panel="beranda">
+      <div class="hero">
+        <div class="orb"></div>
+        <div>
+          <h1>Selamat datang di THUOS · Aurora</h1>
+          <p>Ruang kerja yang <b>tenang, spasial, dan milikmu sendiri</b> — sebuah arah antarmuka masa depan yang tidak meniru OS mana pun.</p>
+          <span class="chip"><span class="d"></span>konsep antarmuka · bukan OS yang di-boot</span>
+        </div>
+      </div>
+
+      <div class="sectitle">Mulai dari sini</div>
+      <div class="tiles" id="homeTiles">
+        <div class="tile" data-go="realita" style="--tc:var(--amber)"><div class="ti">⚑</div><span class="go">→</span><h4>Apa ini sebenarnya</h4><p>Status THUOS yang jujur — apa yang sudah ada, apa yang belum.</p></div>
+        <div class="tile" data-go="roadmap" style="--tc:var(--teal)"><div class="ti">⤳</div><span class="go">→</span><h4>Roadmap</h4><p>9 langkah menuju OS yang benar-benar bisa dipakai.</p></div>
+        <div class="tile" data-go="tampilan" style="--tc:var(--violet)"><div class="ti">⤢</div><span class="go">→</span><h4>Tampilan baru</h4><p>Kenapa Aurora: zoomable + calm + local-first.</p></div>
+        <div class="tile" data-go="sistem" style="--tc:var(--green)"><div class="ti">❖</div><span class="go">→</span><h4>Sistem</h4><p>Telemetri konsep — CPU, memori, uptime.</p></div>
+        <div class="tile" data-go="arsitektur" style="--tc:var(--magenta)"><div class="ti">◈</div><span class="go">→</span><h4>Arsitektur</h4><p>Pilihan "masa depan": microkernel, capability, Rust.</p></div>
+        <div class="tile" data-go="tentang" style="--tc:var(--teal)"><div class="ti">∗</div><span class="go">→</span><h4>Tentang</h4><p>Apa itu THUOS, dan janji kejujurannya.</p></div>
+      </div>
+
+      <div class="statusbar">
+        <div class="stat"><div class="k">Tahap</div><div class="val">Pra-boot</div></div>
+        <div class="stat"><div class="k">Subsistem</div><div class="val ok">Host-tested</div></div>
+        <div class="stat"><div class="k">Boot-verified</div><div class="val warn">Tidak ada</div></div>
+        <div class="stat"><div class="k">Arsitektur</div><div class="val">i386 · Multiboot</div></div>
+      </div>
+    </section>
+
+    <!-- REALITA -->
+    <section class="panel" data-panel="realita">
+      <div class="phead" style="--accent:var(--amber)"><div class="pic">⚑</div><div><h2>Apa ini sebenarnya</h2><div class="ps">kejujuran · ground truth</div></div></div>
+      <p class="lead">THUOS hari ini adalah <b>kernel from-scratch yang jujur + subsistem yang host-tested</b>, di tahap <b>pra-boot</b>. Arsitekturnya benar dan logikanya teruji — tapi kemampuan inti OS <b>belum dihidupkan</b>. Berikut keadaannya, apa adanya.</p>
+      <div class="cols">
+        <div class="card">
+          <h4 style="margin-bottom:8px;color:var(--green)">Sudah ada (host-tested)</h4>
+          <ul class="list">
+            <li class="yes"><span class="m">✓</span>Boot stub Multiboot, GDT/IDT, exception, PIC/IRQ, PIT, keyboard</li>
+            <li class="yes"><span class="m">✓</span>Physical memory manager (bitmap frame 4 KiB)</li>
+            <li class="yes"><span class="m">✓</span>Kernel heap (bump), konstruksi tabel paging</li>
+            <li class="yes"><span class="m">✓</span>THUAR initrd + VFS/ramfs (read-only)</li>
+            <li class="yes"><span class="m">✓</span>ABI syscall + 11 handler, validator ELF32</li>
+            <li class="yes"><span class="m">✓</span>Model proses/scheduler/fd/gfx — semua diuji di host</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4 style="margin-bottom:8px;color:var(--magenta)">Belum hidup</h4>
+          <ul class="list">
+            <li class="no"><span class="m">✕</span>Belum pernah di-boot (tak ada QEMU di sini)</li>
+            <li class="no"><span class="m">✕</span>Context switch nyata (scheduler masih model)</li>
+            <li class="no"><span class="m">✕</span>Paging &amp; ring-3 di-<i>gate off</i> → belum ada isolasi memori</li>
+            <li class="no"><span class="m">✕</span>Filesystem writable, driver disk</li>
+            <li class="no"><span class="m">✕</span>Networking, libc/POSIX</li>
+            <li class="no"><span class="m">✕</span>Userspace dieksekusi (dimuat ke READY, tak jalan)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="banner"><span class="bi">⚑</span><div><b>BOOT-VERIFIED: tidak ada.</b><small>Tak ada yang di-boot di lingkungan ini. Semua "host-tested" = kode kernel yang sama dikompilasi & diuji dengan gcc native, bukan dijalankan sebagai OS.</small></div></div>
+      <p class="note">Di Aurora, OS menunjukkan keadaannya yang sebenarnya — transparansi adalah bagian dari desain, bukan cacat yang disembunyikan.</p>
+    </section>
+
+    <!-- ROADMAP -->
+    <section class="panel" data-panel="roadmap">
+      <div class="phead" style="--accent:var(--teal)"><div class="pic">⤳</div><div><h2>Roadmap menuju OS nyata</h2><div class="ps">riset §3 · dependency-ordered</div></div></div>
+      <p class="lead">Jalur berlapis dari "model host-tested" → "OS yang hidup". Setiap langkah membuka langkah berikutnya. Empat langkah <b style="color:var(--magenta)">merah</b> adalah yang paling berisiko menurut semua sumber OS-dev.</p>
+      <div class="legend">
+        <span><i style="background:var(--teal)"></i>langkah biasa</span>
+        <span><i style="background:var(--magenta)"></i>paling berisiko</span>
+      </div>
+      <div class="timeline" id="timeline"></div>
+      <p class="note">Sumber: OSDev <i>What order should I make things in</i> · <i>Getting to Ring 3</i> · MIT xv6 · os.phil-opp · OSTEP. Semua langkah harus dijalankan & diverifikasi di mesin ber-QEMU dulu — di sini statusnya tetap <b>COMPILE-ONLY</b>.</p>
+    </section>
+
+    <!-- TAMPILAN -->
+    <section class="panel" data-panel="tampilan">
+      <div class="phead" style="--accent:var(--violet)"><div class="pic">⤢</div><div><h2>Kenapa tampilan ini baru</h2><div class="ps">visi · bukan meniru siapa pun</div></div></div>
+      <p class="lead">Metafora "desktop" lahir di Xerox PARC ~1970 dan kini terasa membatasi. Aurora memilih tiga ide yang lebih jujur untuk era milik-sendiri:</p>
+      <div class="grid g3">
+        <div class="card"><h4 style="color:var(--teal)">⤢ Zoomable (ZUI)</h4><p style="color:var(--ink2);font-size:13px;line-height:1.55;margin-top:8px">Konten hidup di kanvas, navigasi lewat zoom &amp; "lompat" (cari-niat), bukan tumpukan window &amp; folder. <i style="color:var(--ink3)">Raskin Archy, Pad++.</i></p></div>
+        <div class="card"><h4 style="color:var(--green)">☁ Calm / ambient</h4><p style="color:var(--ink2);font-size:13px;line-height:1.55;margin-top:8px">Info tinggal di tepi (jam, sistem), datang ke pusat hanya saat perlu. Tenang, bukan berisik. <i style="color:var(--ink3)">Weiser &amp; Brown, 1995.</i></p></div>
+        <div class="card"><h4 style="color:var(--violet)">⬡ Local-first</h4><p style="color:var(--ink2);font-size:13px;line-height:1.55;margin-top:8px">Datamu hidup di perangkatmu, sinkron lewat CRDT, tetap milikmu &amp; jalan offline. <i style="color:var(--ink3)">Ink &amp; Switch, 2019.</i></p></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h4>Shell ini = perwujudan "calm + jelas"</h4>
+        <p style="color:var(--ink2);font-size:13.5px;line-height:1.6;margin-top:8px">Versi pertama Aurora memakai kanvas spasial murni — indah, tapi membingungkan. Pelajaran: ide baru tetap harus <b>langsung bisa dipahami</b>. Maka shell ini menaruh struktur jelas di depan (menu, beranda, panel), sambil tetap menyimpan jiwa zoomable/calm/local-first.</p>
+      </div>
+    </section>
+
+    <!-- ARSITEKTUR -->
+    <section class="panel" data-panel="arsitektur">
+      <div class="phead" style="--accent:var(--magenta)"><div class="pic">◈</div><div><h2>Pilihan arsitektur "masa depan"</h2><div class="ps">riset §4 · trade-off, bukan slogan</div></div></div>
+      <p class="lead">Apa yang membuat sebuah OS terasa "frontier" — dan apa biayanya. Semua ini relevan <b>setelah</b> dasar real-OS hidup.</p>
+      <div class="grid g2">
+        <div class="card"><h4 style="color:var(--violet)">Microkernel + capability</h4><p style="color:var(--ink2);font-size:13px;line-height:1.55;margin-top:8px">Inti minimal (IPC, scheduling, address-space) di ring 0; driver/FS/net di server user-space → TCB kecil. seL4 punya bukti formal ~8.700 baris C — tapi <b style="color:var(--amber)">bukan</b> "tak bisa diretas" (asumsi HW/timing). Fuchsia/Zircon: ~100 syscall, tanpa konsep "user".</p></div>
+        <div class="card"><h4 style="color:var(--teal)">Memory-safety (Rust)</h4><p style="color:var(--ink2);font-size:13px;line-height:1.55;margin-top:8px">~70% bug keamanan serius = memory-safety (Google/Microsoft). Redox OS = microkernel Rust. Bukan peluru perak: <span style="font-family:var(--mono)">unsafe</span> di batas HW, tak menutup bug logika/side-channel.</p></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h4>Saran realistis untuk THUOS</h4>
+        <ol style="color:var(--ink2);font-size:13.5px;line-height:1.7;margin:8px 0 0;padding-left:18px">
+          <li>Isolasi MMU sungguhan dulu (prasyarat segalanya).</li>
+          <li>Syscall ber-rasa capability + TCB kecil.</li>
+          <li>Jangka jauh: split microkernel-ish &amp;/atau bagian aman ditulis Rust.</li>
+        </ol>
+        <p class="note" style="margin-top:10px"><b>Hindari</b> menjanjikan "verified microkernel ala seL4" — itu upaya riset besar bertahun-tahun.</p>
+      </div>
+    </section>
+
+    <!-- SISTEM -->
+    <section class="panel" data-panel="sistem">
+      <div class="phead" style="--accent:var(--green)"><div class="pic">❖</div><div><h2>Sistem</h2><div class="ps">telemetri konsep</div></div></div>
+      <p class="lead">Gambaran tenang tentang "kondisi" sistem. Di OS jujur, panel ini menampilkan keadaan sebenarnya dari kernel — di konsep ini, angkanya simulasi.</p>
+      <div class="grid g2">
+        <div class="card">
+          <h4>Beban</h4>
+          <div class="gauge"><span class="lab">cpu</span><span class="track"><i class="fill" id="gcpu"></i></span><span class="val" id="tcpu">0%</span></div>
+          <div class="gauge"><span class="lab">memori</span><span class="track"><i class="fill" id="gmem"></i></span><span class="val" id="tmem">0%</span></div>
+          <div class="gauge"><span class="lab">i/o</span><span class="track"><i class="fill" id="gio"></i></span><span class="val" id="tio">0%</span></div>
+          <p class="note">angka konsep — bukan dari kernel nyata.</p>
+        </div>
+        <div class="card">
+          <h4>Informasi</h4>
+          <ul class="list" style="margin-top:6px">
+            <li class="yes"><span class="m" style="color:var(--ink3)">·</span>Versi: <b style="color:var(--ink)">THUOS 0.3.0 "Memory Foundation"</b></li>
+            <li class="yes"><span class="m" style="color:var(--ink3)">·</span>Target: i386 (32-bit) · Multiboot 1</li>
+            <li class="yes"><span class="m" style="color:var(--ink3)">·</span>Toolchain: gcc -m32 -ffreestanding</li>
+            <li class="yes"><span class="m" style="color:var(--ink3)">·</span>Uptime konsep: <b id="vup2" style="color:var(--ink)">0s</b></li>
+            <li class="no"><span class="m">✕</span>Boot nyata: belum (BOOT-VERIFIED: tidak ada)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- TENTANG -->
+    <section class="panel" data-panel="tentang">
+      <div class="phead" style="--accent:var(--teal)"><div class="pic">∗</div><div><h2>Tentang THUOS</h2><div class="ps">dan janji kejujurannya</div></div></div>
+      <p class="lead">THUOS adalah OS hobi x86 <b>dari nol</b> (bukan distro Linux, bukan skin UI, bukan simulator palsu). Dibangun pelan-pelan, subsistem demi subsistem, dengan satu aturan keras: <b>tidak melebih-lebihkan.</b></p>
+      <div class="card">
+        <h4>Label kejujuran yang dipakai</h4>
+        <div class="grid g2" style="margin-top:10px">
+          <ul class="list">
+            <li class="yes"><span class="m" style="color:var(--teal)">▹</span><b style="color:var(--ink)">HOST-TESTED</b> — diuji dengan gcc native</li>
+            <li class="yes"><span class="m" style="color:var(--teal)">▹</span><b style="color:var(--ink)">COMPILE-ONLY</b> — dikompilasi, belum dijalankan</li>
+            <li class="yes"><span class="m" style="color:var(--teal)">▹</span><b style="color:var(--ink)">DESIGN-ONLY</b> — masih rancangan</li>
+          </ul>
+          <ul class="list">
+            <li class="no"><span class="m" style="color:var(--amber)">▹</span><b style="color:var(--ink)">EXPERIMENTAL-OFF</b> — ada tapi gated off</li>
+            <li class="no"><span class="m" style="color:var(--amber)">▹</span><b style="color:var(--ink)">NOT-VERIFIED-HERE</b> — tak terbukti di sini</li>
+            <li class="no"><span class="m" style="color:var(--magenta)">▹</span><b style="color:var(--ink)">BOOT-VERIFIED</b> — <b style="color:var(--amber)">tidak ada</b></li>
+          </ul>
+        </div>
+      </div>
+      <p class="note">Aurora ini adalah <b>konsep visi antarmuka</b> dalam HTML — interaktif, tapi bukan GUI kernel dan bukan OS yang di-boot. Laporan riset lengkap ada di <span class="kbd">docs/THUOS_OS_RESEARCH.md</span>.</p>
+    </section>
+
+  </main>
+
+  <footer id="foot">
+    <div class="honest">konsep visi masa depan · bukan GUI kernel · bukan OS yang di-boot · <b>BOOT-VERIFIED: tidak ada</b></div>
+    <div class="dock">
+      <button id="btnTour">◷ Tur</button>
+      <button data-go="beranda">◉ Beranda</button>
+    </div>
+  </footer>
 </div>
 
-<!-- calm periphery -->
-<div id="topbar">
-  <div class="brand"><span class="dot"></span><b>THUOS · AURORA</b></div>
-  <div class="center"><div class="clock" id="clock">--:--</div><div class="climate" id="climate">iklim sistem · tenang</div></div>
-  <div class="right">
-    <span class="vital">cpu <b id="vcpu">—</b></span>
-    <span class="vital">mem <b id="vmem">—</b></span>
-    <span class="vital">uptime <b id="vup">0s</b></span>
-  </div>
+<!-- tour -->
+<div id="tourOverlay"></div>
+<div id="tourTip">
+  <div class="tn" id="tourN">TUR 1/5</div>
+  <h4 id="tourH">—</h4>
+  <p id="tourP">—</p>
+  <div class="row"><span class="skip" id="tourSkip">Lewati</span><button class="next" id="tourNext">Lanjut ▸</button></div>
 </div>
 
-<div id="leapWrap">
-  <div id="leap"><span class="ico">⌖</span>
-    <input id="leapInput" placeholder="lompat ke mana pun — ketik maksudmu…" autocomplete="off" spellcheck="false">
-    <kbd>esc</kbd></div>
-  <div id="leapList"></div>
-</div>
-
-<div id="dock">
-  <button data-jump="core"><span class="g">◉</span>Inti</button>
-  <button data-jump="reality"><span class="g">⚑</span>Realita</button>
-  <button data-jump="rm-title"><span class="g">⤳</span>Roadmap</button>
-  <button data-jump="ui-zui"><span class="g">⤢</span>Tampilan</button>
-  <button data-jump="system"><span class="g">❖</span>Sistem</button>
-  <button id="btnOverview"><span class="g">⊙</span>Tinjau semua</button>
-</div>
-
-<div id="zoomctl">
-  <button id="zin" title="Perbesar">+</button>
-  <button id="zout" title="Perkecil">−</button>
-  <button id="zfit" title="Tinjau semua (F)">⊙</button>
-  <button id="zhelp" title="Bantuan (?)">?</button>
-</div>
-
-<div id="mini"><span class="cap">peta</span><canvas id="minicv" width="376" height="248"></canvas></div>
-
-<div id="honest">konsep visi masa depan · bukan GUI kernel · bukan OS yang di-boot · <b>BOOT-VERIFIED: tidak ada</b></div>
-
-<div id="help">
-  <div class="card">
-    <h3>Cara menjelajah Aurora</h3>
-    <p class="s">Bukan desktop. Ini kanvas spasial tak-terbatas — kamu terbang di antara ide, sistem, dan roadmap THUOS.</p>
-    <div class="kv"><span>Geser kanvas</span><span>seret · <kbd>drag</kbd></span></div>
-    <div class="kv"><span>Perbesar / perkecil (ke arah kursor)</span><span><kbd>scroll</kbd> · <kbd>+</kbd> <kbd>−</kbd></span></div>
-    <div class="kv"><span>Lompat (cari niat)</span><span><kbd>/</kbd> atau <kbd>spasi</kbd></span></div>
-    <div class="kv"><span>Fokus ke satu sel</span><span><kbd>dbl-click</kbd></span></div>
-    <div class="kv"><span>Tinjau semua / kembali</span><span><kbd>F</kbd> · <kbd>Esc</kbd></span></div>
-    <div class="close">klik di mana saja untuk menutup · <kbd>?</kbd></div>
-  </div>
-</div>
-
-<div id="boot">
-  <div class="bcore">
-    <div class="borb"></div>
-    <h1>THUOS</h1>
-    <div class="tag">aurora · ruang kerja yang tenang</div>
-    <div class="bar"><i></i></div>
-  </div>
-</div>
+<!-- boot -->
+<div id="boot"><div class="c"><div class="borb"></div><h1>THUOS</h1><div class="t">aurora · ruang kerja yang tenang</div><div class="bar"><i></i></div></div></div>
 
 <script>
 "use strict";
-/* ============================================================
-   THUOS · Aurora — a spatial / zoomable / calm OS concept.
-   Realization of the deep-research UI thesis (ZUI + calm + local-first).
-   NOT a booted OS. NOT the kernel GUI. An interactive vision.
-   ============================================================ */
+/* THUOS · Aurora — a clear, guided futuristic OS shell.
+   Realizes the research UI thesis (zoomable spirit + calm + local-first)
+   but with a legible structure: header, sidebar, panels, first-run tour.
+   NOT a booted OS. NOT the kernel GUI. An honest interactive concept. */
 
-/* ---- content: spatial nodes ---- */
-const NODES = [
-  {id:'core', kind:'core', x:0, y:0, w:300,
-   title:'THUOS · Aurora', sub:'', glyph:'',
-   tags:'inti home now beranda mulai',
-   html:`<div class="ring"></div><div class="ring r2"></div>
-         <div class="orb"></div>
-         <h2>THUOS · Aurora</h2>
-         <div class="tag-core">Ruang kerja yang tenang, spasial, milikmu sendiri.</div>`},
+/* ---- navigation ---- */
+const panels = document.querySelectorAll('.panel');
+const navs = document.querySelectorAll('.navitem');
+function go(id){
+  panels.forEach(p=>p.classList.toggle('show', p.dataset.panel===id));
+  navs.forEach(n=>n.classList.toggle('active', n.dataset.go===id));
+  const main=document.getElementById('main'); if(main) main.scrollTop=0;
+}
+document.addEventListener('click', e=>{
+  const t = e.target.closest('[data-go]');
+  if(t){ go(t.dataset.go); }
+});
 
-  {id:'reality', accent:'var(--amber)', glyph:'⚑', x:-760, y:-300, w:360,
-   title:'Apa ini sebenarnya', sub:'kejujuran',
-   tags:'jujur nyata real status boot verified realita kebenaran',
-   html:`THUOS hari ini = <b>kernel from-scratch yang jujur + subsistem host-tested</b>, di tahap <b>PRA-boot</b>.
-     <ul>
-       <li>Belum pernah di-boot (tak ada QEMU di sini)</li>
-       <li>Belum ada <b>context switch</b> nyata</li>
-       <li>Paging &amp; ring-3 masih <b>gated off</b> → belum ada isolasi memori</li>
-       <li>Filesystem read-only; tanpa networking/libc</li>
-     </ul>
-     <div style="margin-top:8px"><span class="warn">BOOT-VERIFIED: tidak ada.</span> Fondasinya benar — tapi kemampuan inti OS belum hidup.</div>`},
-
-  {id:'ui-zui', accent:'var(--teal)', glyph:'⤢', x:-880, y:300, w:330,
-   title:'Tampilan: Zoomable', sub:'zui · raskin',
-   tags:'zoom zui raskin pad archy spasial tampilan antarmuka ui kanvas',
-   html:`<b>ZUI</b> — Zooming User Interface (Jef Raskin <i>Archy</i>, Pad++).
-     Konten hidup di kanvas tak-terbatas. Navigasi = <b>zoom + "leap"</b> (cari-lompat), bukan tumpukan window &amp; folder.
-     <div style="margin-top:6px;color:var(--ink3)">Kamu sedang memakainya sekarang.</div>`},
-
-  {id:'ui-calm', accent:'var(--green)', glyph:'☁', x:-560, y:580, w:330,
-   title:'Tampilan: Calm', sub:'weiser · ambient',
-   tags:'calm tenang ambient weiser periferi damai fokus',
-   html:`<b>Calm / ambient</b> (Weiser &amp; Brown, 1995). Informasi tinggal di <b>tepi</b>, datang ke pusat hanya saat perlu.
-     Tenang, bukan berisik — perhatianmu yang berharga, bukan notifikasi.`},
-
-  {id:'ui-local', accent:'var(--violet)', glyph:'⬡', x:-150, y:650, w:340,
-   title:'Tampilan: Local-first', sub:'ink & switch',
-   tags:'local first data crdt privasi milik sendiri sinkron offline',
-   html:`<b>Local-first</b> (Ink &amp; Switch, 2019). Datamu hidup di <b>perangkatmu</b>, bukan di server orang lain.
-     Sinkron lewat <b>CRDT</b>, tetap berfungsi offline, tetap milikmu. <i>Paling selaras dengan nilai THUOS.</i>`},
-
-  {id:'system', accent:'var(--teal)', glyph:'❖', x:760, y:380, w:300,
-   title:'Sistem', sub:'telemetri konsep',
-   tags:'sistem cpu mem memori vitals telemetri kinerja uptime',
-   html:`<div id="gauges">
-       <div class="gauge"><span class="lab">cpu</span><span class="track"><i class="fill" id="gcpu"></i></span><span class="val" id="tcpu">0%</span></div>
-       <div class="gauge"><span class="lab">mem</span><span class="track"><i class="fill" id="gmem"></i></span><span class="val" id="tmem">0%</span></div>
-       <div class="gauge"><span class="lab">io</span><span class="track"><i class="fill" id="gio"></i></span><span class="val" id="tio">0%</span></div>
-     </div>
-     <div style="margin-top:8px;color:var(--ink3);font-size:11.5px">angka konsep (bukan dari kernel nyata) — di OS jujur, sistem menunjukkan keadaannya yang sebenarnya.</div>`},
-
-  {id:'assistant', accent:'var(--magenta)', glyph:'✦', x:300, y:-560, w:330,
-   title:'Niat, bukan menu', sub:'nlui · spekulatif',
-   tags:'asisten niat intent ai nlui bahasa perintah cari',
-   html:`Antarmuka berbasis-<b>niat</b> (NLUI). Tekan <kbd style="font-family:var(--mono);font-size:11px;border:1px solid var(--edge);padding:1px 5px;border-radius:5px">/</kbd> lalu ketik maksudmu — kamu <b>lompat</b>, bukan menyusuri menu.
-     <div style="margin-top:6px;color:var(--ink3)">Arah AI-native — <i>spekulatif</i>, ditandai jujur.</div>`},
-
-  {id:'arch', accent:'var(--violet)', glyph:'◈', x:1000, y:-130, w:340,
-   title:'Pilihan arsitektur', sub:'masa depan',
-   tags:'arsitektur microkernel rust capability sel4 fuchsia redox isolasi',
-   html:`Untuk jadi "masa depan": <b>microkernel + capability</b> (seL4, Fuchsia/Zircon), <b>memory-safety</b> (Rust/Redox), TCB kecil.
-     <ul><li>seL4: bukti formal ~8.700 baris C — tapi <span class="warn">bukan "tak bisa diretas"</span></li>
-       <li>Rust: ~70% bug keamanan = memory-safety</li></ul>
-     Trade-off nyata, bukan slogan. Semua <b>setelah</b> dasar real-OS hidup.`},
-
-  {id:'workspace', accent:'var(--teal)', glyph:'▦', x:-330, y:-640, w:320,
-   title:'Ruang kerja', sub:'lokal · milikmu',
-   tags:'ruang kerja workspace catatan kode kanvas berkas file dokumen',
-   html:`Bukan "folder di disk orang lain" — tapi <b>ruang</b> di kanvasmu: Catatan · Kode · Kanvas.
-     Semua data lokal, dapat di-zoom, dapat dicari-lompat. Susun duniamu sendiri.`},
-
-  {id:'rm-title', accent:'var(--teal)', glyph:'⤳', x:720, y:-430, w:320,
-   title:'Peta menuju OS nyata', sub:'roadmap · §3 riset',
-   tags:'roadmap peta langkah jalur menuju nyata real path rencana',
-   html:`Jalur berlapis dari "model host-tested" → "OS hidup". Sembilan langkah di bawah ini —
-     <span class="warn">4 yang merah</span> adalah yang paling berisiko. Zoom &amp; ikuti jalurnya.`},
-];
-
-/* roadmap step path (from research §3) */
+/* ---- roadmap data ---- */
 const STEPS = [
-  {n:1, t:'Boot-verify di QEMU',      m:'lalu hardware',           x:1150, y:-360, risk:false},
-  {n:2, t:'Aktifkan paging + isolasi', m:'#PF · higher-half',      x:1330, y:-160, risk:true,  badge:'tersulit #1'},
-  {n:3, t:'Context switch nyata',     m:'scheduler preemptif',     x:1440, y:70,   risk:true,  badge:'race'},
-  {n:4, t:'Ring 3 + syscall hidup',   m:'TSS · int 0x80 · iret',   x:1470, y:310,  risk:true,  badge:'tersulit #2'},
-  {n:5, t:'Filesystem writable',      m:'driver blok · ATA/virtio',x:1410, y:545,  risk:true,  badge:'crash-konsistensi'},
-  {n:6, t:'libc + POSIX',             m:'port newlib/musl',        x:1270, y:745,  risk:false},
-  {n:7, t:'Networking (TCP/IP)',      m:'NIC + lwIP',              x:1070, y:880,  risk:false},
-  {n:8, t:'Userland + self-hosting',  m:'shell · toolchain',       x:840,  y:945,  risk:false},
-  {n:9, t:'SMP + fitur masa depan',   m:'multi-core',              x:600,  y:975,  risk:false},
+  {n:1,t:'Boot-verify di QEMU',s:'lalu hardware — tanpa ini, semua "host-tested" belum tervalidasi runtime',risk:false},
+  {n:2,t:'Aktifkan paging + isolasi',s:'page directory, CR3/CR0.PG, #PF handler, lalu higher-half',risk:true,badge:'tersulit #1'},
+  {n:3,t:'Context switch + scheduler preemptif',s:'save/restore register per-proses, didorong timer',risk:true,badge:'race'},
+  {n:4,t:'Ring 3 + syscall hidup',s:'TSS (ltr), gerbang int 0x80 DPL-3, iret ke user, fault policy',risk:true,badge:'tersulit #2'},
+  {n:5,t:'Filesystem writable + driver blok',s:'ATA/AHCI/virtio, lalu FS R/W (FAT/ext2)',risk:true,badge:'crash-konsistensi'},
+  {n:6,t:'libc + POSIX',s:'port newlib/musl → program nyata bisa jalan',risk:false},
+  {n:7,t:'Networking (TCP/IP)',s:'driver NIC (e1000/virtio-net) + stack (lwIP)',risk:false},
+  {n:8,t:'Userland + shell + self-hosting',s:'toolchain jalan di atas THUOS, ala Linux From Scratch',risk:false},
+  {n:9,t:'SMP / multi-core + fitur masa depan',s:'lalu microkernel-ish / Rust (lihat Arsitektur)',risk:false},
 ];
+const tl = document.getElementById('timeline');
+if(tl) tl.innerHTML = STEPS.map(s=>
+  '<div class="tl'+(s.risk?' risk':'')+'"><div class="rail"><div class="dot">'+s.n+'</div></div>'+
+  '<div class="body"><h4>'+s.t+'</h4><div class="s">'+s.s+'</div>'+
+  (s.risk?'<span class="badge">'+(s.badge||'risiko')+'</span>':'')+'</div></div>').join('');
 
-const LINKS = [
-  ['core','reality'],['core','rm-title'],['core','assistant'],['core','arch'],
-  ['core','system'],['core','workspace'],['core','ui-local'],
-  ['ui-zui','ui-calm'],['ui-calm','ui-local'],['core','ui-zui'],
-];
-
-/* ---------- build DOM ---------- */
-const world = document.getElementById('world');
-const linksSvg = document.getElementById('links');
-const nodeById = {};
-const allNodes = [];
-
-function el(tag, cls){const e=document.createElement(tag); if(cls)e.className=cls; return e;}
-
-NODES.forEach(n=>{
-  const d = el('div', 'node' + (n.kind==='core'?' core':''));
-  d.id = 'n-'+n.id;
-  if(n.accent) d.style.setProperty('--accent', n.accent);
-  d.style.left = n.x+'px'; d.style.top = n.y+'px';
-  if(n.w) d.style.width = n.w+'px';
-  if(n.kind==='core'){
-    d.innerHTML = n.html;
-  } else {
-    d.innerHTML =
-      '<div class="kick">'+(n.glyph?'<div class="glyph">'+n.glyph+'</div>':'')+
-      '<div><h3>'+n.title+'</h3>'+(n.sub?'<div class="sub">'+n.sub+'</div>':'')+'</div></div>'+
-      '<div class="detail">'+n.html+'</div>'+
-      '<div class="tagrow">'+n.tags.split(' ').slice(0,4).map(t=>'<span class="tag">'+t+'</span>').join('')+'</div>';
-  }
-  d.dataset.id = n.id;
-  world.appendChild(d);
-  n._el = d; n.cx = n.x; n.cy = n.y; n.hw = (n.w||300)/2; n.hh = 120;
-  nodeById[n.id] = n; allNodes.push(n);
-});
-
-STEPS.forEach(s=>{
-  const d = el('div','node step'+(s.risk?' risk':''));
-  d.id = 'n-step'+s.n;
-  d.style.left = s.x+'px'; d.style.top = s.y+'px';
-  d.innerHTML = '<div class="num">LANGKAH '+s.n+'</div><h3>'+s.t+'</h3>'+
-    '<div class="meta">'+s.m+'</div>'+(s.risk?'<div class="badge">'+(s.badge||'risiko')+'</div>':'');
-  const id = 'step'+s.n;
-  d.dataset.id = id;
-  world.appendChild(d);
-  const node = {id, x:s.x, y:s.y, cx:s.x, cy:s.y, w:180, hw:90, hh:50,
-    title:'Langkah '+s.n+': '+s.t, sub:s.m, glyph:s.risk?'▲':'•', tags:'langkah step '+s.t.toLowerCase(), _el:d};
-  nodeById[id]=node; allNodes.push(node);
-});
-
-/* connect roadmap steps as a dashed path */
-for(let i=0;i<STEPS.length-1;i++) LINKS.push(['step'+STEPS[i].n,'step'+STEPS[i+1].n,'path']);
-LINKS.push(['rm-title','step1','path']);
-
-LINKS.forEach(L=>{
-  const a=nodeById[L[0]], b=nodeById[L[1]]; if(!a||!b) return;
-  const ln=document.createElementNS('http://www.w3.org/2000/svg','line');
-  ln.setAttribute('x1',a.x); ln.setAttribute('y1',a.y);
-  ln.setAttribute('x2',b.x); ln.setAttribute('y2',b.y);
-  if(L[2]==='path') ln.setAttribute('class','path');
-  linksSvg.appendChild(ln);
-});
-
-/* ---------- camera ---------- */
-let vw=innerWidth, vh=innerHeight;
-const cam = {x:0, y:0, scale:0.55};
-const MIN=0.18, MAX=2.6;
-const stage=document.getElementById('stage');
-
-function applyCam(){
-  world.style.transform = `translate(${vw/2}px,${vh/2}px) scale(${cam.scale}) translate(${-cam.x}px,${-cam.y}px)`;
-  let z = cam.scale<0.42?'overview':(cam.scale<0.78?'mid':'detail');
-  if(document.body.dataset.zoom!==z) document.body.dataset.zoom=z;
-  drawMini();
-}
-function screenToWorld(sx,sy){return {x:(sx-vw/2)/cam.scale+cam.x, y:(sy-vh/2)/cam.scale+cam.y};}
-function clamp(v,a,b){return v<a?a:v>b?b:v;}
-
-function zoomAt(sx,sy,factor){
-  const before=screenToWorld(sx,sy);
-  cam.scale=clamp(cam.scale*factor,MIN,MAX);
-  const after=screenToWorld(sx,sy);
-  cam.x+=before.x-after.x; cam.y+=before.y-after.y;
-  applyCam();
-}
-
-/* smooth camera fly */
-let anim=null;
-function flyTo(tx,ty,tscale,dur){
-  dur=dur||640;
-  const sx=cam.x, sy=cam.y, ss=cam.scale;
-  tscale=clamp(tscale,MIN,MAX);
-  const t0=performance.now();
-  if(anim) cancelAnimationFrame(anim);
-  function step(now){
-    let p=Math.min(1,(now-t0)/dur);
-    const e=p<0.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2; // easeInOutCubic
-    cam.x=sx+(tx-sx)*e; cam.y=sy+(ty-sy)*e; cam.scale=ss+(tscale-ss)*e;
-    applyCam();
-    if(p<1) anim=requestAnimationFrame(step); else anim=null;
-  }
-  anim=requestAnimationFrame(step);
-}
-function flyToNode(id,scale){const n=nodeById[id]; if(!n)return; selectNode(id); flyTo(n.x,n.y,scale|| (id.startsWith('step')?1.4:1.05));}
-
-function bounds(){
-  let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
-  allNodes.forEach(n=>{minx=Math.min(minx,n.x-n.hw);maxx=Math.max(maxx,n.x+n.hw);
-    miny=Math.min(miny,n.y-n.hh);maxy=Math.max(maxy,n.y+n.hh);});
-  return {minx,miny,maxx,maxy};
-}
-function overview(){
-  const b=bounds(); const cx=(b.minx+b.maxx)/2, cy=(b.miny+b.maxy)/2;
-  const sx=vw/((b.maxx-b.minx)+260), sy=vh/((b.maxy-b.miny)+260);
-  flyTo(cx,cy,clamp(Math.min(sx,sy),MIN,0.62),800); selectNode(null);
-}
-
-/* ---------- selection ---------- */
-let selId=null;
-function selectNode(id){
-  if(selId && nodeById[selId]) nodeById[selId]._el.classList.remove('sel');
-  selId=id;
-  if(id && nodeById[id]) nodeById[id]._el.classList.add('sel');
-}
-
-/* ---------- pointer pan ---------- */
-let panning=false, moved=false, sx0=0, sy0=0, cx0=0, cy0=0, pid=null;
-stage.addEventListener('pointerdown',e=>{
-  if(e.target.closest('#leapWrap,#dock,#zoomctl,#mini,#topbar,#help')) return;
-  panning=true; moved=false; pid=e.pointerId;
-  sx0=e.clientX; sy0=e.clientY; cx0=cam.x; cy0=cam.y;
-  stage.classList.add('panning'); stage.setPointerCapture(e.pointerId);
-});
-stage.addEventListener('pointermove',e=>{
-  if(!panning||e.pointerId!==pid) return;
-  const dx=e.clientX-sx0, dy=e.clientY-sy0;
-  if(Math.abs(dx)+Math.abs(dy)>4) moved=true;
-  cam.x=cx0-dx/cam.scale; cam.y=cy0-dy/cam.scale; applyCam();
-});
-function endPan(e){ if(e.pointerId!==pid)return; panning=false; stage.classList.remove('panning'); }
-stage.addEventListener('pointerup',e=>{
-  endPan(e);
-  if(!moved){
-    const nd=e.target.closest('.node');
-    if(nd) selectNode(nd.dataset.id);
-    else { selectNode(null); if(leapOpen) closeLeap(); }
-  }
-});
-stage.addEventListener('pointercancel',endPan);
-
-/* click node -> select; dblclick -> fly into it */
-world.addEventListener('dblclick',e=>{
-  const nd=e.target.closest('.node'); if(!nd)return;
-  flyToNode(nd.dataset.id, nd.dataset.id.startsWith('step')?1.5:1.15);
-});
-
-/* wheel zoom */
-stage.addEventListener('wheel',e=>{
-  e.preventDefault();
-  const f=e.deltaY<0?1.12:1/1.12;
-  zoomAt(e.clientX,e.clientY,f);
-},{passive:false});
-
-/* ---------- leap / intent search ---------- */
-const leapWrap=document.getElementById('leapWrap');
-const leapInput=document.getElementById('leapInput');
-const leapList=document.getElementById('leapList');
-let leapOpen=false, leapMatches=[], leapActive=0;
-
-function openLeap(){leapOpen=true; leapWrap.classList.add('open'); leapInput.value=''; renderLeap(''); setTimeout(()=>leapInput.focus(),30);}
-function closeLeap(){leapOpen=false; leapWrap.classList.remove('open'); leapInput.blur();}
-function leapData(){
-  return allNodes.filter(n=>n.id!=='core'||true).map(n=>({
-    id:n.id, title:n.title||(n._el.querySelector('h2')?n._el.querySelector('h2').textContent:n.id),
-    sub:n.sub||'', glyph:n.glyph||'•', tags:(n.tags||'')+' '+(n.title||'')
-  }));
-}
-function renderLeap(q){
-  q=q.trim().toLowerCase();
-  const data=leapData();
-  let res;
-  if(!q){ res=data.filter(d=>['core','reality','rm-title','ui-zui','system','arch'].includes(d.id)); }
-  else { res=data.map(d=>{
-      const hay=(d.title+' '+d.tags).toLowerCase();
-      let score=0; q.split(/\s+/).forEach(w=>{ if(hay.includes(w)) score+= d.title.toLowerCase().includes(w)?3:1; });
-      return {d,score};
-    }).filter(o=>o.score>0).sort((a,b)=>b.score-a.score).slice(0,7).map(o=>o.d);
-  }
-  leapMatches=res; leapActive=0;
-  leapList.innerHTML = res.length? res.map((d,i)=>
-    '<div class="row'+(i===0?' active':'')+'" data-id="'+d.id+'"><span class="g">'+d.glyph+'</span>'+
-    '<span><b>'+d.title+'</b></span>'+(d.sub?'<small>'+d.sub+'</small>':'')+'</div>').join('')
-    : '<div class="row"><span class="g">∅</span>tak ada yang cocok — coba kata lain</div>';
-  [...leapList.querySelectorAll('.row[data-id]')].forEach(r=>{
-    r.addEventListener('click',()=>{ closeLeap(); flyToNode(r.dataset.id); });
-    r.addEventListener('mouseenter',()=>{ leapList.querySelectorAll('.row').forEach(x=>x.classList.remove('active')); r.classList.add('active'); leapActive=leapMatches.findIndex(m=>m.id===r.dataset.id);});
-  });
-}
-leapInput.addEventListener('input',e=>renderLeap(e.target.value));
-leapInput.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeLeap();}
-  else if(e.key==='Enter'){ const m=leapMatches[leapActive]||leapMatches[0]; if(m){closeLeap(); flyToNode(m.id);} }
-  else if(e.key==='ArrowDown'){e.preventDefault(); leapActive=Math.min(leapMatches.length-1,leapActive+1); paintActive();}
-  else if(e.key==='ArrowUp'){e.preventDefault(); leapActive=Math.max(0,leapActive-1); paintActive();}
-});
-function paintActive(){const rows=[...leapList.querySelectorAll('.row[data-id]')]; rows.forEach((r,i)=>r.classList.toggle('active',i===leapActive));}
-
-/* ---------- keyboard ---------- */
-addEventListener('keydown',e=>{
-  if(document.activeElement===leapInput) return;
-  if(e.key==='/'||(e.key===' '&&!leapOpen)){ e.preventDefault(); openLeap(); }
-  else if(e.key==='Escape'){ if(helpOpen)toggleHelp(false); else if(leapOpen)closeLeap(); else overview(); }
-  else if(e.key==='+'||e.key==='='){ zoomAt(vw/2,vh/2,1.18); }
-  else if(e.key==='-'||e.key==='_'){ zoomAt(vw/2,vh/2,1/1.18); }
-  else if(e.key==='f'||e.key==='F'){ overview(); }
-  else if(e.key==='?'){ toggleHelp(); }
-});
-
-/* ---------- dock / controls ---------- */
-document.querySelectorAll('#dock button[data-jump]').forEach(b=>
-  b.addEventListener('click',()=>flyToNode(b.dataset.jump, b.dataset.jump==='core'?0.9:1.05)));
-document.getElementById('btnOverview').addEventListener('click',overview);
-document.getElementById('zin').addEventListener('click',()=>zoomAt(vw/2,vh/2,1.2));
-document.getElementById('zout').addEventListener('click',()=>zoomAt(vw/2,vh/2,1/1.2));
-document.getElementById('zfit').addEventListener('click',overview);
-
-/* ---------- help ---------- */
-const help=document.getElementById('help'); let helpOpen=false;
-function toggleHelp(force){ helpOpen=(force===undefined)?!helpOpen:force; help.classList.toggle('open',helpOpen); }
-document.getElementById('zhelp').addEventListener('click',()=>toggleHelp());
-help.addEventListener('click',()=>toggleHelp(false));
-
-/* ---------- minimap ---------- */
-const mcv=document.getElementById('minicv'), mctx=mcv.getContext('2d');
-function drawMini(){
-  const b=bounds(); const pad=120;
-  const bw=(b.maxx-b.minx)+pad*2, bh=(b.maxy-b.miny)+pad*2;
-  const s=Math.min(mcv.width/bw, mcv.height/bh);
-  const ox=(mcv.width-bw*s)/2 - (b.minx-pad)*s;
-  const oy=(mcv.height-bh*s)/2 - (b.miny-pad)*s;
-  mctx.clearRect(0,0,mcv.width,mcv.height);
-  // links
-  mctx.strokeStyle='rgba(159,176,216,.18)'; mctx.lineWidth=1;
-  LINKS.forEach(L=>{const a=nodeById[L[0]],c=nodeById[L[1]]; if(!a||!c)return;
-    mctx.beginPath(); mctx.moveTo(a.x*s+ox,a.y*s+oy); mctx.lineTo(c.x*s+ox,c.y*s+oy); mctx.stroke();});
-  // nodes
-  allNodes.forEach(n=>{
-    const isStep=n.id.startsWith('step');
-    mctx.fillStyle = n.id===selId?'#fff':(isStep?'rgba(45,226,198,.8)':'rgba(123,92,255,.85)');
-    mctx.beginPath(); mctx.arc(n.x*s+ox,n.y*s+oy,isStep?2.4:3.4,0,7); mctx.fill();
-  });
-  // viewport rect
-  const tl=screenToWorld(0,0), br=screenToWorld(vw,vh);
-  mctx.strokeStyle='rgba(255,255,255,.55)'; mctx.lineWidth=1.2;
-  mctx.strokeRect(tl.x*s+ox, tl.y*s+oy, (br.x-tl.x)*s, (br.y-tl.y)*s);
-}
-mcv.addEventListener('pointerdown',e=>{
-  const r=mcv.getBoundingClientRect();
-  const b=bounds(); const pad=120;
-  const bw=(b.maxx-b.minx)+pad*2, bh=(b.maxy-b.miny)+pad*2;
-  const s=Math.min(mcv.width/bw,mcv.height/bh);
-  const ox=(mcv.width-bw*s)/2-(b.minx-pad)*s, oy=(mcv.height-bh*s)/2-(b.miny-pad)*s;
-  const mx=(e.clientX-r.left)*(mcv.width/r.width), my=(e.clientY-r.top)*(mcv.height/r.height);
-  flyTo((mx-ox)/s,(my-oy)/s,cam.scale,500);
-  e.stopPropagation();
-});
-
-/* ---------- starfield ---------- */
-const sc=document.getElementById('stars'), sx=sc.getContext('2d');
-let stars=[];
-function initStars(){
-  sc.width=vw; sc.height=vh; stars=[];
-  const n=Math.round(vw*vh/9000);
-  for(let i=0;i<n;i++) stars.push({x:Math.random()*vw,y:Math.random()*vh,
-    z:Math.random()*0.8+0.2, r:Math.random()*1.3+0.2, t:Math.random()*6.28});
-}
-let mpx=0,mpy=0;
-addEventListener('pointermove',e=>{ mpx=(e.clientX/vw-0.5); mpy=(e.clientY/vh-0.5); });
-function drawStars(now){
-  sx.clearRect(0,0,sc.width,sc.height);
-  for(const s of stars){
-    const tw=0.55+0.45*Math.sin(now/900+s.t);
-    const px=s.x + (mpx*40 - cam.x*0.012)*s.z;
-    const py=s.y + (mpy*40 - cam.y*0.012)*s.z;
-    sx.globalAlpha=tw*s.z;
-    sx.fillStyle = s.z>0.7?'#dfe8ff':(s.z>0.45?'#bcd0ff':'#8fa6e0');
-    sx.beginPath(); sx.arc((px%vw+vw)%vw,(py%vh+vh)%vh,s.r,0,7); sx.fill();
-  }
-  sx.globalAlpha=1;
-  requestAnimationFrame(drawStars);
-}
-
-/* ---------- ambient clock + vitals ---------- */
-const climates=['tenang','jernih','fokus','damai','hening'];
-const t0=Date.now();
+/* ---- clock + vitals (calm) ---- */
+const t0 = Date.now();
+const climates = ['tenang','jernih','fokus','damai','hening'];
+function fmtUp(){const up=Math.floor((Date.now()-t0)/1000);return up<60?up+'s':Math.floor(up/60)+'m '+(up%60)+'s';}
 function tick(){
   const d=new Date();
-  document.getElementById('clock').textContent=
-    String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
-  const up=Math.floor((Date.now()-t0)/1000);
-  document.getElementById('vup').textContent= up<60?up+'s':Math.floor(up/60)+'m '+(up%60)+'s';
+  const c=document.getElementById('clock');
+  if(c) c.textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  const u=document.getElementById('vup'); if(u)u.textContent=fmtUp();
+  const u2=document.getElementById('vup2'); if(u2)u2.textContent=fmtUp();
+  const cl=document.getElementById('climate'); if(cl)cl.textContent='iklim sistem · '+climates[Math.floor((Date.now()/9000)%climates.length)];
 }
-let gv={cpu:12,mem:34,io:8};
+let gv={cpu:14,mem:36,io:9};
+function clamp(v,a,b){return v<a?a:v>b?b:v;}
 function vitals(){
-  gv.cpu=clamp(gv.cpu+(Math.random()*16-8),4,72);
-  gv.mem=clamp(gv.mem+(Math.random()*6-3),22,68);
-  gv.io =clamp(gv.io +(Math.random()*20-10),0,55);
-  const set=(id,v)=>{const e=document.getElementById(id); if(e)e.textContent=Math.round(v)+'%';};
-  const bar=(id,v)=>{const e=document.getElementById(id); if(e)e.style.width=v+'%';};
-  document.getElementById('vcpu').textContent=Math.round(gv.cpu)+'%';
-  document.getElementById('vmem').textContent=Math.round(gv.mem)+'%';
-  set('tcpu',gv.cpu); set('tmem',gv.mem); set('tio',gv.io);
-  bar('gcpu',gv.cpu); bar('gmem',gv.mem); bar('gio',gv.io);
-  document.getElementById('climate').textContent='iklim sistem · '+climates[Math.floor((Date.now()/9000)%climates.length)];
+  gv.cpu=clamp(gv.cpu+(Math.random()*16-8),5,74);
+  gv.mem=clamp(gv.mem+(Math.random()*6-3),24,70);
+  gv.io =clamp(gv.io +(Math.random()*22-11),0,58);
+  const set=(id,v,bar)=>{const e=document.getElementById(id);if(e){if(bar)e.style.width=v+'%';else e.textContent=Math.round(v)+'%';}};
+  set('vcpu',gv.cpu);set('vmem',gv.mem);
+  set('tcpu',gv.cpu);set('tmem',gv.mem);set('tio',gv.io);
+  set('gcpu',gv.cpu,1);set('gmem',gv.mem,1);set('gio',gv.io,1);
 }
+tick();vitals();setInterval(tick,1000);setInterval(vitals,1500);
 
-/* ---------- resize ---------- */
-addEventListener('resize',()=>{vw=innerWidth; vh=innerHeight; initStars(); applyCam();});
+/* ---- starfield (subtle) ---- */
+const sc=document.getElementById('stars'),sx=sc.getContext('2d');
+let stars=[],vw=innerWidth,vh=innerHeight;
+function initStars(){sc.width=vw=innerWidth;sc.height=vh=innerHeight;stars=[];
+  const n=Math.round(vw*vh/14000);
+  for(let i=0;i<n;i++)stars.push({x:Math.random()*vw,y:Math.random()*vh,r:Math.random()*1.2+.2,t:Math.random()*6.28,z:Math.random()*.7+.3});}
+function drawStars(now){sx.clearRect(0,0,vw,vh);
+  for(const s of stars){const tw=.5+.5*Math.sin(now/1000+s.t);sx.globalAlpha=tw*s.z*.8;
+    sx.fillStyle=s.z>.7?'#dfe8ff':'#aebfe8';sx.beginPath();sx.arc(s.x,s.y,s.r,0,7);sx.fill();}
+  sx.globalAlpha=1;requestAnimationFrame(drawStars);}
+addEventListener('resize',initStars);
+initStars();requestAnimationFrame(drawStars);
 
-/* ---------- boot ---------- */
-function start(){
-  initStars(); requestAnimationFrame(drawStars);
-  applyCam(); tick(); vitals();
-  setInterval(tick,1000); setInterval(vitals,1400);
-  // intro: from wide overview, gently settle near the core
-  cam.x=0; cam.y=0; cam.scale=0.22; applyCam();
-  setTimeout(()=>flyTo(0,40,0.62,1500),120);
+/* ---- first-run guided tour ---- */
+const TOUR=[
+  {sel:'#side', h:'Ini menumu', p:'Semua bagian THUOS ada di sini — tinggal klik untuk pindah ruang. Tak perlu menebak.'},
+  {sel:'#nav-realita', h:'Mulai dari kejujuran', p:'"Apa ini sebenarnya" menjelaskan keadaan THUOS apa adanya — yang sudah ada dan yang belum.'},
+  {sel:'#nav-roadmap', h:'Peta menuju OS nyata', p:'"Roadmap" = 9 langkah berurutan menuju OS yang benar-benar bisa dipakai, dengan langkah berisikonya ditandai.'},
+  {sel:'#topbar', h:'Info yang tenang', p:'Jam & kondisi sistem hidup lembut di tepi atas — hadir saat kamu butuh, tidak mengganggu.'},
+  {sel:'#homeTiles', h:'Pintasan cepat', p:'Dan ini jalan pintas ke bagian penting. Selesai — selamat menjelajah Aurora!'},
+];
+let ti=0;
+const ov=document.getElementById('tourOverlay'),tip=document.getElementById('tourTip');
+let curTarget=null;
+function clearSpot(){if(curTarget){curTarget.classList.remove('tour-target');curTarget=null;}}
+function showStep(i){
+  ti=i;
+  if(i>=TOUR.length){endTour();return;}
+  go('beranda');
+  const step=TOUR[i];
+  clearSpot();
+  const target=document.querySelector(step.sel);
+  document.getElementById('tourN').textContent='TUR '+(i+1)+'/'+TOUR.length;
+  document.getElementById('tourH').textContent=step.h;
+  document.getElementById('tourP').textContent=step.p;
+  document.getElementById('tourNext').textContent=(i===TOUR.length-1)?'Selesai ✓':'Lanjut ▸';
+  ov.classList.add('on');tip.classList.add('on');
+  if(target){
+    curTarget=target;target.classList.add('tour-target');
+    const r=target.getBoundingClientRect();
+    const tw=Math.min(320,innerWidth*.86),th=tip.offsetHeight||150;
+    let left=r.right+14, top=r.top;
+    if(left+tw>innerWidth-12) left=Math.max(12,r.left- tw-14);
+    if(left<12) left=Math.min(innerWidth-tw-12, Math.max(12,r.left));
+    if(top+th>innerHeight-12) top=Math.max(12,innerHeight-th-12);
+    if(top<12) top=12;
+    // if target is wide (sidebar/topbar), prefer placing tip just inside viewport
+    if(r.width>innerWidth*.6){ left=(innerWidth-tw)/2; top=Math.min(innerHeight-th-16, r.bottom+14); }
+    tip.style.left=left+'px';tip.style.top=top+'px';
+  } else {
+    tip.style.left=(innerWidth-320)/2+'px';tip.style.top='120px';
+  }
 }
+function endTour(){clearSpot();ov.classList.remove('on');tip.classList.remove('on');
+  try{localStorage.setItem('thuos_aurora_tour','1');}catch(e){}}
+document.getElementById('tourNext').addEventListener('click',()=>showStep(ti+1));
+document.getElementById('tourSkip').addEventListener('click',endTour);
+ov.addEventListener('click',endTour);
+document.getElementById('btnTour').addEventListener('click',()=>{go('beranda');setTimeout(()=>showStep(0),60);});
+addEventListener('keydown',e=>{if(e.key==='?'){go('beranda');setTimeout(()=>showStep(0),60);}
+  else if(e.key==='Escape'){endTour();}});
+addEventListener('resize',()=>{if(ov.classList.contains('on'))showStep(ti);});
+
+/* ---- boot then maybe tour ---- */
 window.addEventListener('load',()=>{
-  start();
   const b=document.getElementById('boot');
-  setTimeout(()=>{ b.classList.add('gone'); }, 2200);
-  setTimeout(()=>{ b.style.display='none'; }, 3100);
+  setTimeout(()=>b.classList.add('gone'),2000);
+  setTimeout(()=>{b.style.display='none';
+    let seen=false; try{seen=localStorage.getItem('thuos_aurora_tour')==='1';}catch(e){}
+    if(!seen) showStep(0);
+  },2900);
 });
 </script>
 </body>
