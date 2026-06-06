@@ -13,7 +13,7 @@ CC      := gcc
 LD      := gcc
 
 INCLUDES := -Ikernel/lib -Ikernel/arch/x86 -Ikernel/core \
-            -Ikernel/drivers -Ikernel/shell -Ikernel/mm \
+            -Ikernel/drivers -Ikernel/shell -Ikernel/mm -Ikernel/sched \
             -Ikernel/include -Ikernel/include/thuos
 
 # Freestanding 32-bit kernel. We provide our own mem*/str* so we disable the
@@ -74,6 +74,8 @@ test:
 	@./$(BUILD)/test_kheap
 	@gcc -O2 -std=gnu11 -Wall -Wextra -o $(BUILD)/test_vmm tests/test_vmm.c
 	@./$(BUILD)/test_vmm
+	@gcc -O2 -std=gnu11 -Wall -Wextra -o $(BUILD)/test_sched tests/test_sched.c
+	@./$(BUILD)/test_sched
 
 iso: kernel
 	@if command -v grub-mkrescue >/dev/null 2>&1 && command -v xorriso >/dev/null 2>&1; then \

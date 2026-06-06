@@ -3,6 +3,38 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.6.0] — "Scheduler" — 2026-06-06
+
+Milestone 0.6: a round-robin process scheduler **policy core** — the run queue
+and selection logic that decides who runs next — informed by the scheduler
+study in `docs/THUOS_ARCHITECTURE.md` (Linux EEVDF, Mach threads). The actual
+CPU context switch (register/stack swap that makes tasks truly run) is the next
+step and is **staged** until paging is boot-verified.
+
+### Added — kernel (scheduling)
+- `kernel/sched/sched_core.{c,h}` — pure scheduler policy: task states
+  (READY/RUNNING/BLOCKED/ZOMBIE), `sched_add`, round-robin `sched_pick_next`,
+  time-slice `sched_on_tick`, `block`/`unblock`/`exit`, runnable count. Free of
+  kernel deps so it is unit-tested on the host.
+- `kernel/sched/sched.{c,h}` — glue: in-kernel run queue + initial tasks; the
+  real (host-tested) policy runs live via the shell.
+- `kernel_main` initialises the scheduler at boot.
+
+### Added — shell commands
+- `ps` — list scheduler tasks + states + quantum/ran stats.
+- `sched` — run the round-robin policy live and print the pick order.
+- Shell command count: 25 -> **27**.
+
+### Added — verification
+- `tests/test_sched.c` + `make test`: round-robin fairness, block/unblock,
+  time-slice expiry, exit. Host-tested (now 4 host test suites: pmm, kheap,
+  vmm, sched).
+
+### Honesty
+- HOST-TESTED: scheduler policy. The CPU **context switch is NOT implemented**
+  yet (staged); tasks are scheduling descriptors the policy rotates over until
+  paging is boot-verified and a context switch can be verified. BOOT-VERIFIED: none.
+
 ## [0.5.0] — "Paging" — 2026-06-06
 
 Milestone 0.5: x86 paging tables + address translation, informed by a study of
