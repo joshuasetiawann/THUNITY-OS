@@ -64,11 +64,14 @@ verify: kernel
 status:
 	@bash scripts/status.sh
 
-# Host-side unit test of the page-frame allocator (native gcc, no QEMU needed).
+# Host-side unit tests (native gcc, no QEMU needed): page-frame allocator
+# and kernel heap. These compile the same core .c files the kernel uses.
 test:
 	@mkdir -p $(BUILD)
 	@gcc -O2 -std=gnu11 -Wall -Wextra -o $(BUILD)/test_pmm tests/test_pmm.c
 	@./$(BUILD)/test_pmm
+	@gcc -O2 -std=gnu11 -Wall -Wextra -o $(BUILD)/test_kheap tests/test_kheap.c
+	@./$(BUILD)/test_kheap
 
 iso: kernel
 	@if command -v grub-mkrescue >/dev/null 2>&1 && command -v xorriso >/dev/null 2>&1; then \

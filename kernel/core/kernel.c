@@ -14,6 +14,7 @@
 #include "pit.h"
 #include "keyboard.h"
 #include "pmm.h"
+#include "kheap.h"
 #include "shell.h"
 
 static void ok_line(const char *label) {
@@ -48,6 +49,9 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
     pmm_init(magic, mb_info_addr);
     ok_line("Physical memory manager (4 KiB frames)");
     pmm_print_stats();
+
+    kheap_init();
+    ok_line("Kernel heap (1 MiB fixed arena, kmalloc/kfree)");
 
     __asm__ volatile("sti");   /* interrupts on: timer + keyboard now live */
 

@@ -3,6 +3,38 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.4.0] — "Kernel Heap" — 2026-06-06
+
+Milestone 0.4: a kernel heap (`kmalloc`/`kfree`). On top of the physical memory
+manager, THUOS now has a general-purpose allocator so later subsystems (data
+structures, processes, VFS) have somewhere to allocate from.
+
+### Added — kernel (memory management)
+- `kernel/mm/kheap_core.{c,h}` — pure free-list allocator core (address-ordered
+  blocks, first-fit + splitting, forward coalescing, magic-guarded frees), free
+  of kernel/hardware deps so it is unit-tested on the host.
+- `kernel/mm/kheap.{c,h}` — kernel glue: `kmalloc`/`kcalloc`/`krealloc`/`kfree`
+  backed by a static 1 MiB arena (Stage-A, pre-paging). The API stays stable
+  when a paging-backed heap replaces the arena later.
+- `kernel_main` initialises the heap right after the PMM and logs it at boot.
+
+### Added — shell commands
+- `heap` — kernel-heap statistics (total/used/free/blocks + integrity check).
+- `kmalloc <bytes>` — allocate from the heap and print the pointer.
+- `kfree <hex>` — free a `kmalloc` pointer.
+- `status` now marks the kernel heap done and paging as the next (highest-risk) step.
+
+### Added — verification, build & docs
+- `tests/test_kheap.c` — host unit test: init/alloc/free, split, coalesce,
+  realloc-preserve, exhaustion→NULL, double-free guard, full reclaim.
+- `make test` now builds and runs both the PMM and kernel-heap host tests.
+- `BOOT_THUOS.md` — how to build / boot THUOS in QEMU or on hardware and verify
+  the boot yourself (honest: boot is COMPILE-ONLY in this dev environment).
+
+### Honesty
+- BOOT-VERIFIED: none here (no QEMU in the dev environment). The kernel links as
+  an ELF Multiboot i386 image; boot is verifiable on a QEMU/hardware machine.
+
 ## [0.3.0] — "Memory Foundation" — 2026-06-05
 
 Milestone 0.3: the physical memory manager. THUOS can now parse the Multiboot
