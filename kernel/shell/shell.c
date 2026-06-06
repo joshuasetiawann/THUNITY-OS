@@ -15,6 +15,7 @@
 #include "vmm.h"
 #include "sched.h"
 #include "coop.h"
+#include "fs.h"
 
 #define LINE_MAX 128
 
@@ -78,6 +79,9 @@ static void cmd_help(void) {
     kprintf("  ps         List scheduler tasks and states\n");
     kprintf("  sched      Run the round-robin scheduler (live demo)\n");
     kprintf("  tasks      Run cooperative multitasking (3 tasks, live)\n");
+    kprintf("  ls         List files in the RAM filesystem\n");
+    kprintf("  cat F      Print file F\n");
+    kprintf("  write F T  Write text T to file F\n");
     kprintf("  echo       Print the rest of the line\n");
     kprintf("  banner     Show the THUOS banner\n");
     kprintf("  color N    Set text color (0-15)\n");
@@ -112,8 +116,8 @@ static void cmd_status(void) {
     kprintf("  [done]    Kernel heap kmalloc/kfree (Milestone 0.4)\n");
     kprintf("  [done]    Paging ENABLED (0.7, CR0.PG, boot-verified QEMU)\n");
     kprintf("  [done]    Cooperative multitasking (0.9, boot-verified)\n");
-    kprintf("  [plan]    Preemptive (timer IRQ) -> ring 3 + syscall\n");
-    kprintf("  [plan]    VFS + initrd, userspace, in-VM terminal\n");
+    kprintf("  [done]    RAM filesystem ls/cat/write (0.10)\n");
+    kprintf("  [plan]    Preemptive, ring 3 + syscall, userspace\n");
 }
 
 static void cmd_sysinfo(void) {
@@ -232,6 +236,40 @@ static void cmd_vmm(const char *args) {
     kprintf("  usage: vmm <hex-va>  to translate an address\n");
 }
 
+static void cmd_ls(void) {
+    int shown = 0, max = kfs_max_files();
+    kprintf("Files in ramfs (%u bytes used):\n", (uint32_t)kfs_bytes_used());
+    for (int i = 0; i < max; i++) {
+        const char *nm = kfs_name(i);
+        if (nm) { kprintf("  %s  (%u bytes)\n", nm, (uint32_t)kfs_size(i)); shown++; }
+    }
+    if (!shown) kprintf("  (no files)\n");
+}
+
+static void cmd_cat(const char *args) {
+    if (args[0] == '\0') { kprintf("usage: cat <file>\n"); return; }
+    uint32_t n;
+    const uint8_t *d = kfs_read(args, &n);
+    if (!d) { kprintf("cat: %s: not found\n", args); return; }
+    for (uint32_t i = 0; i < n; i++) kputc((char)d[i]);
+    if (n == 0 || d[n - 1] != '\n') kputc('\n');
+}
+
+static void cmd_write(const char *args) {
+    const char *sp = args;
+    while (*sp && *sp != ' ') sp++;
+    if (*sp != ' ') { kprintf("usage: write <file> <text>\n"); return; }
+    char name[32];
+    int nl = 0;
+    for (const char *q = args; q < sp && nl < 31; q++) name[nl++] = *q;
+    name[nl] = '\0';
+    const char *content = sp + 1;
+    uint32_t len = 0; while (content[len]) len++;
+    int w = kfs_write(name, content, len);
+    if (w < 0) kprintf("write: failed (file table or arena full)\n");
+    else        kprintf("wrote %d bytes to '%s'\n", w, name);
+}
+
 static void cmd_thupkg(const char *args) {
     if (strcmp(args, "list") == 0) {
         kprintf("thupkg - installed/known packages (design preview):\n");
@@ -316,6 +354,9 @@ static void execute(char *line) {
     else if (strcmp(line, "ps") == 0)        sched_klist();
     else if (strcmp(line, "sched") == 0)     sched_kdemo();
     else if (strcmp(line, "tasks") == 0)     coop_run_demo();
+    else if (strcmp(line, "ls") == 0)        cmd_ls();
+    else if (strcmp(line, "cat") == 0)       cmd_cat(args);
+    else if (strcmp(line, "write") == 0)     cmd_write(args);
     else if (strcmp(line, "echo") == 0)      kprintf("%s\n", args);
     else if (strcmp(line, "banner") == 0)    print_banner();
     else if (strcmp(line, "color") == 0)     cmd_color(args);

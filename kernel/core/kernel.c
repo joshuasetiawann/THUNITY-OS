@@ -19,6 +19,7 @@
 #include "sched.h"
 #include "task.h"
 #include "coop.h"
+#include "fs.h"
 #include "shell.h"
 
 static void ok_line(const char *label) {
@@ -89,6 +90,9 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
 
     coop_run_demo();
     ok_line("Cooperative multitasking OK (3 tasks via scheduler + exited)");
+
+    kfs_init();
+    ok_line("RAM filesystem ready (local-first, in-kernel files)");
 
     __asm__ volatile("sti");   /* interrupts on: timer + keyboard now live */
 

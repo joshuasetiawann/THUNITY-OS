@@ -8,9 +8,9 @@
 #define THUOS_FS_NAME      "THUFS"
 #define THUOS_PKG_NAME     "thupkg"
 
-#define THUOS_VERSION      "0.9.0"
-#define THUOS_CODENAME     "Cooperative Tasks"
-#define THUOS_MILESTONE    "Milestone 0.9 - Cooperative multitasking (scheduler + context switch), boot-verified"
+#define THUOS_VERSION      "0.10.0"
+#define THUOS_CODENAME     "Filesystem"
+#define THUOS_MILESTONE    "Milestone 0.10 - RAM filesystem (local-first ls/cat/write), host-tested + boot-verified"
 #define THUOS_ARCH         "x86 (i386, 32-bit)"
 
 #define THUOS_BUILD_DATE   __DATE__
