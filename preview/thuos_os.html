@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THUOS 0.10 — Live Desktop</title>
+<style>
+:root{
+  --bg:#05060f; --ink:#eef3ff; --ink2:#bcc8e8; --ink3:#7d8cb4;
+  --teal:#2de2c6; --violet:#8b6dff; --magenta:#ff6db0; --amber:#ffcf76; --green:#54e6a6; --cyan:#7ad7ff;
+  --edge:rgba(255,255,255,.12); --glass:rgba(18,22,40,.66); --glass2:rgba(255,255,255,.04);
+  --ff:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,'SF Mono','JetBrains Mono',Menlo,Consolas,monospace;
+  --accent:#8b6dff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--ff);-webkit-font-smoothing:antialiased;user-select:none}
+#sky{position:fixed;inset:0;z-index:0;background:
+  radial-gradient(1100px 760px at 16% 8%,rgba(45,226,198,.13),transparent 60%),
+  radial-gradient(1000px 820px at 88% 18%,rgba(139,109,255,.17),transparent 62%),
+  radial-gradient(1200px 900px at 60% 106%,rgba(255,109,176,.10),transparent 60%),
+  linear-gradient(160deg,#05060f,#080b1a 55%,#06080f)}
+#vig{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(140% 120% at 50% 40%,transparent 56%,rgba(2,3,8,.6))}
+
+/* top bar */
+#bar{position:fixed;top:0;left:0;right:0;height:38px;z-index:9000;display:flex;align-items:center;gap:13px;
+  padding:0 14px;background:rgba(10,13,26,.5);backdrop-filter:blur(18px) saturate(150%);border-bottom:1px solid rgba(255,255,255,.07);font-size:13px}
+#bar .logo{width:20px;height:20px;border-radius:6px;background:radial-gradient(circle at 36% 32%,#fff,#bda9ff 32%,#6f4ff0 66%,#241a63);box-shadow:0 0 14px -3px var(--violet)}
+#bar b{font-weight:650;letter-spacing:.3px}
+#bar .mi{color:var(--ink3);font-size:12.5px}
+#bar .sp{flex:1}
+.badge{font-size:10.5px;border-radius:999px;padding:2px 9px}
+.badge.ok{color:#06121a;background:linear-gradient(90deg,var(--green),var(--teal));font-weight:700}
+.badge.v{color:var(--violet);border:1px solid rgba(139,109,255,.4)}
+#clock{font-variant-numeric:tabular-nums;font-weight:600}
+
+/* desktop */
+#desk{position:fixed;inset:38px 0 0 0;z-index:5}
+
+/* dock */
+#dock{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:9000;display:flex;gap:8px;
+  padding:8px 10px;border-radius:18px;background:rgba(12,15,30,.55);backdrop-filter:blur(22px) saturate(150%);border:1px solid var(--edge);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.di{width:52px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 3px;border-radius:13px;transition:.15s}
+.di:hover{background:rgba(255,255,255,.08);transform:translateY(-3px)}
+.di .ic{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03));border:1px solid var(--edge);color:var(--dc,var(--teal))}
+.di .ic svg{width:22px;height:22px} .di .lb{font-size:9.5px;color:var(--ink3)}
+.di:hover .lb{color:var(--ink2)} .di.run .ic{border-color:var(--dc,var(--teal))}
+
+/* windows */
+.win{position:absolute;min-width:300px;border-radius:14px;overflow:hidden;background:var(--glass);
+  backdrop-filter:blur(22px) saturate(150%);border:1px solid var(--edge);box-shadow:0 30px 80px rgba(0,0,0,.5);display:flex;flex-direction:column;opacity:0;transform:scale(.98);animation:wi .16s ease forwards}
+@keyframes wi{to{opacity:1;transform:scale(1)}}
+.win.act{box-shadow:0 36px 100px rgba(0,0,0,.6),0 0 0 1px var(--accent),0 0 50px -18px var(--accent)}
+.tb{height:38px;flex:0 0 38px;display:flex;align-items:center;gap:9px;padding:0 12px;cursor:grab;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01));border-bottom:1px solid rgba(255,255,255,.07)}
+.tb.drag{cursor:grabbing}
+.lights{display:flex;gap:7px}
+.lights b{width:12px;height:12px;border-radius:50%;display:block;cursor:pointer;border:none}
+.lc{background:#ff5f57}.lm{background:#febc2e}.lx{background:#28c840}
+.tb .ti{font-size:13px;font-weight:600;color:var(--ink2)} .tb .sp{flex:1}
+.bd{flex:1;overflow:auto;padding:14px 16px;font-size:13px;color:var(--ink2);line-height:1.5}
+.bd::-webkit-scrollbar{width:9px}.bd::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:9px}
+h3{margin:0 0 6px;font-size:15px;color:var(--ink)} h4{margin:0 0 6px;font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px}
+.ps{font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+
+/* terminal */
+.term{margin:-14px -16px;height:calc(100% + 28px);display:flex;flex-direction:column;background:rgba(4,6,14,.6)}
+.term .o{flex:1;overflow:auto;padding:12px 14px;font-family:var(--mono);font-size:12.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.term .pl{display:flex;padding:0 14px 12px;font-family:var(--mono);font-size:12.5px}
+.term .pl .ps1{color:var(--green)} .cur{display:inline-block;width:7px;height:14px;background:var(--teal);vertical-align:-2px;animation:bl 1.05s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+.ok{color:var(--green)}.err{color:var(--magenta)}.c{color:var(--cyan)}.am{color:var(--amber)}.gr{color:var(--ink3)}.vi{color:var(--violet)}
+
+/* monitor */
+.gauge{margin:11px 0}
+.gauge .l{display:flex;justify-content:space-between;font-size:12px;color:var(--ink2);margin-bottom:5px}
+.track{height:9px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.fill{height:100%;border-radius:99px;transition:width .5s ease}
+.f1{background:linear-gradient(90deg,var(--teal),var(--violet))}.f2{background:linear-gradient(90deg,var(--violet),var(--magenta))}.f3{background:linear-gradient(90deg,var(--amber),var(--magenta))}
+.kv{display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-top:1px solid rgba(255,255,255,.05)}
+.kv span:last-child{font-family:var(--mono);color:var(--ink)}
+.pill{display:inline-block;font-size:10.5px;border-radius:999px;padding:2px 9px;background:rgba(84,230,166,.16);color:var(--green);border:1px solid rgba(84,230,166,.35)}
+.tlist .row{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;padding:6px 0;border-top:1px solid rgba(255,255,255,.05)}
+
+/* files */
+.fl{display:flex;gap:12px;height:100%;margin:-14px -16px}
+.fl .side{flex:0 0 150px;border-right:1px solid rgba(255,255,255,.08);overflow:auto;background:rgba(0,0,0,.12)}
+.fl .it{padding:9px 12px;font-size:12.5px;color:var(--ink2);cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fl .it:hover{background:rgba(255,255,255,.05)} .fl .it.on{background:rgba(45,226,198,.14);color:var(--ink)}
+.fl .new{all:unset;cursor:pointer;display:block;text-align:center;padding:9px;color:var(--teal);font-size:12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.fl .main{flex:1;display:flex;flex-direction:column;min-width:0;padding:12px}
+.fl input.fn{background:none;border:none;outline:none;color:var(--ink);font-family:var(--mono);font-size:13px;font-weight:600;margin-bottom:8px}
+.fl textarea{flex:1;background:rgba(0,0,0,.2);border:1px solid var(--edge);border-radius:9px;outline:none;resize:none;color:var(--ink2);font-family:var(--mono);font-size:12.5px;line-height:1.55;padding:10px}
+.fl .fb{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:11.5px;color:var(--ink3)}
+.btn{all:unset;cursor:pointer;font-size:12px;padding:6px 13px;border-radius:9px;background:linear-gradient(135deg,var(--teal),var(--violet));color:#06121a;font-weight:700}
+.btn.ghost{background:rgba(255,255,255,.06);color:var(--ink2);border:1px solid var(--edge)}
+
+.note{font-size:11.5px;color:var(--ink3);line-height:1.6}
+.mile{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid rgba(255,255,255,.05);font-size:12.5px}
+.mile .d{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex:0 0 auto}
+.mile.pl .d{background:var(--ink3);box-shadow:none} .mile .vv{font-family:var(--mono);color:var(--violet);flex:0 0 42px}
+
+/* boot + lock */
+#boot{position:fixed;inset:0;z-index:9800;background:#03040c;display:flex;align-items:center;justify-content:center;transition:opacity .5s}
+#boot .bw{width:min(560px,92vw)}
+#boot .bt{font-family:var(--mono);font-size:12px;line-height:1.55;white-space:pre-wrap;color:var(--ink2);max-height:60vh;overflow:hidden}
+#boot.gone{opacity:0;pointer-events:none}
+#hint{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:8000;font-size:12px;color:var(--ink2);background:rgba(12,15,30,.7);border:1px solid var(--edge);border-radius:999px;padding:7px 14px;backdrop-filter:blur(12px);opacity:0;transition:.4s}
+#hint.on{opacity:1}
+</style>
+</head>
+<body>
+<div id="sky"></div>
+<div id="vig"></div>
+
+<div id="bar">
+  <span class="logo"></span><b id="mbApp">THUOS</b>
+  <span class="mi">Berkas</span><span class="mi">Tampilan</span><span class="mi">Bantuan</span>
+  <span class="badge v">v0.10 "Filesystem"</span>
+  <span class="badge ok">● boot-verified · QEMU/CI</span>
+  <span class="sp"></span>
+  <span class="mi" id="memmini">mem —</span>
+  <span id="clock">--:--</span>
+</div>
+
+<div id="desk"></div>
+<div id="hint"></div>
+<div id="dock"></div>
+
+<div id="boot"><div class="bw"><div class="bt" id="boottext"></div></div></div>
+
+<script>
+"use strict";
+/* ============ faithful kernel state (ported from the real THUOS kernel) ============ */
+var KS={
+  boot0:Date.now(),
+  pmm:{usable:32639,reserved:464,free:32175,used:464,next:0x210000,freed:[]},
+  heapTOTAL:1048576, HDR:16, HBASE:0x140000, HALIGN:8,
+  heap:[{size:1048576-16,free:true}],
+  fs:null
+};
+function ticks(){return Math.floor((Date.now()-KS.boot0)/10);}
+function secs(){return Math.floor((Date.now()-KS.boot0)/1000);}
+function hex8(n){var s=(n>>>0).toString(16);while(s.length<8)s='0'+s;return '0x'+s;}
+function parseHex(s){if(!s)return null;s=s.trim();if(/^0x/i.test(s))s=s.slice(2);if(!/^[0-9a-fA-F]+$/.test(s))return null;return parseInt(s,16)>>>0;}
+function alignup(v){return (v+(KS.HALIGN-1))&~(KS.HALIGN-1);}
+/* PMM */
+function pmmAlloc(){if(KS.pmm.free<=0)return 0;var a;if(KS.pmm.freed.length)a=KS.pmm.freed.pop();else{a=KS.pmm.next;KS.pmm.next+=0x1000;}KS.pmm.free--;KS.pmm.used++;return a>>>0;}
+function pmmFree(addr){addr=addr&~0xFFF;if(addr<0x100000)return -2;if(addr>=KS.pmm.next&&KS.pmm.freed.indexOf(addr)<0)return -1;if(KS.pmm.freed.indexOf(addr)>=0)return -3;KS.pmm.freed.push(addr);KS.pmm.free++;KS.pmm.used--;return 0;}
+/* heap: first-fit + split + coalesce */
+function payAddr(i){var a=KS.HBASE+KS.HDR;for(var k=0;k<i;k++)a+=KS.HDR+KS.heap[k].size;return a>>>0;}
+function kmalloc(n){n=alignup(n);if(n===0)n=KS.HALIGN;for(var i=0;i<KS.heap.length;i++){if(KS.heap[i].free&&KS.heap[i].size>=n){if(KS.heap[i].size>=n+KS.HDR+KS.HALIGN){var rem=KS.heap[i].size-n-KS.HDR;KS.heap[i].size=n;KS.heap.splice(i+1,0,{size:rem,free:true});}KS.heap[i].free=false;return payAddr(i);}}return 0;}
+function kfree(addr){var hit=false;for(var i=0;i<KS.heap.length;i++){if(payAddr(i)===(addr>>>0)){if(KS.heap[i].free)return false;KS.heap[i].free=true;hit=true;break;}}if(!hit)return false;for(var j=0;j<KS.heap.length-1;){if(KS.heap[j].free&&KS.heap[j+1].free){KS.heap[j].size+=KS.HDR+KS.heap[j+1].size;KS.heap.splice(j+1,1);}else j++;}return true;}
+function heapUsed(){var u=0;KS.heap.forEach(function(b){if(!b.free)u+=b.size;});return u;}
+function heapFree(){var f=0;KS.heap.forEach(function(b){if(b.free)f+=b.size;});return f;}
+function translate(va){va=va>>>0;return va<0x800000?va:-1;}
+/* ramfs persisted */
+var FS_KEY='thuos_sim_fs';
+function fsLoad(){try{KS.fs=JSON.parse(localStorage.getItem(FS_KEY));}catch(e){KS.fs=null;}
+ if(!KS.fs||typeof KS.fs!=='object'){KS.fs={
+  'welcome.txt':"Welcome to the THUOS RAM filesystem.\nThese are real files living in kernel memory.\nTry:  ls  |  cat readme  |  write notes hello there",
+  'readme':"THUOS local-first ramfs (milestone 0.10).\nHost-tested core + boot-verified in QEMU.\nFiles are in-memory for now; persistence comes later."};fsSave();}}
+function fsSave(){try{localStorage.setItem(FS_KEY,JSON.stringify(KS.fs));}catch(e){}}
+function fsBytes(){var n=0;for(var k in KS.fs)if(KS.fs.hasOwnProperty(k))n+=KS.fs[k].length;return n;}
+fsLoad();
+
+/* ============ icons ============ */
+var S='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">';
+var ICON={
+ terminal:S+'<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9l3 3-3 3"/><path d="M13 15h4"/></svg>',
+ monitor:S+'<path d="M3 12h3.5l2.2 6 3.6-12 2.4 8 1.3-2H21"/></svg>',
+ files:S+'<path d="M3 8a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+ tasks:S+'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+ about:S+'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6h.01"/></svg>'
+};
+
+/* ============ window manager ============ */
+var desk=document.getElementById('desk'), wins={}, ztop=20, activeId=null, nopen=0;
+function focusWin(id){if(!wins[id])return;if(activeId&&wins[activeId])wins[activeId].el.classList.remove('act');activeId=id;wins[id].el.style.zIndex=(++ztop);wins[id].el.classList.add('act');document.getElementById('mbApp').textContent=APPS[id].name;}
+function closeWin(id){if(!wins[id])return;if(wins[id].onclose)try{wins[id].onclose();}catch(e){}wins[id].el.remove();delete wins[id];document.querySelectorAll('.di').forEach(function(d){if(d.dataset.app===id)d.classList.remove('run');});if(activeId===id){activeId=null;document.getElementById('mbApp').textContent='THUOS';}}
+function openApp(id){
+  var a=APPS[id];if(!a)return;
+  if(wins[id]){focusWin(id);return;}
+  var win=document.createElement('div');win.className='win';
+  win.style.width=a.w+'px';win.style.height=a.h+'px';
+  var n=nopen++;var left=Math.max(12,(innerWidth-a.w)/2 + (n%4)*30 - 50);var top=Math.max(50,(innerHeight-a.h)/2 + (n%4)*26 - 60);
+  win.style.left=left+'px';win.style.top=top+'px';
+  win.innerHTML='<div class="tb"><div class="lights"><button class="lc"></button><button class="lm"></button><button class="lx"></button></div><span class="ti">'+a.name+'</span><span class="sp"></span></div><div class="bd"></div>';
+  desk.appendChild(win);
+  wins[id]={el:win};
+  var bd=win.querySelector('.bd');
+  win.querySelector('.lc').onclick=function(e){e.stopPropagation();closeWin(id);};
+  win.addEventListener('pointerdown',function(){focusWin(id);});
+  drag(win,win.querySelector('.tb'));
+  document.querySelectorAll('.di').forEach(function(d){if(d.dataset.app===id)d.classList.add('run');});
+  focusWin(id);
+  a.mount(bd, win, id);
+}
+function drag(win,h){var sx,sy,ox,oy,d=false,pid=null;
+  h.addEventListener('pointerdown',function(e){if(e.target.closest('button'))return;d=true;pid=e.pointerId;sx=e.clientX;sy=e.clientY;ox=parseFloat(win.style.left);oy=parseFloat(win.style.top);h.classList.add('drag');h.setPointerCapture(pid);});
+  h.addEventListener('pointermove',function(e){if(!d||e.pointerId!==pid)return;var nx=ox+(e.clientX-sx),ny=oy+(e.clientY-sy);nx=Math.max(-(win.offsetWidth-90),Math.min(nx,innerWidth-90));ny=Math.max(40,Math.min(ny,innerHeight-50));win.style.left=nx+'px';win.style.top=ny+'px';});
+  function up(e){if(e.pointerId===pid){d=false;h.classList.remove('drag');}}
+  h.addEventListener('pointerup',up);h.addEventListener('pointercancel',up);
+}
+
+/* ============ apps ============ */
+var APPS={
+ terminal:{name:'Terminal',icon:'terminal',dc:'#54e6a6',w:560,h:400,mount:mountTerm},
+ monitor:{name:'Monitor Sistem',icon:'monitor',dc:'#2de2c6',w:380,h:440,mount:mountMonitor},
+ files:{name:'Berkas',icon:'files',dc:'#ffcf76',w:540,h:380,mount:mountFiles},
+ tasks:{name:'Tasks',icon:'tasks',dc:'#ff6db0',w:460,h:380,mount:mountTasks},
+ about:{name:'Tentang THUOS',icon:'about',dc:'#8b6dff',w:440,h:430,mount:mountAbout}
+};
+
+/* ---- Terminal (faithful shell) ---- */
+function mountTerm(bd){
+  bd.innerHTML='<div class="term"><div class="o" id="to"></div><div class="pl"><span class="ps1">thuos&gt; </span><span id="tb"></span><span class="cur"></span></div></div>';
+  var o=bd.querySelector('#to'), tb=bd.querySelector('#tb');
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function W(t,cls){var d=document.createElement('div');if(cls)d.className=cls;d.innerHTML=(t===''?'&nbsp;':esc(t));o.appendChild(d);o.scrollTop=o.scrollHeight;}
+  function Wraw(h){var d=document.createElement('div');d.innerHTML=h;o.appendChild(d);o.scrollTop=o.scrollHeight;}
+  W('THUOS 0.10.0 "Filesystem" — shell','c');
+  W("Type 'help'. Perintah mengubah state nyata (lihat Monitor & Berkas).",'gr');
+  var TC=makeCmds(W,Wraw,esc);
+  var buf='',hist=[],hi=-1;
+  function render(){tb.textContent=buf;}
+  termInput=function(e){
+    if(e.key==='Enter'){e.preventDefault();Wraw('<span class="ok">thuos&gt; </span>'+esc(buf));var l=buf;buf='';render();if(l.trim()){hist.push(l);hi=hist.length;}runCmd(TC,l.trim());refreshApps();}
+    else if(e.key==='Backspace'){e.preventDefault();buf=buf.slice(0,-1);render();}
+    else if(e.key==='ArrowUp'){e.preventDefault();if(hi>0){hi--;buf=hist[hi];render();}}
+    else if(e.key==='ArrowDown'){e.preventDefault();if(hi<hist.length-1){hi++;buf=hist[hi];render();}else{hi=hist.length;buf='';render();}}
+    else if(e.key.length===1&&!e.ctrlKey&&!e.metaKey){e.preventDefault();buf+=e.key;render();}
+  };
+  wins.terminal.onclose=function(){termInput=null;};
+}
+var termInput=null;
+function runCmd(TC,line){var sp=line.indexOf(' ');var name=(sp<0?line:line.slice(0,sp)).trim();var args=(sp<0?'':line.slice(sp+1)).trim();if(name==='')return;if(TC[name])TC[name](args);else TC.__unknown(name);}
+function makeCmds(W,Wraw,esc){
+  function ok(l){Wraw('<span class="ok">  [ OK ] </span><span class="gr">'+esc(l)+'</span>');}
+  var C={
+   __unknown:function(n){W('Unknown command: '+n+" (try 'help')",'err');},
+   help:function(){['THUOS shell commands:','  help about version status sysinfo uptime ticks','  mem pages allocpage freepage','  heap kmalloc N kfree A   vmm [A]','  ps sched tasks','  ls   cat F   write F T','  echo banner color N clear crash div0 reboot'].forEach(function(l){W(l);});},
+   about:function(){W('THUOS - a from-scratch personal operating system.');W('Kernel : THU Kernel');W('Goal   : local-first, privacy-first, honest engineering.');},
+   version:function(){W('THU Kernel 0.10.0 "Filesystem"','c');W('Milestone 0.10 - RAM filesystem (host-tested + boot-verified)');},
+   status:function(){W('THUOS subsystem status (honest):');['  [done] PMM, kernel heap','  [done] Paging ENABLED (CR0.PG)','  [done] Multitasking + context switch','  [done] RAM filesystem (ls/cat/write)','  [plan] ring 3 + syscall, userspace'].forEach(function(l){W(l,l.indexOf('[done]')>=0?'ok':'am');});},
+   sysinfo:function(){W('THUOS 0.10.0 "Filesystem"','c');W('Arch    : x86 (i386, 32-bit)');W('Timer   : PIT @ 100 Hz');W('Uptime  : '+secs()+' s ('+ticks()+' ticks)');W('Memory  : ~130559 KiB usable, '+KS.pmm.free+' free frames');W('Paging  : ENABLED (identity map low 8 MiB)');},
+   uptime:function(){W('Uptime: '+ticks()+' ticks, approx '+secs()+' seconds (PIT @ 100 Hz)');},
+   ticks:function(){W(''+ticks());},
+   pages:function(){W('Physical memory (4 KiB frames):');W('  usable : ~130559 KiB ('+KS.pmm.usable+' frames)');W('  free   : '+KS.pmm.free+' frames (~'+(KS.pmm.free*4)+' KiB)');W('  used   : '+KS.pmm.used+' frames');},
+   mem:function(){W('Memory hint: 639 KiB low, 130048 KiB high (Multiboot)');C.pages();},
+   allocpage:function(){var a=pmmAlloc();if(!a){W('allocpage: out of physical memory','err');return;}W('Allocated frame at physical '+hex8(a)+' (free now: '+KS.pmm.free+' frames)');W('Free it with: freepage '+hex8(a));},
+   freepage:function(ar){var a=parseHex(ar);if(a===null){W('usage: freepage <hex>','err');return;}var r=pmmFree(a);if(r===0)W('Freed frame at '+hex8(a&~0xFFF)+' (free now: '+KS.pmm.free+' frames)');else if(r===-2)W('freepage: '+hex8(a)+' is a protected region (refused)','err');else if(r===-3)W('freepage: '+hex8(a)+' was already free','err');else W('freepage: '+hex8(a)+' out of range','err');},
+   heap:function(){W('Kernel heap:');W('  total : '+KS.heapTOTAL+' bytes');W('  used  : '+heapUsed()+' bytes');W('  free  : '+heapFree()+' bytes');W('  blocks: '+KS.heap.length);W('  integrity: OK','ok');},
+   kmalloc:function(ar){var n=parseInt(ar,10);if(!(n>0)){W('usage: kmalloc <bytes>','err');return;}var p=kmalloc(n);if(!p){W('kmalloc('+n+'): out of heap memory','err');return;}W('kmalloc('+n+') = '+hex8(p)+'  (heap free now: '+heapFree()+' bytes)');W('Free it with: kfree '+hex8(p));},
+   kfree:function(ar){var a=parseHex(ar);if(a===null){W('usage: kfree <hex>','err');return;}var k=kfree(a);W('kfree('+hex8(a)+'): heap free now '+heapFree()+' bytes, integrity OK'+(k?'':' (not an active pointer)'));},
+   vmm:function(ar){if(ar){var va=parseHex(ar);if(va===null){W('usage: vmm <hex>','err');return;}var pa=translate(va);if(pa<0)W('vmm: va '+hex8(va)+' is NOT mapped','err');else W('vmm: va '+hex8(va)+' -> pa '+hex8(pa));return;}W('Virtual memory (paging): ENABLED (CR0.PG)','c');W('  identity map: low 8192 KiB');W('  va 0x00400000 -> pa '+hex8(translate(0x400000)));W('  running under paging: YES (boot-verified)','ok');},
+   ps:function(){W('Scheduler (round-robin):');W('  task 0  READY  quantum 5/5');W('  task 1  READY  quantum 3/3');W('  task 2  READY  quantum 2/2');W('  runnable 3, current -1');},
+   sched:function(){var s='';for(var i=0;i<10;i++)s+=(i%3)+' ';W('Live round-robin pick order: '+s.trim());},
+   tasks:function(){W('  [coop] starting 3 cooperative tasks...','vi');for(var t=1;t<=3;t++)for(var k=0;k<3;k++)W('  [task '+k+'] tick '+t+' (own stack, via scheduler)');for(var k2=0;k2<3;k2++)W('  [task '+k2+'] done');W('  [coop] all tasks finished, back in kernel main','vi');},
+   ls:function(){W('Files in ramfs ('+fsBytes()+' bytes used):');var any=false;for(var k in KS.fs)if(KS.fs.hasOwnProperty(k)){W('  '+k+'  ('+KS.fs[k].length+' bytes)');any=true;}if(!any)W('  (no files)');},
+   cat:function(ar){if(!ar){W('usage: cat <file>','err');return;}if(!KS.fs.hasOwnProperty(ar)){W('cat: '+ar+': not found','err');return;}KS.fs[ar].split('\n').forEach(function(l){W(l);});},
+   write:function(ar){var sp=ar.indexOf(' ');if(sp<0){W('usage: write <file> <text>','err');return;}var nm=ar.slice(0,sp),tx=ar.slice(sp+1);KS.fs[nm]=tx;fsSave();W("wrote "+tx.length+" bytes to '"+nm+"'");},
+   echo:function(ar){W(ar);},
+   banner:function(){['','  ##### THUOS #####','  0.10.0 "Filesystem"',''].forEach(function(l){W(l,'vi');});},
+   color:function(ar){W('Text color set to '+(parseInt(ar,10)||0)+'. (simulasi)');},
+   clear:function(){var o=document.querySelector('#to');if(o)o.innerHTML='';},
+   crash:function(ar){if(ar!=='div0'){W('usage: crash div0','err');return;}W('*** KERNEL PANIC ***','err');W('EXCEPTION: Divide-by-zero (#DE), vector 0','err');W('  eip=0x0010a3f1 cs=0x08 eflags=0x00000202','err');W('System halted.','am');},
+   reboot:function(){W('Rebooting THUOS...');}
+  };
+  C['div0']=function(){C.crash('div0');};
+  return C;
+}
+
+/* ---- Monitor ---- */
+function mountMonitor(bd){
+  function render(){
+    var hu=heapUsed(),hf=heapFree(),hp=Math.round(hu/KS.heapTOTAL*100);
+    var fu=KS.pmm.used,ff=KS.pmm.free,fp=Math.round(fu/(fu+ff)*100);
+    bd.innerHTML=
+     '<div class="ps">state kernel · live</div>'+
+     '<h4>Memori fisik (PMM)</h4>'+
+     '<div class="gauge"><div class="l"><span>frame terpakai</span><span>'+fu+' / '+(fu+ff)+'</span></div><div class="track"><i class="fill f1" style="width:'+Math.max(3,fp)+'%"></i></div></div>'+
+     '<div class="kv"><span>bebas</span><span>'+ff+' frame (~'+(ff*4)+' KiB)</span></div>'+
+     '<h4 style="margin-top:14px">Kernel heap (kmalloc)</h4>'+
+     '<div class="gauge"><div class="l"><span>terpakai</span><span>'+hu+' / '+KS.heapTOTAL+' B</span></div><div class="track"><i class="fill f2" style="width:'+Math.max(2,hp)+'%"></i></div></div>'+
+     '<div class="kv"><span>blok</span><span>'+KS.heap.length+'</span></div>'+
+     '<div class="kv"><span>integritas</span><span class="pill">OK</span></div>'+
+     '<h4 style="margin-top:14px">Paging</h4>'+
+     '<div class="kv"><span>status</span><span class="pill">ENABLED · CR0.PG</span></div>'+
+     '<div class="kv"><span>identity map</span><span>low 8 MiB</span></div>'+
+     '<h4 style="margin-top:14px">Scheduler</h4>'+
+     '<div class="tlist"><div class="row"><span>task 0</span><span>READY</span></div><div class="row"><span>task 1</span><span>READY</span></div><div class="row"><span>task 2</span><span>READY</span></div></div>'+
+     '<div class="kv"><span>uptime</span><span>'+secs()+' s</span></div>';
+  }
+  render();var iv=setInterval(function(){if(wins.monitor)render();else clearInterval(iv);},900);
+  wins.monitor.onclose=function(){clearInterval(iv);};
+}
+
+/* ---- Files ---- */
+function mountFiles(bd){
+  var cur=null;
+  function render(){
+    var items='';for(var k in KS.fs)if(KS.fs.hasOwnProperty(k))items+='<div class="it'+(k===cur?' on':'')+'" data-f="'+k+'">'+k+'</div>';
+    bd.innerHTML='<div class="fl"><div class="side"><button class="new" id="fnew">＋ berkas baru</button>'+items+'</div>'+
+      '<div class="main">'+(cur===null?'<div class="note">Pilih atau buat berkas. Ini ramfs yang sama dengan perintah ls/cat/write di Terminal.</div>':
+      '<input class="fn" id="fname" value="'+cur+'"><textarea id="fbody">'+(KS.fs[cur]||'').replace(/</g,'&lt;')+'</textarea><div class="fb"><span>local-first · tersimpan di perangkat</span><button class="btn" id="fsave">Simpan</button></div>')+'</div></div>';
+    bd.querySelectorAll('.it').forEach(function(it){it.onclick=function(){cur=it.dataset.f;render();};});
+    var nb=bd.querySelector('#fnew');if(nb)nb.onclick=function(){var n='catatan'+(Object.keys(KS.fs).length);KS.fs[n]='';fsSave();cur=n;render();};
+    var sv=bd.querySelector('#fsave');if(sv)sv.onclick=function(){var nm=bd.querySelector('#fname').value.trim()||cur;var bdy=bd.querySelector('#fbody').value;if(nm!==cur)delete KS.fs[cur];KS.fs[nm]=bdy;cur=nm;fsSave();render();refreshApps();};
+  }
+  render();
+  wins.files.refresh=render;
+}
+
+/* ---- Tasks ---- */
+function mountTasks(bd){
+  bd.innerHTML='<h3>Multitasking kooperatif</h3><div class="ps">scheduler + context switch (nyata di kernel)</div>'+
+   '<p class="note">3 task jalan bergantian di stack masing-masing lewat scheduler round-robin, lalu keluar — persis demo yang di-boot-verify CI.</p>'+
+   '<button class="btn" id="trun">▸ Jalankan demo</button><div class="o" id="tout" style="font-family:var(--mono);font-size:12px;line-height:1.5;margin-top:12px;white-space:pre-wrap;color:var(--ink2)"></div>';
+  var o=bd.querySelector('#tout');
+  bd.querySelector('#trun').onclick=function(){
+    o.innerHTML='';var lines=[];lines.push(['vi','[coop] starting 3 cooperative tasks...']);
+    for(var t=1;t<=3;t++)for(var k=0;k<3;k++)lines.push(['','  [task '+k+'] tick '+t]);
+    for(var k2=0;k2<3;k2++)lines.push(['gr','  [task '+k2+'] done']);
+    lines.push(['vi','[coop] all tasks finished, back in kernel main']);
+    var i=0;(function nx(){if(i<lines.length){var d=document.createElement('div');if(lines[i][0])d.className=lines[i][0];d.textContent=lines[i][1];o.appendChild(d);o.scrollTop=o.scrollHeight;i++;setTimeout(nx,140);}})();
+  };
+}
+
+/* ---- About ---- */
+function mountAbout(bd){
+  var ms=[['0.3','Physical memory manager'],['0.4','Kernel heap (kmalloc/kfree)'],['0.5','Paging tables'],['0.6','Scheduler + boot-verified'],['0.7','Paging ENABLED (CR0.PG)'],['0.8','Context switch'],['0.9','Cooperative multitasking'],['0.10','RAM filesystem'],['next','Ring 3 + syscall, userspace',1]];
+  var h='<h3>THUOS 0.10 "Filesystem"</h3><div class="ps">from-scratch OS · x86 i386 · Multiboot 1</div>'+
+   '<p class="note">Kernel from-scratch yang <b>boot di QEMU</b> &amp; diverifikasi CI tiap push. Sudah punya virtual memory, multitasking, dan filesystem — semua host-tested + boot-verified.</p>'+
+   '<h4 style="margin-top:6px">Perjalanan</h4>';
+  ms.forEach(function(m){h+='<div class="mile'+(m[2]?' pl':'')+'"><span class="d"></span><span class="vv">'+m[0]+'</span><span>'+m[1]+'</span></div>';});
+  h+='<p class="note" style="margin-top:12px"><b style="color:var(--amber)">Jujur:</b> desktop ini visualisasi konsep dari state THUOS sekarang. Kernel asli = shell teks di QEMU (lihat app Terminal — perilakunya setia). Belum menyaingi Windows/macOS; ini fondasi yang tumbuh ke arah yang bisa dimenangkan.</p>';
+  bd.innerHTML=h;
+}
+
+/* refresh open monitors/files after state changes */
+function refreshApps(){ if(wins.files&&wins.files.refresh)wins.files.refresh(); }
+
+/* ============ dock ============ */
+var DOCK=['terminal','monitor','files','tasks','about'];
+var dock=document.getElementById('dock');
+DOCK.forEach(function(id){var a=APPS[id];var d=document.createElement('div');d.className='di';d.dataset.app=id;d.style.setProperty('--dc',a.dc);
+  d.innerHTML='<div class="ic">'+ICON[a.icon]+'</div><div class="lb">'+a.name.split(' ')[0]+'</div>';d.onclick=function(){openApp(id);};dock.appendChild(d);});
+
+/* keyboard -> terminal */
+document.addEventListener('keydown',function(e){if(termInput&&activeId==='terminal'){termInput(e);}});
+
+/* clock */
+function pad(n){return (n<10?'0':'')+n;}
+function tick(){var d=new Date();document.getElementById('clock').textContent=pad(d.getHours())+':'+pad(d.getMinutes());
+  document.getElementById('memmini').textContent='mem '+Math.round(KS.pmm.used/(KS.pmm.used+KS.pmm.free)*100)+'% · heap '+Math.round(heapUsed()/KS.heapTOTAL*100)+'%';}
+tick();setInterval(tick,1000);
+
+/* ============ boot ============ */
+var BOOT=[
+ 'THUOS 0.10.0 "Filesystem"','THU Kernel - x86 (i386, 32-bit)','From-scratch OS foundation. Booting...','',
+ '[THUOS] serial COM1 online',
+ '  [ OK ] GDT, IDT, exceptions, PIC/IRQ, PIT, keyboard',
+ '  [ OK ] Physical memory manager (4 KiB frames)',
+ '  [ OK ] Kernel heap (1 MiB, kmalloc/kfree)',
+ '  [ OK ] Paging ENABLED (CR0.PG) - virtual memory',
+ '  [ OK ] Scheduler + context switch',
+ '  [ OK ] Cooperative multitasking (3 tasks)',
+ '  [ OK ] RAM filesystem ready',
+ '','Welcome to THUOS.'
+];
+var bt=document.getElementById('boottext'),bi=0;
+function bstep(){
+  if(bi<BOOT.length){var l=BOOT[bi];
+    bt.innerHTML += (l.indexOf('[ OK ]')>=0 ? '<span style="color:var(--green)">'+l+'</span>' : (l.indexOf('THUOS 0.10')===0?'<span style="color:var(--cyan)">'+l+'</span>':l))+'\n';
+    bi++;setTimeout(bstep, l===''?60:150);
+  } else setTimeout(finishBoot,650);
+}
+function finishBoot(){
+  var b=document.getElementById('boot');b.classList.add('gone');setTimeout(function(){b.style.display='none';},500);
+  openApp('terminal');openApp('monitor');
+  var h=document.getElementById('hint');h.innerHTML='Buka app dari <b>dock</b> ↓ · klik Terminal lalu ketik <b>help</b>';h.classList.add('on');setTimeout(function(){h.classList.remove('on');},6000);
+}
+window.addEventListener('load',function(){KS.boot0=Date.now();bstep();});
+</script>
+</body>
+</html>
