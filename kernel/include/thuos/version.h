@@ -8,9 +8,9 @@
 #define THUOS_FS_NAME      "THUFS"
 #define THUOS_PKG_NAME     "thupkg"
 
-#define THUOS_VERSION      "0.6.0"
+#define THUOS_VERSION      "0.6.1"
 #define THUOS_CODENAME     "Scheduler"
-#define THUOS_MILESTONE    "Milestone 0.6 - Round-robin scheduler policy (host-tested; context switch staged)"
+#define THUOS_MILESTONE    "Milestone 0.6.1 - Boot-verified in QEMU (CI serial smoke-test)"
 #define THUOS_ARCH         "x86 (i386, 32-bit)"
 
 #define THUOS_BUILD_DATE   __DATE__
