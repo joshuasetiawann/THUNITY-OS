@@ -8,9 +8,9 @@
 #define THUOS_FS_NAME      "THUFS"
 #define THUOS_PKG_NAME     "thupkg"
 
-#define THUOS_VERSION      "0.8.0"
-#define THUOS_CODENAME     "Context Switch"
-#define THUOS_MILESTONE    "Milestone 0.8 - Cooperative context switch (real stack/register swap), boot-verified"
+#define THUOS_VERSION      "0.9.0"
+#define THUOS_CODENAME     "Cooperative Tasks"
+#define THUOS_MILESTONE    "Milestone 0.9 - Cooperative multitasking (scheduler + context switch), boot-verified"
 #define THUOS_ARCH         "x86 (i386, 32-bit)"
 
 #define THUOS_BUILD_DATE   __DATE__

@@ -14,6 +14,7 @@
 #include "kheap.h"
 #include "vmm.h"
 #include "sched.h"
+#include "coop.h"
 
 #define LINE_MAX 128
 
@@ -76,6 +77,7 @@ static void cmd_help(void) {
     kprintf("  vmm [A]    Paging info; translate virtual addr A (hex)\n");
     kprintf("  ps         List scheduler tasks and states\n");
     kprintf("  sched      Run the round-robin scheduler (live demo)\n");
+    kprintf("  tasks      Run cooperative multitasking (3 tasks, live)\n");
     kprintf("  echo       Print the rest of the line\n");
     kprintf("  banner     Show the THUOS banner\n");
     kprintf("  color N    Set text color (0-15)\n");
@@ -109,8 +111,8 @@ static void cmd_status(void) {
     kprintf("  [done]    Physical memory manager (Milestone 0.3)\n");
     kprintf("  [done]    Kernel heap kmalloc/kfree (Milestone 0.4)\n");
     kprintf("  [done]    Paging ENABLED (0.7, CR0.PG, boot-verified QEMU)\n");
-    kprintf("  [done]    Cooperative context switch (0.8, boot-verified)\n");
-    kprintf("  [plan]    Preemptive multitasking -> ring 3 + syscall\n");
+    kprintf("  [done]    Cooperative multitasking (0.9, boot-verified)\n");
+    kprintf("  [plan]    Preemptive (timer IRQ) -> ring 3 + syscall\n");
     kprintf("  [plan]    VFS + initrd, userspace, in-VM terminal\n");
 }
 
@@ -313,6 +315,7 @@ static void execute(char *line) {
     else if (strcmp(line, "vmm") == 0)       cmd_vmm(args);
     else if (strcmp(line, "ps") == 0)        sched_klist();
     else if (strcmp(line, "sched") == 0)     sched_kdemo();
+    else if (strcmp(line, "tasks") == 0)     coop_run_demo();
     else if (strcmp(line, "echo") == 0)      kprintf("%s\n", args);
     else if (strcmp(line, "banner") == 0)    print_banner();
     else if (strcmp(line, "color") == 0)     cmd_color(args);
