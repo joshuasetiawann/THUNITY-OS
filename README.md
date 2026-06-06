@@ -10,14 +10,16 @@ built incrementally toward a calm, local-first desktop OS tomorrow.
 
 - **Project:** THUOS · **Kernel:** THU Kernel · **Desktop:** THU Desktop
 - **Filesystem (planned):** THUFS · **Package manager (planned):** thupkg
-- **Version:** `0.3.0` "Memory Foundation" · **Arch:** x86 (i386, 32-bit) · **Boot:** Multiboot 1 (GRUB-compatible)
+- **Version:** `0.6.1` "Scheduler / Boot-Verified" · **Arch:** x86 (i386, 32-bit) · **Boot:** Multiboot 1 · **Boot status:** ✅ boot-verified in QEMU (CI)
 
 ---
 
-## What works today (build-verified)
+## What works today (boot-verified in QEMU)
 
-THU Kernel 0.2.0 compiles and links into a **valid 32-bit Multiboot ELF**. The
-following subsystems are implemented and wired into `kernel_main()`:
+THU Kernel **boots in QEMU and reaches its `thuos>` shell** — verified
+automatically on every push by the CI `boot-smoke` job (`scripts/boottest.sh`
+captures COM1 serial and checks the boot markers). The following subsystems are
+implemented and wired into `kernel_main()`:
 
 | Area | Status | Source |
 |------|--------|--------|
@@ -31,24 +33,33 @@ following subsystems are implemented and wired into `kernel_main()`:
 | PIT timer @ 100 Hz + uptime | ✅ Implemented | `kernel/arch/x86/pit.c` |
 | PS/2 keyboard (IRQ1, scancode set 1, shift) | ✅ Implemented | `kernel/drivers/keyboard.c` |
 | Panic / assert system | ✅ Implemented | `kernel/core/panic.c` |
-| Interactive shell (`thuos>`, 21 commands) | ✅ Implemented | `kernel/shell/shell.c` |
+| Interactive shell (`thuos>`, 27 commands) | ✅ Implemented | `kernel/shell/shell.c` |
 | Freestanding `mem*`/`str*` lib | ✅ Implemented | `kernel/lib/string.c` |
 | Multiboot memory-map parsing | ✅ Implemented | `kernel/mm/multiboot.h`, `pmm.c` |
 | Physical memory manager (4 KiB frames) + protected-region reservation | ✅ Implemented | `kernel/mm/pmm.c`, `frame_bitmap.c` (unit-tested: `tests/test_pmm.c`) |
 | Memory shell commands (`memmap`, `pages`, `allocpage`, `freepage`) | ✅ Implemented | `kernel/shell/shell.c` |
+| Kernel heap (`kmalloc`/`kfree`) | ✅ Implemented + host-tested | `kernel/mm/kheap_core.c`, `kheap.c` (`tests/test_kheap.c`) |
+| Paging tables + translation (staged, not enabled) | ✅ Host-tested | `kernel/mm/vmm_core.c`, `vmm.c` (`tests/test_vmm.c`) |
+| Round-robin scheduler policy core | ✅ Host-tested | `kernel/sched/sched_core.c`, `sched.c` (`tests/test_sched.c`) |
+| Boot in QEMU → `thuos>` (serial smoke-test) | ✅ Boot-verified (CI) | `scripts/boottest.sh`, CI `boot-smoke` |
 
-> **What "Implemented" means here:** the code compiles, links, and is integrated,
-> and the kernel passes structural verification (valid Multiboot header, correct
-> ELF class, required symbols present). It has **not** been booted under QEMU *in
-> this build environment* because QEMU is not installed here. See
-> [`docs/07_LIMITATIONS_AND_NEXT_STEPS.md`](docs/07_LIMITATIONS_AND_NEXT_STEPS.md)
-> and [`BUILD_VERIFICATION.txt`](BUILD_VERIFICATION.txt) for the honest details.
+> **Honesty:** logic is **host-tested** (`make test`: PMM, heap, paging, scheduler)
+> and the kernel is **boot-verified in QEMU** by CI (`make boottest` → reaches
+> `thuos>` over serial). It has **not** been run on physical hardware, and this dev
+> sandbox has no QEMU (so `make boottest` skips here; CI runs it for real). See
+> [`docs/THUOS_REALITY_CHECK.md`](docs/THUOS_REALITY_CHECK.md) for the honest big picture.
 
-## Planned (not done yet)
+## Direction & what's next
 
-Paging + kernel heap (designed: `docs/10`, `docs/11`) · VFS + initrd (0.4) ·
-userspace + syscalls (0.5) · framebuffer graphics (0.6) · in-kernel THU Desktop
-(0.7) · real `thupkg` backend · installer ISO. See [`docs/08_ROADMAP.md`](docs/08_ROADMAP.md).
+THUOS's honest strategy — it cannot out-engineer Windows/macOS head-on (see
+[`docs/THUOS_REALITY_CHECK.md`](docs/THUOS_REALITY_CHECK.md)) — is a focused wedge:
+a **capability-secured, local-first, fast-boot developer/AI-agent OS that runs in
+a VM/microVM** (sidestepping the driver moat). See
+[`docs/THUOS_VISION.md`](docs/THUOS_VISION.md) and
+[`docs/THUOS_ARCHITECTURE.md`](docs/THUOS_ARCHITECTURE.md).
+
+Next (staged — need boot-verification first): enable paging in QEMU · context
+switch → live processes · ring 3 + capability syscalls · a real in-VM terminal.
 
 ---
 
@@ -57,7 +68,8 @@ userspace + syscalls (0.5) · framebuffer graphics (0.6) · in-kernel THU Deskto
 ```bash
 make kernel     # build build/kernel.elf (freestanding 32-bit)
 make verify     # ELF class, Multiboot header+checksum, symbols, allocator test -> BUILD_VERIFICATION.txt
-make test       # host unit test of the page-frame allocator (native gcc, no QEMU)
+make test       # host unit tests: PMM + kernel heap + paging + scheduler (native gcc)
+make boottest   # BOOT THUOS in QEMU and verify it reaches thuos> (skips if no QEMU)
 make status     # one-screen honest project status
 make demo       # serve the THU Desktop preview at http://localhost:8080
 make clean      # remove build artifacts
@@ -113,6 +125,10 @@ docs/          Milestone documentation (00–08) + docs/design/ deep specs
 | [09_MEMORY_FOUNDATION](docs/09_MEMORY_FOUNDATION.md) | Physical memory manager (implemented) |
 | [10_PAGING_PLAN](docs/10_PAGING_PLAN.md) | Paging design (planned) |
 | [11_KERNEL_HEAP_PLAN](docs/11_KERNEL_HEAP_PLAN.md) | Kernel heap design (planned) |
+| [THUOS_VISION](docs/THUOS_VISION.md) | Project vision & the winnable wedge |
+| [THUOS_ARCHITECTURE](docs/THUOS_ARCHITECTURE.md) | Studied Linux/XNU/NT/seL4 → THUOS design |
+| [THUOS_REALITY_CHECK](docs/THUOS_REALITY_CHECK.md) | Deep research: can THUOS rival the giants? |
+| [BOOT_THUOS](BOOT_THUOS.md) | How to boot THUOS yourself (QEMU/ISO) |
 | [PROJECT_STATUS](PROJECT_STATUS.md) | Subsystem status board |
 
 ## Principles
