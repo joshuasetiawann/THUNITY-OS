@@ -3,6 +3,45 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.12.0] — "User Mode" — 2026-06-09
+
+**Ring 3.** The kernel now drops the CPU to privilege level 3, runs code there,
+and that code can re-enter the kernel **only** through the `int 0x80` syscall
+gate — then control returns cleanly to ring 0. This is the privilege mechanism
+every real OS is built on: a Task State Segment supplies the kernel stack for the
+ring 3 → ring 0 transition, and an `iret` performs the ring 0 → ring 3 drop.
+
+Honesty: the address space is still a single flat identity map (now marked
+user-accessible), so this is **not** per-process memory isolation — that is a
+later milestone. What is demonstrated and asserted in CI is the CPL 0→3→0
+transition and a real syscall issued from user mode. Boot self-test wired into
+`scripts/boottest.sh`; CI `boot-smoke` asserts the new `User mode` marker.
+
+### Added — kernel (user mode / ring 3)
+- `kernel/arch/x86/usermode_core.{c,h}` — pure descriptor/selector math (segment
+  selectors, ring-3 `EFLAGS`, the 8-byte available-32-bit-TSS descriptor), free
+  of kernel deps → host-tested.
+- `kernel/arch/x86/tss.{c,h}` — the Task State Segment: holds `SS0:ESP0` (a
+  dedicated kernel stack) that the CPU loads on every ring 3 → ring 0 entry. The
+  GDT grows a sixth descriptor for it (`gdt.c`) and `ltr` loads the task register.
+- `kernel/arch/x86/usermode_entry.S` — `usermode_enter()` builds an `iret` frame
+  and drops to CPL 3; `usermode_resume_kernel()` is the one-way unwind the
+  `SYS_EXIT` handler uses to come back; `tss_flush()` runs `ltr`.
+- `kernel/arch/x86/usermode.c` — a ring-3 demo task that prints via `SYS_WRITE`,
+  calls `SYS_GETPID`, then `SYS_EXIT`; `usermode_selftest()` runs it at boot.
+- `SYS_EXIT` syscall; `syscall_last_cs()` records the caller's `CS` so `(cs & 3)`
+  proves the trap really came from ring 3.
+- `kernel/mm/vmm.c` — the identity map is now `PTE_RW | PTE_USER`, making the low
+  8 MiB reachable from ring 3 (ring 0 is unaffected).
+- Shell gains `user`: enter ring 3 and round-trip a syscall live, reporting CPL.
+
+### Verification
+- `tests/test_usermode.c` (+ `make test`, now 8 host suites): selector
+  composition, ring-3 `EFLAGS` (IF set / NT cleared), TSS descriptor byte layout.
+- `scripts/boottest.sh` asserts the `User mode` boot marker, so CI proves the
+  kernel actually enters CPL 3, takes a syscall from there, and returns — then
+  still reaches `thuos>`.
+
 ## [0.11.0] — "Syscalls" — 2026-06-06
 
 A system-call interface (`int 0x80`) — the ABI boundary that userspace will use.

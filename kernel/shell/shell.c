@@ -17,6 +17,7 @@
 #include "coop.h"
 #include "fs.h"
 #include "syscall.h"
+#include "usermode.h"
 
 #define LINE_MAX 128
 
@@ -84,6 +85,7 @@ static void cmd_help(void) {
     kprintf("  cat F      Print file F\n");
     kprintf("  write F T  Write text T to file F\n");
     kprintf("  sys        Invoke syscalls via int 0x80 (demo)\n");
+    kprintf("  user       Drop to ring 3 and round-trip a syscall (CPL 3 demo)\n");
     kprintf("  echo       Print the rest of the line\n");
     kprintf("  banner     Show the THUOS banner\n");
     kprintf("  color N    Set text color (0-15)\n");
@@ -120,7 +122,8 @@ static void cmd_status(void) {
     kprintf("  [done]    Cooperative multitasking (0.9, boot-verified)\n");
     kprintf("  [done]    RAM filesystem ls/cat/write (0.10)\n");
     kprintf("  [done]    Syscall interface int 0x80 (0.11)\n");
-    kprintf("  [plan]    Ring 3 (user mode) + more syscalls, userspace\n");
+    kprintf("  [done]    User mode (ring 3): TSS + iret + syscall from CPL 3 (0.12)\n");
+    kprintf("  [plan]    Per-process isolation, more syscalls, userspace programs\n");
 }
 
 static void cmd_sysinfo(void) {
@@ -285,6 +288,18 @@ static void cmd_sys(const char *args) {
     kprintf("  registered syscalls: %d\n", syscall_count());
 }
 
+static void cmd_user(const char *args) {
+    (void)args;
+    kprintf("Entering ring 3 (user mode), then returning via the syscall gate...\n");
+    int code = usermode_run();
+    uint32_t cs = syscall_last_cs();
+    kprintf("Back in ring 0: exit=%d, last int 0x80 from CS=0x%02x => CPL %u\n",
+            code, cs, cs & 3u);
+    if ((cs & 3u) == 3u)
+        kprintf("  ring 3 confirmed: the CPU recorded CPL 3 for that syscall.\n");
+    kprintf("  (ring 3 can reach the kernel only through int 0x80.)\n");
+}
+
 static void cmd_thupkg(const char *args) {
     if (strcmp(args, "list") == 0) {
         kprintf("thupkg - installed/known packages (design preview):\n");
@@ -373,6 +388,7 @@ static void execute(char *line) {
     else if (strcmp(line, "cat") == 0)       cmd_cat(args);
     else if (strcmp(line, "write") == 0)     cmd_write(args);
     else if (strcmp(line, "sys") == 0)       cmd_sys(args);
+    else if (strcmp(line, "user") == 0)      cmd_user(args);
     else if (strcmp(line, "echo") == 0)      kprintf("%s\n", args);
     else if (strcmp(line, "banner") == 0)    print_banner();
     else if (strcmp(line, "color") == 0)     cmd_color(args);
