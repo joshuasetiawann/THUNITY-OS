@@ -3,6 +3,27 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.16.0] — "Polish" — 2026-06-09
+
+**Visual refinement.** The desktop gets a nicer look and, in particular, **real
+pictogram app icons** instead of letters: a terminal prompt, a calculator face, a
+folder, settings sliders, and an info badge — each on its own coloured tile. The
+top bar gains a **live clock** (mm:ss) and the dock shows a **running-app
+indicator** dot under the active app. The wallpaper, window and dock chrome were
+tidied up.
+
+### Added — kernel (graphics)
+- `kernel/drivers/lfb.c` — `lfb_disc()` (filled circle) and `lfb_line()`
+  (Bresenham), used to draw the pictogram icons.
+- `kernel/gui/desktop.c` — `icon_glyph()` draws each app's pictogram; `draw_dock()`
+  paints the dock + active indicator; `draw_clock()` updates each second in the
+  event loop. Refined wallpaper gradient, window and title bar.
+
+### Verification
+- `make test` 8 host suites, `make verify` 16/0, no warnings. Boot-smoke still
+  asserts `THU Desktop` + `thuos>` over serial. BOOT-VERIFIED in QEMU; the new
+  look is verified by QEMU screenshots. No behaviour change to the apps.
+
 ## [0.15.0] — "Apps" — 2026-06-09
 
 **A usable desktop.** THUOS gains a **PS/2 mouse** with a composited arrow

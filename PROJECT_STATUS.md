@@ -1,6 +1,6 @@
 # THUOS — Project Status
 
-**Milestone:** 0.15 "Apps" — PS/2 mouse + clickable dock + built-in apps (Terminal, Calculator, Files, System), boot-verified in QEMU (CI)
+**Milestone:** 0.16 "Polish" — refined desktop with pictogram app icons, a top-bar clock and an active-app indicator, boot-verified in QEMU (CI)
 **Date of this status:** 2026-06-09
 **Honesty rule:** every "Implemented" item is backed by a source file and passes
 the build + structural verification in [`BUILD_VERIFICATION.txt`](BUILD_VERIFICATION.txt).
@@ -39,6 +39,7 @@ what is actually run/tested.
 | **User mode (ring 3): TSS + iret + int 0x80 from CPL 3** | **Host-tested + boot-verified (QEMU/CI)** | `kernel/arch/x86/usermode_core.c`, `usermode.c`, `usermode_entry.S`, `tss.c` (`tests/test_usermode.c`); boot asserts `User mode` (serial: `CS=0x1b => CPL 3`) |
 | **High-res truecolor desktop (1024×768×32, Bochs VBE) + graphical terminal** | **Boot-verified (QEMU/CI) + screenshot** | `kernel/drivers/lfb.c` (PCI probe + DISPI), `vmm_map_lfb`, `kernel/gui/gconsole.c`, `desktop.c`; boot asserts `THU Desktop`; shell runs in the desktop window |
 | **PS/2 mouse + clickable dock + apps (Terminal, Calculator, Files, System, About)** | **Boot-verified (QEMU/CI) + screenshot** | `kernel/drivers/mouse.c`, `kernel/gui/apps.c`, `desktop.c` event loop; click a dock icon to switch apps |
+| **Polished desktop: pictogram icons, clock, active-app indicator** | **Boot-verified (QEMU/CI) + screenshot** | `lfb_disc`/`lfb_line`, `icon_glyph`/`draw_dock`/`draw_clock` in `desktop.c` |
 | Camera / Wi-Fi / Bluetooth | Not supported (honest) | No device in QEMU / vendor firmware+drivers out of scope; shown truthfully in the System app |
 | Freestanding `mem*`/`str*` | Implemented | `kernel/lib/string.c` |
 | **Multiboot memory-map parsing** | **Implemented** | `kernel/mm/multiboot.h`, `pmm.c` |

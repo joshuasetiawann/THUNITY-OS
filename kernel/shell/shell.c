@@ -131,6 +131,7 @@ static void cmd_status(void) {
     kprintf("  [done]    THU Desktop: VGA graphics + graphical terminal (0.13)\n");
     kprintf("  [done]    Aurora: high-res 1024x768x32 truecolor desktop (0.14)\n");
     kprintf("  [done]    Apps: mouse + clickable dock, Calculator/Files/System (0.15)\n");
+    kprintf("  [done]    Polish: pictogram dock icons, clock, refined desktop (0.16)\n");
     kprintf("  [plan]    Movable windows, per-process isolation, ELF userspace apps\n");
 }
 

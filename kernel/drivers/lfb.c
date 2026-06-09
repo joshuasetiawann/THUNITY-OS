@@ -118,6 +118,27 @@ void lfb_round_fill(int x, int y, int w, int h, int r, uint32_t rgb) {
     }
 }
 
+void lfb_disc(int cx, int cy, int r, uint32_t rgb) {
+    for (int dy = -r; dy <= r; dy++) {
+        int half = isqrt(r * r - dy * dy);
+        lfb_fill(cx - half, cy + dy, 2 * half + 1, 1, rgb);
+    }
+}
+
+void lfb_line(int x0, int y0, int x1, int y1, uint32_t rgb) {
+    int dx = x1 - x0, dy = y1 - y0;
+    int adx = dx < 0 ? -dx : dx, ady = dy < 0 ? -dy : dy;
+    int sx = dx < 0 ? -1 : 1, sy = dy < 0 ? -1 : 1;
+    int err = (adx > ady ? adx : -ady) / 2, e2;
+    for (;;) {
+        lfb_pixel(x0, y0, rgb);
+        if (x0 == x1 && y0 == y1) break;
+        e2 = err;
+        if (e2 > -adx) { err -= ady; x0 += sx; }
+        if (e2 <  ady) { err += adx; y0 += sy; }
+    }
+}
+
 void lfb_char(int x, int y, char ch, uint32_t fg, long bg, int s) {
     const uint8_t *g = gfx_glyph((uint8_t)ch);
     for (int r = 0; r < 16; r++) {
