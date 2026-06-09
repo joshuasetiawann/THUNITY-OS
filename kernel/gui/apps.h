@@ -10,7 +10,14 @@ void app_calc_click(int mx, int my);
 void app_files_open(int x, int y, int w, int h);
 void app_files_click(int mx, int my);
 
-void app_sys_open(int x, int y, int w, int h);     /* honest system + devices panel */
-void app_about_open(int x, int y, int w, int h);
+void app_notes_open(int x, int y, int w, int h);
+void app_notes_key(char c);
+
+void app_paint_open(int x, int y, int w, int h);
+void app_paint_click(int mx, int my);
+void app_paint_motion(int mx, int my);     /* called while the button is held */
+
+void app_settings_open(int x, int y, int w, int h);   /* sidebar menu + panes */
+void app_settings_click(int mx, int my);
 
 #endif /* THUOS_APPS_H */

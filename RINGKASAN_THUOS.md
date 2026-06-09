@@ -1,13 +1,13 @@
 # THUOS / THUNITY-OS — Ringkasan & Handoff
 > Paket konteks untuk melanjutkan proyek di sesi/percakapan baru.
-> Tanggal: 2026-06-09 · Versi terakhir: **0.16.0 "Polish"** (desktop diperhalus + ikon app pictogram + jam + indikator app aktif)
+> Tanggal: 2026-06-09 · Versi terakhir: **0.17.0 "Suite"** (menu Settings + tema bisa diganti + app Notes & Paint)
 
 ---
 
 ## 0. Mulai cepat untuk sesi baru (PENTING)
 - **Repo GitHub (publik):** https://github.com/joshuasetiawann/THUNITY-OS
   · **0.12 → 0.15 (User Mode, Desktop, Aurora, Apps) di branch `claude/serene-dijkstra-earnge`** (PR #2, base loving-ptolemy) · CI build + boot-smoke **hijau** (boot-verified di QEMU).
-  · Snapshot tiap versi ada di folder `versions/v0.2.0 … v0.16.0` (root = tree aktif terbaru yang di-build CI).
+  · Snapshot tiap versi ada di folder `versions/v0.2.0 … v0.17.0` (root = tree aktif terbaru yang di-build CI).
 - **Sandbox kadang rollback lokal** ke commit lama tiap pergantian giliran. **Selalu** awali sesi dengan menarik kode terbaru dari GitHub (read publik selalu jalan); pakai branch milestone terbaru:
   ```bash
   git clone -b claude/serene-dijkstra-earnge https://github.com/joshuasetiawann/THUNITY-OS.git thuos
@@ -47,6 +47,7 @@ Strateginya **bukan** menyaingi Windows/macOS langsung (mustahil untuk tim kecil
 | 0.14 | **Aurora** (desktop modern 1024×768×32 truecolor via Bochs VBE; PCI+DISPI+map LFB) | boot-verified + screenshot |
 | 0.15 | **Apps** (PS/2 mouse + kursor, dock bisa diklik, app: Terminal/Kalkulator/Files/System/About) | boot-verified + screenshot |
 | 0.16 | **Polish** (desktop diperhalus, ikon app pictogram, jam top-bar, indikator app aktif) | boot-verified + screenshot |
+| 0.17 | **Suite** (menu Settings: tema/display/devices + app Notes & Paint) | boot-verified + screenshot |
 
 **Verifikasi:** 8 unit test host (`make test`) + 2 job CI (`build-and-test`, `boot-smoke`).
 `boot-smoke` mem-boot kernel di QEMU, baca serial COM1, dan meng-assert marker
@@ -92,8 +93,8 @@ Tanpa setup apa pun: buka **`preview/thuos_os.html`** di browser (simulasi deskt
 
 ## 6. Shell `thuos>` (perintah inti)
 `help about version status sysinfo uptime ticks mem memmap pages allocpage freepage`
-`heap kmalloc kfree vmm ps sched tasks ls cat write sys user gui calc files devices about apps echo banner color clear crash reboot halt`
-Di desktop grafis: **klik ikon dock** untuk ganti app; **Esc** kembali ke terminal.
+`heap kmalloc kfree vmm ps sched tasks ls cat write sys user gui files notes calc paint settings apps echo banner color clear crash reboot halt`
+Di desktop grafis: **klik ikon dock** untuk ganti app (Terminal/Files/Notes/Kalkulator/Paint/Settings); **Esc** kembali ke terminal. Settings ▸ Appearance bisa ganti tema.
 
 Coba: `sysinfo` · `heap` lalu `kmalloc 256` lalu `heap` · `vmm 0x400000` · `tasks` · `write notes halo` lalu `ls` lalu `cat notes` · `sys` · `user` (turun ke ring 3 lalu balik via `int 0x80`, lapor CPL).
 
@@ -129,8 +130,9 @@ Makefile README.md CHANGELOG.md PROJECT_STATUS.md linker.ld grub.cfg
 - ✅ **0.13 THU Desktop (grafis)** — SELESAI: VGA mode 13h (320x200x256), font dari plane 2 VGA, desktop + window, shell di terminal grafis.
 - ✅ **0.14 Aurora (desktop modern)** — SELESAI: framebuffer 1024×768×32 (Bochs VBE/DISPI), LFB via PCI + `vmm_map_lfb`, tema gelap flat (gradien, window ber-shadow, dock).
 - ✅ **0.15 Apps** — SELESAI: PS/2 mouse (IRQ12) + kursor composited, dock bisa diklik, event loop (`desktop_run`), app: Terminal/Kalkulator(integer)/Files(ramfs)/System(jujur)/About.
-- ✅ **0.16 Polish** — SELESAI: ikon app jadi pictogram (terminal/kalkulator/folder/sliders/info) via `lfb_disc`+`lfb_line`, jam top-bar (update tiap detik), indikator app aktif di dock, wallpaper/window/dock diperhalus.
-1. **0.17 Window bisa digeser / banyak window** + window manager.
+- ✅ **0.16 Polish** — SELESAI: ikon app jadi pictogram via `lfb_disc`+`lfb_line`, jam top-bar, indikator app aktif, chrome diperhalus.
+- ✅ **0.17 Suite** — SELESAI: menu **Settings** (sidebar: Appearance/Display/Date&Time/Devices/About; tema bisa diganti live via `desktop_set_theme`), app **Notes** (editor, autosave ke ramfs `notes.txt`), app **Paint** (gambar pakai mouse, palet warna, stroke di-interpolasi). Dock jadi 6 app.
+1. **0.18 Window bisa digeser / banyak window** + window manager.
 2. **ELF loader** + isolasi memori per-proses → app **dimuat dari file** (arti realistis "install app"). Lebih banyak syscall (`open`/`read`/`write`).
 3. Jaringan **kabel** (NIC e1000 emulasi + TCP/IP minimal) — track besar terpisah.
 4. Preemptive multitasking, persistensi (initrd), font TrueType/anti-alias.

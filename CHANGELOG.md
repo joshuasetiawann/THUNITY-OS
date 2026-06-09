@@ -3,6 +3,38 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.17.0] — "Suite" — 2026-06-09
+
+**A Settings menu and more apps.** The dock grows to six apps and gains a proper
+**Settings** menu (a typical sidebar layout) plus two new basic apps, **Notes**
+and **Paint**.
+
+- **Settings** — a sidebar of categories with a content pane:
+  - **Appearance** — five theme swatches; clicking one changes the wallpaper
+    gradient and accent colour live across the whole desktop.
+  - **Display** — resolution / colour / framebuffer info.
+  - **Date & Time** — uptime + clock info (no RTC wired yet, stated honestly).
+  - **Devices** — the honest device list (Display/Keyboard/Mouse/Storage/Timer
+    OK; network = no driver; Camera/Wi-Fi/Bluetooth not supported).
+  - **About** — version, arch, app list.
+- **Notes** — a text editor; what you type is **autosaved to `notes.txt`** in the
+  RAM filesystem (and reloaded when reopened).
+- **Paint** — draw on a canvas by dragging the mouse, with a 7-colour palette and
+  a Clear button; strokes are interpolated so they're solid.
+
+### Added — kernel
+- `kernel/gui/apps.c` — `app_settings_*` (sidebar + categories + theme apply via
+  `desktop_set_theme`), `app_notes_*` (editor + ramfs autosave), `app_paint_*`
+  (palette + canvas + interpolated strokes).
+- `kernel/gui/desktop.c` — runtime theme (`desktop_set_theme`/`desktop_accent`),
+  six-app dock with new pictogram icons (Notes = document, Paint = palette),
+  keyboard routing to Notes, mouse-drag routing to Paint.
+
+### Verification
+- `make test` 8 host suites, `make verify` 16/0, no warnings; boot-smoke asserts
+  `THU Desktop` + `thuos>` over serial. BOOT-VERIFIED in QEMU; Settings (incl. a
+  live theme switch), Notes and Paint verified by scripted QEMU screenshots.
+
 ## [0.16.0] — "Polish" — 2026-06-09
 
 **Visual refinement.** The desktop gets a nicer look and, in particular, **real

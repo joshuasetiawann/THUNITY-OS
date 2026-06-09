@@ -89,7 +89,7 @@ static void cmd_help(void) {
     kprintf("  write F T  Write text T to file F\n");
     kprintf("  sys        Invoke syscalls via int 0x80 (demo)\n");
     kprintf("  user       Drop to ring 3 and round-trip a syscall (CPL 3 demo)\n");
-    kprintf("  apps       calc | files | devices | about  (or click the dock)\n");
+    kprintf("  apps       files | notes | calc | paint | settings  (or click the dock)\n");
     kprintf("  gui        Repaint the THU Desktop\n");
     kprintf("  echo       Print the rest of the line\n");
     kprintf("  banner     Show the THUOS banner\n");
@@ -132,6 +132,7 @@ static void cmd_status(void) {
     kprintf("  [done]    Aurora: high-res 1024x768x32 truecolor desktop (0.14)\n");
     kprintf("  [done]    Apps: mouse + clickable dock, Calculator/Files/System (0.15)\n");
     kprintf("  [done]    Polish: pictogram dock icons, clock, refined desktop (0.16)\n");
+    kprintf("  [done]    Suite: Settings (themes) + Notes + Paint apps (0.17)\n");
     kprintf("  [plan]    Movable windows, per-process isolation, ELF userspace apps\n");
 }
 
@@ -408,9 +409,10 @@ static void execute(char *line) {
     else if (strcmp(line, "gui") == 0)       cmd_gui(args);
     else if (strcmp(line, "calc") == 0)      desktop_open_app(APP_CALC);
     else if (strcmp(line, "files") == 0)     desktop_open_app(APP_FILES);
-    else if (strcmp(line, "devices") == 0)   desktop_open_app(APP_SYSTEM);
-    else if (strcmp(line, "about") == 0)     desktop_open_app(APP_ABOUT);
-    else if (strcmp(line, "apps") == 0)      kprintf("Apps: calc, files, devices, about (or click the dock).\n");
+    else if (strcmp(line, "notes") == 0)     desktop_open_app(APP_NOTES);
+    else if (strcmp(line, "paint") == 0)     desktop_open_app(APP_PAINT);
+    else if (strcmp(line, "settings") == 0)  desktop_open_app(APP_SETTINGS);
+    else if (strcmp(line, "apps") == 0)      kprintf("Apps: files notes calc paint settings (or click the dock).\n");
     else if (strcmp(line, "echo") == 0)      kprintf("%s\n", args);
     else if (strcmp(line, "banner") == 0)    print_banner();
     else if (strcmp(line, "color") == 0)     cmd_color(args);
