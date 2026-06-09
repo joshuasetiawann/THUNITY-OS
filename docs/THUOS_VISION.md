@@ -49,8 +49,9 @@ Sebuah fitur "selesai" hanya jika:
 1. **Host-tested** (logika murni lulus `make test`), DAN
 2. **Boot-verified** di QEMU (muncul di smoke-test serial CI) bila menyangkut runtime.
 
-Status hari ini: v0.6 — PMM, heap, tabel paging (staged), scheduler policy core;
-semua host-tested. **Boot-verification otomatis sedang dipasang** (job CI QEMU).
+Status hari ini: v0.6.1 — PMM, heap, tabel paging (staged), scheduler policy core
+(semua host-tested) dan **boot-verified di QEMU**: job CI `boot-smoke` mem-boot
+kernel tiap push hingga mencapai prompt `thuos>` (terverifikasi via serial).
 
 ## North-star 6–24 bulan
 Boot-verify di QEMU → ring 3 + syscall berkapabilitas → terminal sungguhan di VM

@@ -198,11 +198,11 @@ VFS → driver → jaringan → libc → userland**. Langkah paling berisiko: pa
 ---
 
 ## 6. Kejujuran
-- **HOST-TESTED:** PMM, kernel heap, dan logika paging (di `make test`).
-- **COMPILE-ONLY (di sini):** kernel ter-link sebagai ELF Multiboot i386.
-- **BOOT-VERIFIED:** *tidak ada di lingkungan dev ini* (tak ada QEMU). Bisa
-  diverifikasi sendiri lewat `BOOT_THUOS.md`.
-- Dokumen ini akan diperbarui saat tiap subsistem benar-benar hidup & terbukti.
+- **HOST-TESTED:** PMM, kernel heap, logika paging, scheduler (di `make test`).
+- **BOOT-VERIFIED: ya — di QEMU via CI.** Job `boot-smoke` mem-boot kernel tiap
+  push hingga prompt `thuos>` (terverifikasi lewat serial COM1). Belum di
+  hardware fisik; sandbox dev ini sendiri tanpa QEMU (jadi di sini skip).
+- Boot sendiri: `BOOT_THUOS.md`. Dokumen ini diperbarui saat subsistem terbukti.
 
 ---
 

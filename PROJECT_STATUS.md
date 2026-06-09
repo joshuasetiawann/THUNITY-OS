@@ -1,10 +1,12 @@
 # THUOS — Project Status
 
-**Milestone:** 0.6 "Scheduler" — round-robin policy core (host-tested; context switch staged)
+**Milestone:** 0.6.1 "Boot-Verified" — boots in QEMU (CI serial smoke-test); scheduler policy host-tested
 **Date of this status:** 2026-06-06
 **Honesty rule:** every "Implemented" item is backed by a source file and passes
 the build + structural verification in [`BUILD_VERIFICATION.txt`](BUILD_VERIFICATION.txt).
-Nothing here claims a QEMU boot, ISO, or install that was not actually performed.
+A QEMU boot **is** now performed automatically in CI (`scripts/boottest.sh`): the
+kernel boots and reaches its `thuos>` shell over serial. No claim here exceeds
+what is actually run/tested.
 
 ## Status legend
 
@@ -29,6 +31,7 @@ Nothing here claims a QEMU boot, ISO, or install that was not actually performed
 | Panic / assert | Implemented | `kernel/core/panic.c` |
 | Shell (`thuos>`, 27 commands) | Implemented | `kernel/shell/shell.c` |
 | **Scheduler (round-robin policy)** | **Implemented (policy core)** | `kernel/sched/sched_core.c`, `sched.c`; unit test `tests/test_sched.c`; context switch staged |
+| **Boot in QEMU (serial smoke-test)** | **Boot-verified (CI)** | `scripts/boottest.sh`; CI `boot-smoke` job; reaches `thuos>` over COM1 |
 | Freestanding `mem*`/`str*` | Implemented | `kernel/lib/string.c` |
 | **Multiboot memory-map parsing** | **Implemented** | `kernel/mm/multiboot.h`, `pmm.c` |
 | **Physical memory manager (4 KiB frames)** | **Implemented** | `kernel/mm/pmm.c`, `frame_bitmap.c`; unit test `tests/test_pmm.c` |

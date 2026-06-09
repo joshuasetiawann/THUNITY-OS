@@ -22,7 +22,7 @@ tumbuh. (§5–§6)
 
 | Pertanyaan | Jawaban jujur |
 |---|---|
-| Sudah mirip Windows/macOS? | Belum. THUOS = pra-boot, 0.6, belum punya proses hidup/driver/FS/GUI kernel. |
+| Sudah mirip Windows/macOS? | Belum. THUOS baru boot-verified di QEMU (0.6.1); belum punya proses hidup/driver/FS/GUI kernel. |
 | Bisa menyaingi mereka head-on? | Tidak, untuk tim kecil — secara matematis (puluhan ribu person-year). |
 | Bisa melampaui? | Tidak pada "keluasan". **Bisa pada satu sumbu sempit** (privasi/isolasi/honest/terminal). |
 | Bisa menyaingi *terminal*? | **Ya** — ini target yang jauh lebih bisa dicapai (§4). |
@@ -32,7 +32,8 @@ tumbuh. (§5–§6)
 
 ## 1. Di mana THUOS sekarang (titik nol yang jujur)
 Kernel i386 Multiboot, **v0.6**: PMM, kernel heap, tabel paging (staged), scheduler
-(policy core). Semua **COMPILE-ONLY / HOST-TESTED**, **belum pernah boot-verified**.
+(policy core). Semua **HOST-TESTED**, dan kini **BOOT-VERIFIED di QEMU via CI**
+(boot sampai prompt `thuos>`); belum di hardware fisik.
 Belum ada: proses yang benar-benar jalan, driver, filesystem, jaringan, GUI kernel,
 userspace. Aurora = konsep UI di browser. → Ini fondasi awal yang sehat, **bukan**
 sesuatu yang dekat dengan OS konsumen.
@@ -168,7 +169,7 @@ banyak OS.
 ---
 
 ## 7. Kejujuran
-- THUOS **belum** menyaingi apa pun; ia fondasi kernel pra-boot yang sehat.
+- THUOS **belum** menyaingi apa pun; ia fondasi kernel yang sehat & kini boot-verified di QEMU.
 - "Menyaingi Windows/macOS" head-on: **tidak realistis & tidak disarankan**.
 - "Memenangkan wedge terminal/dev-OS-di-VM yang capability-secured & local-first":
   **realistis, defensible, dan sesuai jiwa THUOS** — itu arah yang kupertaruhkan.

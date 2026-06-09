@@ -3,6 +3,23 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.6.1] — "Boot-Verified" — 2026-06-06
+
+THUOS now actually **BOOTS**, verified automatically. Until now every milestone
+was COMPILE-ONLY / HOST-TESTED; this turns "boot" from a claim into a checked fact.
+
+### Added — verification
+- `scripts/boottest.sh` — boots the kernel in QEMU, captures COM1 serial, and
+  asserts the boot markers (THUOS banner → PMM → kernel heap → scheduler →
+  `thuos>` prompt). `make boottest` runs it (skips gracefully if QEMU absent).
+- CI `boot-smoke` job installs QEMU and runs the boot test on **every push**.
+
+### Status
+- **BOOT-VERIFIED: yes — in QEMU via CI** (i386, `-kernel` multiboot). The CI log
+  shows the full boot log and the kernel reaching its interactive `thuos>` shell
+  prompt over serial. (Not yet run on physical hardware; the dev sandbox itself
+  has no QEMU, so it skips there.)
+
 ## [0.6.0] — "Scheduler" — 2026-06-06
 
 Milestone 0.6: a round-robin process scheduler **policy core** — the run queue

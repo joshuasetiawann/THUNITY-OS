@@ -339,7 +339,7 @@ button{font-family:inherit}
     <div class="luser"><div class="lav"></div><div class="lname">thu</div></div>
     <div class="lhint">klik di mana saja · atau tekan Enter untuk masuk</div>
   </div>
-  <div class="lbadge">THUOS · Aurora — konsep antarmuka · <b>BOOT-VERIFIED: tidak ada</b></div>
+  <div class="lbadge">THUOS · Aurora — konsep antarmuka · <b>kernel boot-verified di QEMU (CI)</b></div>
 </div>
 
 <div id="boot"><div class="c"><div class="borb"></div><h1>THUOS</h1><div class="t">aurora · menyalakan ruang kerja</div><div class="bar"><i></i></div></div></div>
@@ -394,28 +394,28 @@ const APPS = {
      <button class="qbtn" data-open="terminal"><span class="qi">${ICON.terminal}</span>Terminal</button>
      <button class="qbtn" data-open="guide"><span class="qi">${ICON.guide}</span>Panduan</button>
    </div>
-   <p class="note" style="margin-top:14px">Jujur: ini konsep antarmuka masa depan. Bukan GUI kernel yang di-boot. <b style="color:var(--amber)">BOOT-VERIFIED: tidak ada.</b></p>`},
+   <p class="note" style="margin-top:14px">Jujur: ini konsep antarmuka, <b>bukan</b> GUI kernel. Kernel THUOS sendiri kini <b style="color:var(--green)">boot-verified di QEMU (CI)</b>; Aurora belum jadi GUI-nya.</p>`},
 
  realita:{name:'Realita',icon:'⚑',accent:'#ffcf76',w:560,h:440,body:()=>`
    <h3>Apa ini sebenarnya</h3><div class="ps">kejujuran · ground truth</div>
-   <p>THUOS = <b>kernel from-scratch + subsistem host-tested</b>, di tahap <b>pra-boot</b>. Arsitektur benar, logika teruji — tapi kemampuan inti OS belum dihidupkan.</p>
+   <p>THUOS = <b>kernel from-scratch</b> yang kini <b>boot-verified di QEMU (CI)</b> sampai prompt thuos&gt;. Subsistem host-tested; tapi proses hidup, driver, FS, dan GUI kernel belum ada.</p>
    <div class="cols">
      <div class="card"><h4 style="color:var(--green);margin-bottom:6px">Sudah ada (build + host-tested)</h4><ul class="list">
        <li class="yes"><span class="m">✓</span>Multiboot boot, GDT/IDT, exception 0-31</li>
        <li class="yes"><span class="m">✓</span>PIC/IRQ, PIT, keyboard, serial, VGA, shell</li>
        <li class="yes"><span class="m">✓</span>Physical memory manager (bitmap 4 KiB)</li>
        <li class="yes"><span class="m">✓</span>Kernel heap kmalloc/kfree <b>(baru — 0.4)</b></li>
-       <li class="yes"><span class="m">✓</span>Build → ELF Multiboot i386 (kamu bisa boot di QEMU)</li>
+       <li class="yes"><span class="m">✓</span><b>Boot-verified di QEMU (CI)</b> → sampai prompt thuos&gt;</li>
      </ul></div>
      <div class="card"><h4 style="color:var(--magenta);margin-bottom:6px">Belum hidup</h4><ul class="list">
-       <li class="no"><span class="m">✕</span>Belum di-boot di sini (tak ada QEMU) — bisa kamu boot sendiri</li>
+       <li class="no"><span class="m">✕</span>Aurora belum jadi GUI kernel (masih konsep di browser)</li>
        <li class="no"><span class="m">✕</span>Paging + memori virtual (langkah berikutnya, paling berisiko)</li>
        <li class="no"><span class="m">✕</span>Context switch + scheduler nyata</li>
        <li class="no"><span class="m">✕</span>Ring 3 + syscall, VFS + filesystem</li>
        <li class="no"><span class="m">✕</span>Driver disk, networking, libc, userspace</li>
      </ul></div>
    </div>
-   <div class="banner"><span style="font-size:20px">⚑</span><div><b>BOOT-VERIFIED: tidak ada.</b><small>Semua "host-tested" = kode kernel yang sama diuji dgn gcc native, bukan dijalankan sebagai OS.</small></div></div>`},
+   <div class="banner"><span style="font-size:20px">✓</span><div><b>BOOT-VERIFIED: ya — di QEMU (CI).</b><small>Kernel mem-boot sampai prompt thuos&gt; tiap push. "host-tested" = logika diuji gcc native; boot diverifikasi di QEMU. Belum di hardware fisik.</small></div></div>`},
 
  roadmap:{name:'Roadmap',icon:'⤳',accent:'#2de2c6',w:560,h:500,body:()=>`
    <h3>Roadmap menuju OS nyata</h3><div class="ps">riset §3 · dependency-ordered</div>
@@ -435,7 +435,7 @@ const APPS = {
      const banner=
 '<span class="tp">  ▟▛ THUOS · Aurora — concept shell</span>\n'+
 '  versi 0.4.0 "Kernel Heap" · target i386 · Multiboot 1\n'+
-'  <span class="tw">catatan: ini shell KONSEP. THUOS belum di-boot — BOOT-VERIFIED: tidak ada.</span>\n'+
+'  <span class="tw">catatan: ini shell KONSEP (browser). Kernel THUOS asli kini boot-verified di QEMU (CI).</span>\n'+
 "  ketik 'help' untuk daftar perintah.\n";
      pr(banner);
      const CMD={
@@ -443,7 +443,7 @@ const APPS = {
        ver:()=>"THUOS 0.4.0 \"Kernel Heap\" (i386, Multiboot 1)",
        version:()=>CMD.ver(),
        whoami:()=>"thu",
-       status:()=>'tahap: PRA-boot\nhost-tested: ya (PMM + kernel heap)\ncontext-switch nyata: belum\npaging + ring-3: langkah berikutnya\nfilesystem: belum ada\n<span class="tw">BOOT-VERIFIED: tidak ada</span>',
+       status:()=>'tahap: boot-verified (QEMU/CI)\nhost-tested: ya (PMM+heap+paging+sched)\ncontext-switch nyata: belum\nring-3 + syscall: langkah berikutnya\nfilesystem: belum ada\n<span class="tw">BOOT-VERIFIED: ya (QEMU via CI)</span>',
        ls:()=>'<span class="tp">bin/</span>  <span class="tp">dev/</span>  <span class="tp">etc/</span>  init  hello   <span class="te">(konsep VFS read-only)</span>',
        roadmap:()=>ROAD.map(s=>(s[3]?'<span class="te">●</span> ':'<span class="tp">●</span> ')+s[0]+'. '+s[1]).join('\n'),
        about:()=>"THUOS: OS hobi x86 dari nol. Bukan distro Linux, bukan skin UI, bukan simulator palsu.\nDibangun jujur, subsistem demi subsistem.",
@@ -455,7 +455,7 @@ const APPS = {
 '<span class="tp">   ▜█▙   ▟█▛   </span>  Boot:   <span class="tw">belum (host-tested)</span>\n'+
 '<span class="tp">    ▜█▙ ▟█▛    </span>  UI:     Aurora (desktop konsep)\n'+
 '<span class="tp">     ▜███▛     </span>  Shell:  concept\n'+
-'<span class="tp">      ▜█▛      </span>  Status: pra-boot',
+'<span class="tp">      ▜█▛      </span>  Status: boot-verified (QEMU/CI)',
        clear:()=>{out.innerHTML='';return null;}
      };
      function run(c){
