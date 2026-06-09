@@ -25,6 +25,7 @@ what the OS was at every step, side by side.
 | v0.11.0 | Syscalls         | `int 0x80` syscall ABI (foundation for userspace) |
 | v0.12.0 | User Mode        | Ring 3: TSS + `iret` to CPL 3 + `int 0x80` from userspace |
 | v0.13.0 | Desktop          | VGA graphics (mode 13h) + the THU Desktop, shell in a graphical terminal |
+| v0.14.0 | Aurora           | Modern high-res truecolor desktop (1024×768×32 via Bochs VBE), dark theme + dock |
 
 > There is no `v0.1` source — `0.2.0 "Boot Seed"` is the first bootable kernel.
 > Full per-release notes are in [`../CHANGELOG.md`](../CHANGELOG.md).
