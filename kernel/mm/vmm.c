@@ -8,6 +8,10 @@
 /* Page directory and page tables must be 4 KiB aligned. */
 static uint32_t page_dir[1024]            __attribute__((aligned(4096)));
 static uint32_t page_tabs[VMM_NPTS][1024] __attribute__((aligned(4096)));
+/* Extra page tables to map a high-memory MMIO window (the linear framebuffer,
+ * which a PCI BAR places far above the identity-mapped low RAM). */
+#define VMM_LFB_NPTS 4                     /* up to 16 MiB */
+static uint32_t lfb_tabs[VMM_LFB_NPTS][1024] __attribute__((aligned(4096)));
 static int      ready = 0;
 static int      enabled = 0;
 
@@ -50,4 +54,28 @@ void vmm_enable(void) {
     cr0 |= 0x80000000u;                 /* CR0.PG */
     __asm__ volatile("mov %0, %%cr0" :: "r"(cr0) : "memory");
     enabled = 1;
+}
+
+/* Identity-map [phys, phys+bytes) using dedicated 4 MiB-aligned page tables.
+ * The linear framebuffer sits at a PCI BAR far above the low identity map, so it
+ * needs its own PDEs/PTEs before the kernel can draw to it. Supervisor + R/W. */
+int vmm_map_lfb(uint32_t phys, uint32_t bytes) {
+    if (!ready) return 0;
+    const uint32_t FOURMB = 4u * 1024u * 1024u;
+    uint32_t base = phys & ~(FOURMB - 1);              /* 4 MiB align down */
+    uint32_t npts = (phys + bytes - base + FOURMB - 1) / FOURMB;
+    if (npts == 0 || npts > VMM_LFB_NPTS) {
+        if (npts == 0) return 0;
+        npts = VMM_LFB_NPTS;
+    }
+    for (uint32_t t = 0; t < npts; t++) {
+        uint32_t va  = base + t * FOURMB;
+        uint32_t *pt = lfb_tabs[t];
+        page_dir[va >> 22] = vmm_make_entry((uint32_t)(uintptr_t)pt, PTE_RW | PTE_PRESENT);
+        for (uint32_t e = 0; e < 1024u; e++)
+            pt[e] = vmm_make_entry(va + e * VMM_PAGE_SIZE, PTE_RW | PTE_PRESENT);
+    }
+    uint32_t pd = (uint32_t)(uintptr_t)page_dir;       /* reload CR3 -> flush TLB */
+    __asm__ volatile("mov %0, %%cr3" :: "r"(pd) : "memory");
+    return 1;
 }

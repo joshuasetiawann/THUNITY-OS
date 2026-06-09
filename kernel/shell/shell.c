@@ -18,7 +18,7 @@
 #include "fs.h"
 #include "syscall.h"
 #include "usermode.h"
-#include "gfx.h"
+#include "lfb.h"
 #include "gconsole.h"
 #include "desktop.h"
 
@@ -128,7 +128,8 @@ static void cmd_status(void) {
     kprintf("  [done]    Syscall interface int 0x80 (0.11)\n");
     kprintf("  [done]    User mode (ring 3): TSS + iret + syscall from CPL 3 (0.12)\n");
     kprintf("  [done]    THU Desktop: VGA graphics + graphical terminal (0.13)\n");
-    kprintf("  [plan]    Per-process isolation, mouse, windows, userspace programs\n");
+    kprintf("  [done]    Aurora: high-res 1024x768x32 truecolor desktop (0.14)\n");
+    kprintf("  [plan]    Mouse + clickable windows, per-process isolation, userspace\n");
 }
 
 static void cmd_sysinfo(void) {
@@ -307,11 +308,8 @@ static void cmd_user(const char *args) {
 
 static void cmd_gui(const char *args) {
     (void)args;
-    if (gfx_active()) {
-        desktop_draw();      /* repaint the THU Desktop + clear the terminal */
-    } else {
-        kprintf("gui: graphics not available\n");
-    }
+    if (lfb_active()) kprintf("Repainting the THU Desktop...\n"), desktop_draw();
+    else              kprintf("gui: high-res framebuffer not available\n");
 }
 
 static void cmd_thupkg(const char *args) {

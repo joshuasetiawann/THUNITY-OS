@@ -1,46 +1,63 @@
-/* THUOS — the THU Desktop. See desktop.h. */
+/* THUOS — the THU Desktop (modern, high-res). See desktop.h.
+ * A flat dark theme drawn into the 1024x768 truecolour framebuffer: gradient
+ * wallpaper, a top bar, a shadowed rounded window hosting the terminal, and a
+ * dock. The interactive shell runs inside the terminal panel. */
 #include "desktop.h"
-#include "gfx.h"
+#include "lfb.h"
 #include "gconsole.h"
 #include "version.h"
 
 static int slen(const char *s) { int n = 0; while (s[n]) n++; return n; }
 
 void desktop_draw(void) {
-    gfx_clear(COL_DESK1);
-    gfx_fill(0, 0, GFX_W, 100, COL_DESK2);             /* subtle two-tone sky */
+    int W = lfb_width(), H = lfb_height();
+
+    lfb_gradient_v(0, 0, W, H, 0x0b1220, 0x16223a);          /* wallpaper */
 
     /* top bar */
-    gfx_fill(0, 0, GFX_W, 16, COL_TOPBAR);
-    gfx_fill(4, 4, 8, 8, COL_BRAND);                   /* brand dot */
-    gfx_text(15, 0, THUOS_NAME " " THUOS_VERSION, COL_TITLETX, COL_TOPBAR);
+    int tb = 34;
+    lfb_fill(0, 0, W, tb, 0x101a2e);
+    lfb_fill(0, tb, W, 2, 0x263a5e);                         /* divider */
+    lfb_round_fill(14, 9, 16, 16, 4, 0x6cc7ff);              /* brand dot */
+    lfb_text(40, 9, THUOS_NAME " " THUOS_VERSION, 0xe8eefc, -1, 2);
     const char *cn = THUOS_CODENAME;
-    gfx_text(GFX_W - slen(cn) * 8 - 4, 0, cn, COL_ACCENT, COL_TOPBAR);
-
-    /* taskbar */
-    gfx_fill(0, GFX_H - 16, GFX_W, 16, COL_TASKBAR);
-    gfx_text(4, GFX_H - 16, "THU  -  thuos terminal", COL_MUTED, COL_TASKBAR);
-    gfx_fill(GFX_W - 12, GFX_H - 12, 8, 8, COL_LGREEN);
+    lfb_text(W - slen(cn) * 16 - 16, 9, cn, 0x8aa0c0, -1, 2);
 
     /* window */
-    int wx = 4, wy = 18, ww = 312, wh = 164;
-    gfx_fill(wx + 3, wy + 3, ww, wh, COL_SHADOW);      /* drop shadow */
-    gfx_fill(wx, wy, ww, wh, COL_WIN);
-    gfx_rect(wx, wy, ww, wh, COL_WINBORDER);
-    gfx_fill(wx + 1, wy + 1, ww - 2, 15, COL_TITLE);   /* title bar */
-    gfx_fill(wx + 7,  wy + 5, 6, 6, COL_LRED);         /* window controls */
-    gfx_fill(wx + 16, wy + 5, 6, 6, COL_YELLOW);
-    gfx_fill(wx + 25, wy + 5, 6, 6, COL_LGREEN);
-    gfx_text(wx + 38, wy, "THU Terminal", COL_TITLETX, COL_TITLE);
+    int ww = 820, wh = 560, wx = (W - ww) / 2, wy = 78;
+    lfb_round_fill(wx + 8, wy + 10, ww, wh, 16, 0x05080f);   /* drop shadow */
+    lfb_round_fill(wx, wy, ww, wh, 16, 0x0f1626);            /* body */
+    int th = 40;                                             /* title bar */
+    lfb_round_fill(wx, wy, ww, th, 16, 0x1b2740);
+    lfb_fill(wx, wy + th - 16, ww, 16, 0x1b2740);            /* square the bottom */
+    lfb_fill(wx + 20, wy + 15, 12, 12, 0xff5f56);            /* traffic lights */
+    lfb_fill(wx + 44, wy + 15, 12, 12, 0xffbd2e);
+    lfb_fill(wx + 68, wy + 15, 12, 12, 0x27c93f);
+    lfb_text(wx + 104, wy + 10, "THU Terminal", 0xe8eefc, -1, 2);
 
-    /* terminal content area -> hand it to the graphical console */
-    int tx = wx + 3, ty = wy + 17, tw = ww - 6, th = wh - 20;
-    gfx_fill(tx, ty, tw, th, COL_TERMBG);
-    int cols = tw / 8, rows = th / 16;
-    gcon_init(tx + (tw - cols * 8) / 2, ty + (th - rows * 16) / 2, cols, rows);
+    /* terminal panel -> graphical console */
+    int pad = 16;
+    int tx = wx + pad, ty = wy + th + pad, tw = ww - 2 * pad, tcyh = wh - th - 2 * pad;
+    lfb_round_fill(tx, ty, tw, tcyh, 8, 0x0a0f1a);
+    int s = 2, cw = 8 * s, chh = 16 * s;
+    int cols = (tw - 20) / cw, rows = (tcyh - 16) / chh;
+    gcon_init(tx + 10, ty + 8, cols, rows, s, 0x9defb0, 0x0a0f1a);
+
+    /* dock */
+    int dn = 5, ds = 44, dgap = 14, dw = dn * ds + (dn - 1) * dgap + 24, dh = 60;
+    int dx = (W - dw) / 2, dy = H - dh - 14;
+    lfb_round_fill(dx + 4, dy + 5, dw, dh, 18, 0x05080f);    /* dock shadow */
+    lfb_round_fill(dx, dy, dw, dh, 18, 0x18223a);
+    static const char     gl[5] = { 'T', 'F', 'S', 'i', '+' };
+    static const uint32_t ic[5] = { 0x6cc7ff, 0x27c93f, 0xffbd2e, 0xff7b9c, 0xb18cff };
+    for (int i = 0; i < dn; i++) {
+        int ax = dx + 12 + i * (ds + dgap), ay = dy + (dh - ds) / 2;
+        lfb_round_fill(ax, ay, ds, ds, 12, ic[i]);
+        lfb_char(ax + (ds - 16) / 2, ay + (ds - 32) / 2, gl[i], 0x0f1626, -1, 2);
+    }
 }
 
 void desktop_start(void) {
-    gfx_enter();        /* VGA mode 13h + palette */
-    desktop_draw();     /* chrome + console */
+    if (!lfb_init(1024, 768)) return;   /* no framebuffer -> stay on the text console */
+    desktop_draw();
 }

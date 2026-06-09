@@ -107,13 +107,13 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
     ok_line("User mode (ring 3): entered CPL 3 and returned via int 0x80");
 
     vga_font_extract();        /* copy the VGA font while still in text mode */
-    ok_line("THU Desktop: VGA graphics mode 13h (320x200x256)");
+    ok_line("THU Desktop: high-res framebuffer (1024x768x32 truecolor)");
 
     __asm__ volatile("sti");   /* interrupts on: timer + keyboard now live */
 
-    desktop_start();           /* switch to the graphical THU Desktop */
+    desktop_start();           /* switch to the graphical THU Desktop (or stay text) */
     kprintf("Welcome to %s %s \"%s\".\n", THUOS_NAME, THUOS_VERSION, THUOS_CODENAME);
-    kprintf("A from-scratch OS, now with a graphical desktop.\n\n");
+    kprintf("A from-scratch OS with a modern graphical desktop.\n\n");
 
     shell_run();   /* never returns (runs inside the desktop terminal) */
 

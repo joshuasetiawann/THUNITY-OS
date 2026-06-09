@@ -3,6 +3,37 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.14.0] — "Aurora" — 2026-06-09
+
+**A modern desktop.** THUOS moves off the 320×200 retro VGA mode onto a real
+**high-resolution truecolour framebuffer — 1024×768×32** — via the Bochs VBE /
+DISPI interface that QEMU's standard VGA emulates. The THU Desktop is redrawn in
+a flat dark theme: a gradient wallpaper, a top bar, a shadowed rounded window
+with traffic-light controls hosting the terminal, and a dock. The interactive
+shell runs inside the terminal panel in scaled, crisp text.
+
+No GRUB needed: the framebuffer is located by **PCI enumeration** (display-class
+BAR0), mapped into paging, and the mode is set by programming the DISPI
+registers directly. Serial is unchanged, so the boot self-test still verifies
+the whole bring-up over COM1.
+
+### Added — kernel (modern graphics)
+- `kernel/drivers/lfb.{c,h}` — linear-framebuffer driver: PCI probe for the VGA
+  BAR, DISPI mode-set (1024×768×32), and truecolour primitives (gradient, filled
+  rounded rectangles, scaled text from the VGA font, fast rect scroll).
+- `kernel/mm/vmm.c` — `vmm_map_lfb()` identity-maps the framebuffer's high MMIO
+  window (a PCI BAR far above low RAM) with dedicated page tables.
+- `kernel/arch/x86/io.h` — `outl`/`inl` for 32-bit PCI config access.
+- `gfx.{c,h}` reduced to just the VGA font extraction; `gui/gconsole.c` and
+  `gui/desktop.c` reworked for the 32bpp framebuffer (RGB colours, scaled glyphs,
+  a flat dark desktop with a dock).
+
+### Verification
+- `make test` stays at 8 host suites; `make verify` 16/0. The `THU Desktop` boot
+  marker still asserts over serial in CI `boot-smoke` (the kernel brings up the
+  framebuffer and still reaches `thuos>`). BOOT-VERIFIED in QEMU; the desktop
+  itself is verified by QEMU screenshot (1024×768 truecolour).
+
 ## [0.13.0] — "Desktop" — 2026-06-09
 
 **THUOS gets a screen.** The kernel now switches the VGA into a real graphical

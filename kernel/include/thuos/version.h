@@ -8,9 +8,9 @@
 #define THUOS_FS_NAME      "THUFS"
 #define THUOS_PKG_NAME     "thupkg"
 
-#define THUOS_VERSION      "0.13.0"
-#define THUOS_CODENAME     "Desktop"
-#define THUOS_MILESTONE    "Milestone 0.13 - THU Desktop: VGA mode 13h graphics + graphical terminal (the shell runs in a window), boot-verified (QEMU/CI)"
+#define THUOS_VERSION      "0.14.0"
+#define THUOS_CODENAME     "Aurora"
+#define THUOS_MILESTONE    "Milestone 0.14 - Aurora: high-res truecolor desktop (1024x768x32 via Bochs VBE), shell in a graphical terminal, boot-verified (QEMU/CI)"
 #define THUOS_ARCH         "x86 (i386, 32-bit)"
 
 #define THUOS_BUILD_DATE   __DATE__
