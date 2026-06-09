@@ -3,6 +3,38 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.13.0] — "Desktop" — 2026-06-09
+
+**THUOS gets a screen.** The kernel now switches the VGA into a real graphical
+mode (mode 13h: 320×200, 256 colours, linear framebuffer at `0xA0000`) and draws
+the **THU Desktop** — a top bar, a window with a title bar and traffic-light
+controls, and a taskbar — with the interactive shell running as a graphical
+terminal *inside* the window. The OS is no longer text-only.
+
+No GRUB/BIOS dependency: the VGA registers are programmed directly, so it works
+under QEMU's emulated VGA with the `-kernel` boot path. Serial output is
+unchanged, so the boot self-test still verifies the whole bring-up over COM1.
+
+### Added — kernel (graphics / desktop)
+- `kernel/drivers/gfx.{c,h}` — mode 13h bring-up (register programming + DAC
+  palette), pixel/rect/line primitives, and 8×16 text. The font is copied out of
+  the VGA character generator (plane 2) at boot, so glyphs match the hardware and
+  nothing has to be embedded.
+- `kernel/gui/gconsole.{c,h}` — graphical text console: cursor, line wrap and
+  scrolling, rendered into a framebuffer rectangle. `kputc()` routes here when
+  graphics is active (serial mirroring is untouched).
+- `kernel/gui/desktop.{c,h}` — the THU Desktop chrome and layout; hands its
+  terminal region to the console.
+- `kernel_main` extracts the font, prints the `THU Desktop` marker, switches to
+  graphics, and runs the shell in the desktop terminal. Shell gains `gui`
+  (repaint) and `clear` now clears the graphical console.
+
+### Verification
+- `scripts/boottest.sh` adds the `THU Desktop` boot marker; CI `boot-smoke`
+  proves the kernel enters graphics mode and still reaches `thuos>` over serial.
+  BOOT-VERIFIED in QEMU. The desktop itself is verified by QEMU screenshot
+  (mode 13h is hard to assert over serial); `make test` stays at 8 host suites.
+
 ## [0.12.0] — "User Mode" — 2026-06-09
 
 **Ring 3.** The kernel now drops the CPU to privilege level 3, runs code there,

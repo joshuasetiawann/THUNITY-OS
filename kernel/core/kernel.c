@@ -22,6 +22,8 @@
 #include "fs.h"
 #include "syscall.h"
 #include "usermode.h"
+#include "gfx.h"
+#include "desktop.h"
 #include "shell.h"
 
 static void ok_line(const char *label) {
@@ -104,13 +106,16 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
     usermode_selftest();       /* drop to ring 3, syscall back, return to ring 0 */
     ok_line("User mode (ring 3): entered CPL 3 and returned via int 0x80");
 
+    vga_font_extract();        /* copy the VGA font while still in text mode */
+    ok_line("THU Desktop: VGA graphics mode 13h (320x200x256)");
+
     __asm__ volatile("sti");   /* interrupts on: timer + keyboard now live */
 
-    vga_set_color(VGA_LIGHT_CYAN, VGA_BLACK);
-    kprintf("\nWelcome to %s.\n", THUOS_NAME);
-    vga_set_color(VGA_LIGHT_GREY, VGA_BLACK);
+    desktop_start();           /* switch to the graphical THU Desktop */
+    kprintf("Welcome to %s %s \"%s\".\n", THUOS_NAME, THUOS_VERSION, THUOS_CODENAME);
+    kprintf("A from-scratch OS, now with a graphical desktop.\n\n");
 
-    shell_run();   /* never returns */
+    shell_run();   /* never returns (runs inside the desktop terminal) */
 
     for (;;) __asm__ volatile("hlt");
 }

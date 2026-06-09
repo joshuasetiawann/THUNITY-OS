@@ -1,12 +1,13 @@
 # THUOS / THUNITY-OS — Ringkasan & Handoff
 > Paket konteks untuk melanjutkan proyek di sesi/percakapan baru.
-> Tanggal: 2026-06-09 · Versi terakhir: **0.12.0 "User Mode"** (ring 3)
+> Tanggal: 2026-06-09 · Versi terakhir: **0.13.0 "Desktop"** (GUI grafis — desktop + terminal di window)
 
 ---
 
 ## 0. Mulai cepat untuk sesi baru (PENTING)
 - **Repo GitHub (publik):** https://github.com/joshuasetiawann/THUNITY-OS
-  · milestone 0.11 di branch `claude/loving-ptolemy-JDEAO` (PR #1, closed) · **0.12 "User Mode" di branch `claude/serene-dijkstra-earnge`** (PR #2, base loving-ptolemy) · CI build + boot-smoke **hijau** (boot-verified di QEMU).
+  · **0.12 "User Mode" + 0.13 "Desktop" di branch `claude/serene-dijkstra-earnge`** (PR #2, base loving-ptolemy) · CI build + boot-smoke **hijau** (boot-verified di QEMU).
+  · Snapshot tiap versi ada di folder `versions/v0.2.0 … v0.13.0` (root = tree aktif terbaru yang di-build CI).
 - **Sandbox kadang rollback lokal** ke commit lama tiap pergantian giliran. **Selalu** awali sesi dengan menarik kode terbaru dari GitHub (read publik selalu jalan); pakai branch milestone terbaru:
   ```bash
   git clone -b claude/serene-dijkstra-earnge https://github.com/joshuasetiawann/THUNITY-OS.git thuos
@@ -42,15 +43,18 @@ Strateginya **bukan** menyaingi Windows/macOS langsung (mustahil untuk tim kecil
 | 0.10 | RAM filesystem (ls/cat/write) | host-tested + boot-verified |
 | 0.11 | **Syscalls** (`int 0x80`: uptime/write/getpid/version) | host-tested + boot-verified |
 | 0.12 | **User mode (ring 3)** (TSS + `iret` ke CPL 3 + `int 0x80` dari userspace) | host-tested + boot-verified |
+| 0.13 | **THU Desktop** (VGA mode 13h grafis + terminal di dalam window) | boot-verified + screenshot |
 
 **Verifikasi:** 8 unit test host (`make test`) + 2 job CI (`build-and-test`, `boot-smoke`).
 `boot-smoke` mem-boot kernel di QEMU, baca serial COM1, dan meng-assert marker
 (THUOS → Kernel heap → Paging ENABLED → Context switch OK → all tasks finished →
-RAM filesystem → Syscall interface → **User mode** → `thuos>`).
+RAM filesystem → Syscall interface → **User mode** → **THU Desktop** → `thuos>`).
+Grafis 320x200 sulit di-assert lewat serial → diverifikasi lewat screenshot QEMU.
 
 ---
 
 ## 3. Yang BELUM ada (jujur)
+- **GUI masih dasar** — sudah grafis (VGA mode 13h 320x200, desktop + 1 window terminal), tapi **belum ada mouse, belum banyak window, belum window manager**. Resolusi rendah (retro); resolusi tinggi butuh VBE/framebuffer (langkah lanjut).
 - **Isolasi memori per-proses** — ring 3 sudah jalan tapi map masih *flat* (kernel & user berbagi identity map yang kini user-accessible). Pemisahan ruang alamat per-proses = langkah berikutnya.
 - **ELF loader & program userspace pertama** (yang dimuat dari file, bukan fungsi kernel).
 - Preemptive multitasking (timer IRQ), persistensi file (masih RAM), driver disk/GPU/Wi-Fi/USB (sengaja tak dikejar), jaringan, libc, mesin browser.
@@ -83,7 +87,7 @@ Tanpa setup apa pun: buka **`preview/thuos_os.html`** di browser (simulasi deskt
 
 ## 6. Shell `thuos>` (perintah inti)
 `help about version status sysinfo uptime ticks mem memmap pages allocpage freepage`
-`heap kmalloc kfree vmm ps sched tasks ls cat write sys user echo banner color clear crash reboot halt`
+`heap kmalloc kfree vmm ps sched tasks ls cat write sys user gui echo banner color clear crash reboot halt`
 
 Coba: `sysinfo` · `heap` lalu `kmalloc 256` lalu `heap` · `vmm 0x400000` · `tasks` · `write notes halo` lalu `ls` lalu `cat notes` · `sys` · `user` (turun ke ring 3 lalu balik via `int 0x80`, lapor CPL).
 
@@ -95,7 +99,8 @@ kernel/boot/boot.S                 multiboot + stack + call kernel_main
 kernel/arch/x86/                    gdt(+TSS),idt,isr,irq,pic,pit + syscall_core/.c/.h, syscall_stub.S
                                     tss.c/.h, usermode_core.c/.h, usermode.c/.h, usermode_entry.S (ring 3)
 kernel/core/                        kernel.c (urutan init), kprintf, panic
-kernel/drivers/                     vga, serial (COM1 mirror), keyboard
+kernel/drivers/                     vga (text), serial (COM1 mirror), keyboard, gfx (VGA mode 13h grafis)
+kernel/gui/                         gconsole (terminal grafis) + desktop (THU Desktop)
 kernel/lib/                         string, types
 kernel/mm/                          frame_bitmap+pmm, kheap_core+kheap, vmm_core+vmm
 kernel/sched/                       sched_core+sched, task+context.S, coop
@@ -113,10 +118,12 @@ Makefile README.md CHANGELOG.md PROJECT_STATUS.md linker.ld grub.cfg
 ---
 
 ## 8. Roadmap berikutnya (urut dependensi)
-0. ✅ **0.12 Ring 3 / user mode** — SELESAI: GDT user segments + **TSS** (`ltr`), `iret` ke ring 3, `int 0x80` dari ring 3, kembali bersih ke ring 0. Bukti CPL 3 = `CS & 3` dari frame syscall. Marker boot baru: `User mode`.
-1. **0.13 Isolasi per-proses** — pisahkan page user vs kernel (jangan map seluruh kernel `PTE_USER`); page fault policy untuk akses ilegal.
-2. Lebih banyak syscall (`open`/`read`/`write` via ramfs) + **ELF loader** → program userspace pertama (dimuat dari file).
-3. Preemptive multitasking (timer IRQ → context switch), persistensi (initrd), libc kecil.
+- ✅ **0.12 Ring 3 / user mode** — SELESAI: GDT user segments + **TSS** (`ltr`), `iret` ke ring 3, `int 0x80` dari ring 3, kembali bersih ke ring 0. Bukti CPL 3 = `CS & 3`. Marker `User mode`.
+- ✅ **0.13 THU Desktop (grafis)** — SELESAI: VGA mode 13h (320x200x256, framebuffer 0xA0000), font diambil dari plane 2 VGA, desktop + window + taskbar, **shell jalan di terminal grafis**. Marker `THU Desktop`. Diverifikasi screenshot QEMU.
+1. **0.14 Mouse + window** — driver PS/2 mouse + kursor, beberapa window yang bisa diklik di THU Desktop.
+2. **Isolasi memori per-proses** — pisahkan page user vs kernel (jangan map seluruh kernel `PTE_USER`); page-fault policy.
+3. **ELF loader** + lebih banyak syscall (`open`/`read`/`write` via ramfs) → program userspace pertama (dimuat dari file).
+4. Preemptive multitasking (timer IRQ → context switch), persistensi (initrd), resolusi tinggi (VBE), libc kecil.
 Tiap milestone: *core host-tested* + *boot self-test* + marker baru di `boottest.sh`.
 
 ---
@@ -130,4 +137,4 @@ Tiap milestone: *core host-tested* + *boot self-test* + marker baru di `boottest
 ---
 
 ## 10. Verdikt jujur (one-liner)
-THUOS = **kernel nyata, boot-verified**, dengan fondasi sehat (virtual memory, multitasking, filesystem, syscalls, **ring 3/user mode**) — *belum* menyaingi Windows/macOS, tapi diarahkan ke wedge yang realistis & bisa dimenangkan. Analisis penuh: `docs/THUOS_REALITY_CHECK.md`.
+THUOS = **kernel nyata, boot-verified**, dengan fondasi sehat (virtual memory, multitasking, filesystem, syscalls, ring 3/user mode) dan kini **tampilan grafis sendiri (THU Desktop, mode 13h)** — *belum* menyaingi Windows/macOS, tapi diarahkan ke wedge yang realistis & bisa dimenangkan. Analisis penuh: `docs/THUOS_REALITY_CHECK.md`.

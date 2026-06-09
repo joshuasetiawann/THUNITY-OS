@@ -1,6 +1,6 @@
 # THUOS — Project Status
 
-**Milestone:** 0.12 "User Mode" — ring 3 (TSS + `iret` to CPL 3 + `int 0x80` from userspace), host-tested + boot-verified in QEMU (CI)
+**Milestone:** 0.13 "Desktop" — VGA graphics (mode 13h) + the THU Desktop with the shell running in a graphical terminal, boot-verified in QEMU (CI)
 **Date of this status:** 2026-06-09
 **Honesty rule:** every "Implemented" item is backed by a source file and passes
 the build + structural verification in [`BUILD_VERIFICATION.txt`](BUILD_VERIFICATION.txt).
@@ -37,6 +37,7 @@ what is actually run/tested.
 | **RAM filesystem (ls/cat/write)** | **Host-tested + boot-verified** | `kernel/fs/ramfs_core.c`, `fs.c` (`tests/test_fs.c`); boot asserts `RAM filesystem` |
 | **Syscall interface (int 0x80)** | **Host-tested + boot-verified** | `kernel/arch/x86/syscall_core.c`, `syscall.c`, `syscall_stub.S` (`tests/test_syscall.c`); boot self-test |
 | **User mode (ring 3): TSS + iret + int 0x80 from CPL 3** | **Host-tested + boot-verified (QEMU/CI)** | `kernel/arch/x86/usermode_core.c`, `usermode.c`, `usermode_entry.S`, `tss.c` (`tests/test_usermode.c`); boot asserts `User mode` (serial: `CS=0x1b => CPL 3`) |
+| **VGA graphics (mode 13h) + THU Desktop + graphical terminal** | **Boot-verified (QEMU/CI) + screenshot** | `kernel/drivers/gfx.c`, `kernel/gui/gconsole.c`, `desktop.c`; boot asserts `THU Desktop`; shell runs in the desktop window |
 | Freestanding `mem*`/`str*` | Implemented | `kernel/lib/string.c` |
 | **Multiboot memory-map parsing** | **Implemented** | `kernel/mm/multiboot.h`, `pmm.c` |
 | **Physical memory manager (4 KiB frames)** | **Implemented** | `kernel/mm/pmm.c`, `frame_bitmap.c`; unit test `tests/test_pmm.c` |
@@ -46,8 +47,8 @@ what is actually run/tested.
 | **Kernel heap (`kmalloc`/`kfree`)** | **Implemented** | `kernel/mm/kheap_core.c`, `kheap.c`; unit test `tests/test_kheap.c` |
 | VFS + initrd | Planned | `docs/design/FILESYSTEM.md` |
 | Per-process memory isolation + ELF loader + userspace programs | Planned (next) | `docs/08_ROADMAP.md` |
-| Framebuffer graphics + mouse | Planned (0.6) | `docs/design/GUI_THU_DESKTOP.md` |
-| In-kernel THU Desktop / window manager | Planned (0.7) | `docs/design/GUI_THU_DESKTOP.md` |
+| VGA graphics (mode 13h) | Implemented (0.13) | `kernel/drivers/gfx.c` |
+| Mouse + multiple windows / window manager | Planned | `docs/design/GUI_THU_DESKTOP.md` |
 | THUFS filesystem | Designed | `docs/design/FILESYSTEM.md` |
 | `thupkg` package manager | Designed | `docs/design/PACKAGE_MANAGER.md` |
 | Security / sandboxing / signed packages | Designed | `docs/design/SECURITY_MODEL.md` |
@@ -76,8 +77,8 @@ kept explicit.
 
 ## Next milestone
 
-**THUOS 0.13 — Userspace foundations:** build on the ring-3 mechanism with
-per-process memory isolation (user pages distinct from kernel pages), more
-syscalls (`open`/`read`/`write` over ramfs), and a first loadable userspace
-program. Each step lands as a host-tested core + a boot self-test marker, in the
-verify-first discipline.
+**THUOS 0.14 — Desktop & userspace, deeper:** a PS/2 mouse driver + a cursor and
+clickable windows on the THU Desktop; and on the kernel side, per-process memory
+isolation (user pages distinct from kernel pages) toward a first loadable
+userspace program. Each step lands as a host-tested core + a boot self-test
+marker, in the verify-first discipline.
