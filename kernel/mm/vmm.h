@@ -15,5 +15,7 @@ int      vmm_is_ready(void);        /* 1 if tables were built */
 uint32_t vmm_dir_phys(void);        /* physical address of the page directory */
 uint32_t vmm_mapped_bytes(void);    /* bytes identity-mapped */
 uint32_t vmm_phys_of(uint32_t va);  /* translate va -> pa, or 0xFFFFFFFF */
+void     vmm_enable(void);           /* load CR3 + set CR0.PG (identity map) */
+int      vmm_is_enabled(void);       /* 1 once paging is on */
 
 #endif /* THUOS_VMM_H */

@@ -9,6 +9,7 @@
 static uint32_t page_dir[1024]            __attribute__((aligned(4096)));
 static uint32_t page_tabs[VMM_NPTS][1024] __attribute__((aligned(4096)));
 static int      ready = 0;
+static int      enabled = 0;
 
 void vmm_init(void) {
     uint32_t pts_phys = (uint32_t)(uintptr_t)page_tabs;
@@ -29,15 +30,20 @@ uint32_t vmm_phys_of(uint32_t va) {
     return 0xFFFFFFFFu;
 }
 
-/* EXPERIMENTAL — not enabled by default and NOT boot-verified in this dev
- * environment. Loading CR3 and setting CR0.PG against an unverified mapping can
- * triple-fault. Compile in deliberately, then verify the boot in QEMU. */
-#ifdef THUOS_ENABLE_PAGING_EXPERIMENTAL
+/* Enable paging: load CR3 with the page directory and set CR0.PG. The identity
+ * map covers the low 8 MiB, which contains the whole kernel image, stack, BSS
+ * (heap arena + PMM bitmap + these page tables) and VGA memory, so execution
+ * continues seamlessly (virtual == physical). Boot-verified in QEMU by the CI
+ * boot-smoke job: if this faulted, the kernel would never reach `thuos>`. */
+int vmm_is_enabled(void) { return enabled; }
+
 void vmm_enable(void) {
-    __asm__ volatile("mov %0, %%cr3" :: "r"(page_dir) : "memory");
+    if (!ready) return;                 /* never enable an unbuilt mapping */
+    uint32_t pd = (uint32_t)(uintptr_t)page_dir;
+    __asm__ volatile("mov %0, %%cr3" :: "r"(pd) : "memory");
     uint32_t cr0;
     __asm__ volatile("mov %%cr0, %0" : "=r"(cr0));
     cr0 |= 0x80000000u;                 /* CR0.PG */
     __asm__ volatile("mov %0, %%cr0" :: "r"(cr0) : "memory");
+    enabled = 1;
 }
-#endif

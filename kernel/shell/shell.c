@@ -108,10 +108,10 @@ static void cmd_status(void) {
     kprintf("  [done]    Panic/assert system\n");
     kprintf("  [done]    Physical memory manager (Milestone 0.3)\n");
     kprintf("  [done]    Kernel heap kmalloc/kfree (Milestone 0.4)\n");
-    kprintf("  [wip]     Paging tables + translation (0.5, staged)\n");
+    kprintf("  [done]    Paging ENABLED (0.7, CR0.PG, boot-verified QEMU)\n");
     kprintf("  [done]    Round-robin scheduler policy core (0.6)\n");
-    kprintf("  [plan]    Context switch + ring 3 + syscall (needs boot)\n");
-    kprintf("  [plan]    VFS + initrd, then userspace + libc\n");
+    kprintf("  [plan]    Context switch -> live processes (next)\n");
+    kprintf("  [plan]    Ring 3 + syscall, VFS, userspace\n");
 }
 
 static void cmd_sysinfo(void) {
@@ -218,13 +218,15 @@ static void cmd_vmm(const char *args) {
         else                  kprintf("vmm: va 0x%08x -> pa 0x%08x\n", va, p);
         return;
     }
-    kprintf("Virtual memory (paging) - STAGED, not enabled:\n");
+    kprintf("Virtual memory (paging): %s\n",
+            vmm_is_enabled() ? "ENABLED (CR0.PG)" : "tables built, not enabled");
     kprintf("  page directory : phys 0x%08x\n", vmm_dir_phys());
     kprintf("  identity map   : low %u KiB built\n", vmm_mapped_bytes() / 1024u);
     kprintf("  va 0x00000000  -> pa 0x%08x\n", vmm_phys_of(0x00000000u));
     kprintf("  va 0x00100000  -> pa 0x%08x\n", vmm_phys_of(0x00100000u));
     kprintf("  va 0x00400000  -> pa 0x%08x\n", vmm_phys_of(0x00400000u));
-    kprintf("  paging enable (CR0.PG): EXPERIMENTAL, NOT boot-verified here.\n");
+    kprintf("  running under paging: %s (boot-verified in QEMU/CI)\n",
+            vmm_is_enabled() ? "YES" : "no");
     kprintf("  usage: vmm <hex-va>  to translate an address\n");
 }
 

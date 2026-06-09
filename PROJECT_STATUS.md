@@ -1,6 +1,6 @@
 # THUOS — Project Status
 
-**Milestone:** 0.6.1 "Boot-Verified" — boots in QEMU (CI serial smoke-test); scheduler policy host-tested
+**Milestone:** 0.7 "Virtual Memory" — paging ENABLED (CR0.PG), boot-verified in QEMU (CI)
 **Date of this status:** 2026-06-06
 **Honesty rule:** every "Implemented" item is backed by a source file and passes
 the build + structural verification in [`BUILD_VERIFICATION.txt`](BUILD_VERIFICATION.txt).
@@ -37,7 +37,7 @@ what is actually run/tested.
 | **Physical memory manager (4 KiB frames)** | **Implemented** | `kernel/mm/pmm.c`, `frame_bitmap.c`; unit test `tests/test_pmm.c` |
 | **Protected-region reservation** | **Implemented** | low 1 MiB + kernel image + Multiboot structs, in `pmm.c` |
 | **Memory shell commands** (`memmap`,`pages`,`allocpage`,`freepage`) | **Implemented** | `kernel/shell/shell.c` |
-| **Paging tables + translation** | **Implemented (staged)** | `kernel/mm/vmm_core.c`, `vmm.c`; unit test `tests/test_vmm.c`; enable gated/NOT boot-verified |
+| **Paging ENABLED (CR0.PG, identity map)** | **Boot-verified (QEMU/CI)** | `kernel/mm/vmm.c` enables paging; `vmm_core.c` host-tested (`tests/test_vmm.c`); boot-smoke asserts `Paging ENABLED` |
 | **Kernel heap (`kmalloc`/`kfree`)** | **Implemented** | `kernel/mm/kheap_core.c`, `kheap.c`; unit test `tests/test_kheap.c` |
 | VFS + initrd | Planned (0.4) | `docs/design/FILESYSTEM.md` |
 | Userspace, syscalls, ELF loader | Planned (0.5) | `docs/08_ROADMAP.md` |

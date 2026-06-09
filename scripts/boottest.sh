@@ -39,7 +39,7 @@ cat "$LOG" 2>/dev/null || true
 echo "-------------------------"
 
 rc=0
-for marker in "THUOS" "Physical memory manager" "Kernel heap" "Scheduler" "thuos>"; do
+for marker in "THUOS" "Physical memory manager" "Kernel heap" "Paging ENABLED" "Scheduler" "thuos>"; do
   if grep -qF "$marker" "$LOG" 2>/dev/null; then
     echo "  [ ok ] saw: $marker"
   else

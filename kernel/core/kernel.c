@@ -56,7 +56,9 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
     ok_line("Kernel heap (1 MiB fixed arena, kmalloc/kfree)");
 
     vmm_init();
-    ok_line("Paging tables: identity map low 8 MiB (staged, not enabled)");
+    ok_line("Paging tables: identity map low 8 MiB built");
+    vmm_enable();
+    ok_line("Paging ENABLED (CR0.PG) - running under virtual memory");
 
     sched_kinit();
     ok_line("Scheduler: round-robin policy core (context switch staged)");

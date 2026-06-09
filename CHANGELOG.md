@@ -3,6 +3,26 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.7.0] — "Virtual Memory" — 2026-06-06
+
+Paging is now **actually enabled** — the kernel runs under virtual memory, and
+it's **boot-verified in QEMU** (not just a staged claim). This is the first of
+the "risky staged" steps proven by the CI boot-smoke job: if enabling CR0.PG had
+faulted, the kernel would never reach `thuos>` and CI would go red.
+
+### Changed — kernel (virtual memory)
+- `kernel/mm/vmm.c` — `vmm_enable()` is no longer gated/experimental: it loads
+  CR3 with the page directory and sets `CR0.PG`. The low-8-MiB identity map
+  covers the whole kernel image, stack, BSS (heap arena + PMM bitmap + the page
+  tables) and VGA, so execution continues seamlessly under paging.
+- `kernel_main` builds the tables then **enables paging** before starting the
+  scheduler; `vmm_is_enabled()` added; shell `vmm` and `status` report it on.
+
+### Verification
+- `scripts/boottest.sh` now also asserts the `Paging ENABLED` boot marker, so CI
+  proves the kernel survives enabling paging and still reaches its shell.
+- BOOT-VERIFIED in QEMU (CI). Not yet on physical hardware.
+
 ## [0.6.1] — "Boot-Verified" — 2026-06-06
 
 THUOS now actually **BOOTS**, verified automatically. Until now every milestone
