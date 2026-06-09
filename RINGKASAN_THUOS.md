@@ -7,7 +7,7 @@
 ## 0. Mulai cepat untuk sesi baru (PENTING)
 - **Repo GitHub (publik):** https://github.com/joshuasetiawann/THUNITY-OS
   · **0.12 → 0.15 (User Mode, Desktop, Aurora, Apps) di branch `claude/serene-dijkstra-earnge`** (PR #2, base loving-ptolemy) · CI build + boot-smoke **hijau** (boot-verified di QEMU).
-  · Snapshot tiap versi ada di folder `versions/v0.2.0 … v0.17.0` (root = tree aktif terbaru yang di-build CI).
+  · **Branch `main`** = versi terbaru (kode bersih, di-build & boot-verified CI). **Branch `master`** = arsip tiap versi sebagai folder top-level (`THUOS 0.2.0 … 0.17.0`).
 - **Sandbox kadang rollback lokal** ke commit lama tiap pergantian giliran. **Selalu** awali sesi dengan menarik kode terbaru dari GitHub (read publik selalu jalan); pakai branch milestone terbaru:
   ```bash
   git clone -b claude/serene-dijkstra-earnge https://github.com/joshuasetiawann/THUNITY-OS.git thuos
