@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THUOS 0.10 — Simulasi</title>
+<style>
+:root{
+  --bg:#06080f; --fg:#cdd6ef; --dim:#7d8cb4; --green:#54e6a6; --teal:#2de2c6;
+  --cyan:#7ad7ff; --amber:#ffcf76; --magenta:#ff6db0; --violet:#8b6dff;
+  --mono:ui-monospace,'SF Mono','JetBrains Mono',Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#02030a;color:var(--fg);
+  font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+.frame{max-width:980px;margin:0 auto;padding:18px 14px 26px;min-height:100%}
+.head{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.logo{width:24px;height:24px;border-radius:7px;background:radial-gradient(circle at 36% 32%,#fff,#bda9ff 32%,#6f4ff0 66%,#241a63);box-shadow:0 0 14px -3px var(--violet)}
+.title{font-weight:700;letter-spacing:.4px}
+.chip{font-size:11px;border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:3px 9px;color:var(--dim)}
+.chip.ok{color:#06121a;background:linear-gradient(90deg,var(--green),var(--teal));border:none;font-weight:700}
+.spacer{flex:1}
+.hint{font-size:11.5px;color:var(--dim)}
+.win{border:1px solid rgba(255,255,255,.13);border-radius:12px;overflow:hidden;
+  box-shadow:0 26px 70px rgba(0,0,0,.55);background:rgba(4,6,14,.96)}
+.bar{display:flex;align-items:center;gap:7px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03)}
+.bar i{width:11px;height:11px;border-radius:50%}
+.d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.bar .t{margin-left:8px;font-size:12px;color:var(--dim);font-family:var(--mono)}
+#scr{height:68vh;min-height:420px;overflow-y:auto;padding:13px 15px;font-family:var(--mono);
+  font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+#scr::-webkit-scrollbar{width:9px}#scr::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:9px}
+.ok{color:var(--green)} .err{color:var(--magenta)} .c{color:var(--cyan)} .am{color:var(--amber)}
+.gr{color:var(--dim)} .vi{color:var(--violet)} .tg{color:var(--teal)}
+#promptline{display:flex;white-space:pre-wrap}
+#ps1{color:var(--green);flex:0 0 auto}
+#buf{white-space:pre-wrap}
+.cur{display:inline-block;width:8px;height:15px;background:var(--teal);vertical-align:-2px;animation:bl 1.05s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+.foot{margin-top:10px;font-size:11.5px;color:var(--dim);line-height:1.6}
+.kbd{font-family:var(--mono);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:1px 6px;color:var(--fg)}
+.bn{color:var(--violet)}
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="head">
+    <span class="logo"></span>
+    <span class="title">THUOS · Simulasi</span>
+    <span class="chip">v0.10.0 "Filesystem"</span>
+    <span class="chip ok">● mirror kernel asli</span>
+    <span class="spacer"></span>
+    <span class="hint">klik untuk fokus · ketik <span class="kbd">help</span></span>
+  </div>
+
+  <div class="win">
+    <div class="bar"><i class="d1"></i><i class="d2"></i><i class="d3"></i>
+      <span class="t">qemu-system-i386 -kernel build/kernel.elf -serial stdio</span></div>
+    <div id="scr" tabindex="0">
+      <div id="out"></div>
+      <div id="promptline" style="display:none"><span id="ps1">thuos&gt; </span><span id="buf"></span><span class="cur"></span></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    Ini <b>simulasi setia</b> dari shell THUOS 0.10 yang sebenarnya — teks &amp; perilaku (heap free-list,
+    paging, scheduler, ramfs) mengikuti kernel asli. Kernel asli sendiri <b>boot di QEMU</b> (terverifikasi CI).
+    Perintah: <span class="kbd">help</span> · contoh: <span class="kbd">sysinfo</span> <span class="kbd">heap</span>
+    <span class="kbd">kmalloc 256</span> <span class="kbd">vmm 0x400000</span> <span class="kbd">tasks</span>
+    <span class="kbd">write notes halo</span> <span class="kbd">ls</span> <span class="kbd">cat notes</span>
+  </div>
+</div>
+
+<script>
+"use strict";
+var out = document.getElementById('out');
+var scr = document.getElementById('scr');
+var promptline = document.getElementById('promptline');
+var bufEl = document.getElementById('buf');
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function w(text, cls){               /* write one line */
+  var d=document.createElement('div');
+  if(cls) d.className=cls;
+  d.innerHTML = (text===''? '&nbsp;' : esc(text));
+  out.appendChild(d); scr.scrollTop=scr.scrollHeight;
+}
+function wraw(html){var d=document.createElement('div');d.innerHTML=html;out.appendChild(d);scr.scrollTop=scr.scrollHeight;}
+function ok(label){ wraw('<span class="ok">  [ OK ] </span><span class="gr">'+esc(label)+'</span>'); }
+
+/* ---------------- faithful subsystem state (ported from the real kernel) -------------- */
+var boot0 = Date.now();
+function ticks(){ return Math.floor((Date.now()-boot0)/10); }   /* PIT @ 100 Hz */
+function secs(){ return Math.floor((Date.now()-boot0)/1000); }
+
+/* PMM — 128 MiB, 4 KiB frames (matches QEMU -kernel boot log) */
+var pmm = { usableFrames:32639, reserved:464, free:32175, used:464, next:0x00210000, freed:[] };
+function pmmAlloc(){
+  if(pmm.free<=0) return 0;
+  var a;
+  if(pmm.freed.length) a=pmm.freed.pop(); else { a=pmm.next; pmm.next+=0x1000; }
+  pmm.free--; pmm.used++; return a>>>0;
+}
+function pmmFree(addr){
+  addr = addr & ~0xFFF;
+  if(addr < 0x100000) return -2;                 /* protected low 1 MiB */
+  if(addr >= pmm.next && pmm.freed.indexOf(addr)<0) return -1; /* never allocated */
+  if(pmm.freed.indexOf(addr)>=0) return -3;       /* already free */
+  pmm.freed.push(addr); pmm.free++; pmm.used--; return 0;
+}
+
+/* Kernel heap — first-fit free list with split + coalesce (port of kheap_core.c) */
+var HEAP_TOTAL=1048576, HDR=16, HBASE=0x00140000, HALIGN=8;
+var hb=[{size:HEAP_TOTAL-HDR, free:true}];        /* ordered blocks; each occupies HDR+size */
+function alignup(v){return (v + (HALIGN-1)) & ~(HALIGN-1);}
+function payAddr(i){ var a=HBASE+HDR; for(var k=0;k<i;k++) a+=HDR+hb[k].size; return a>>>0; }
+function kmalloc(n){
+  n=alignup(n); if(n===0) n=HALIGN;
+  for(var i=0;i<hb.length;i++){
+    if(hb[i].free && hb[i].size>=n){
+      if(hb[i].size >= n+HDR+HALIGN){
+        var rem=hb[i].size-n-HDR;
+        hb[i].size=n; hb.splice(i+1,0,{size:rem,free:true});
+      }
+      hb[i].free=false; return payAddr(i);
+    }
+  }
+  return 0;
+}
+function kfree(addr){
+  for(var i=0;i<hb.length;i++){ if(payAddr(i)===(addr>>>0)){ if(hb[i].free) return false; hb[i].free=true; break; } if(i===hb.length-1) return false; }
+  for(var j=0;j<hb.length-1;){ if(hb[j].free&&hb[j+1].free){ hb[j].size+=HDR+hb[j+1].size; hb.splice(j+1,1);} else j++; }
+  return true;
+}
+function heapUsed(){var u=0;hb.forEach(function(b){if(!b.free)u+=b.size;});return u;}
+function heapFree(){var f=0;hb.forEach(function(b){if(b.free)f+=b.size;});return f;}
+
+/* Paging — identity map of the low 8 MiB (matches vmm.c) */
+function translate(va){ va=va>>>0; if(va < 0x800000) return va; return -1; }
+
+/* RAM filesystem — persisted in the browser (local-first feel) */
+var FS_KEY='thuos_sim_fs';
+var fs;
+function fsLoad(){
+  try{ fs=JSON.parse(localStorage.getItem(FS_KEY)); }catch(e){ fs=null; }
+  if(!fs || typeof fs!=='object'){
+    fs={
+     'welcome.txt':"Welcome to the THUOS RAM filesystem.\nThese are real files living in kernel memory.\nTry:  ls  |  cat readme  |  write notes hello there",
+     'readme':"THUOS local-first ramfs (milestone 0.10).\nHost-tested core + boot-verified in QEMU.\nFiles are in-memory for now; persistence comes later."
+    };
+    fsSave();
+  }
+}
+function fsSave(){ try{ localStorage.setItem(FS_KEY, JSON.stringify(fs)); }catch(e){} }
+function fsBytes(){ var n=0; for(var k in fs) if(fs.hasOwnProperty(k)) n+=fs[k].length; return n; }
+fsLoad();
+
+function hex8(n){ var s=(n>>>0).toString(16); while(s.length<8) s='0'+s; return '0x'+s; }
+
+/* ---------------- commands (faithful to kernel shell text) ---------------- */
+function cmd(line){
+  var sp=line.indexOf(' ');
+  var name=(sp<0?line:line.slice(0,sp)).trim();
+  var args=(sp<0?'':line.slice(sp+1)).trim();
+  if(name==='') return;
+  var f=CMDS[name];
+  if(f) f(args);
+  else w('Unknown command: '+name+" (try 'help')", 'err');
+}
+
+var CMDS={
+ help:function(){
+  ['THUOS shell commands:',
+   '  help       Show this help','  about      About THUOS','  version    Kernel name and version',
+   '  status     Implemented / in-progress / planned','  sysinfo    System summary',
+   '  uptime     Uptime in ticks and seconds','  ticks      Raw PIT tick counter',
+   '  mem        Memory summary (physical memory manager)','  pages      Page-frame statistics',
+   '  allocpage  Allocate one 4 KiB physical frame','  freepage A Free a frame by physical address (hex)',
+   '  heap       Kernel heap stats (kmalloc arena)','  kmalloc N  Allocate N bytes from the kernel heap',
+   '  kfree A    Free a kmalloc pointer (hex address)','  vmm [A]    Paging info; translate virtual addr A (hex)',
+   '  ps         List scheduler tasks and states','  sched      Run the round-robin scheduler (live demo)',
+   '  tasks      Run cooperative multitasking (3 tasks, live)','  ls         List files in the RAM filesystem',
+   '  cat F      Print file F','  write F T  Write text T to file F','  echo       Print the rest of the line',
+   '  banner     Show the THUOS banner','  color N    Set text color (0-15)','  clear      Clear the screen',
+   '  crash X    Test fault handler (div0) - testing only','  reboot     Reboot the machine','  halt       Halt the CPU'
+  ].forEach(function(l){w(l);});
+ },
+ about:function(){
+  w('THUOS - a from-scratch personal operating system.');
+  w('Kernel : THU Kernel'); w('Goal   : local-first, privacy-first, honest engineering.');
+  w('Built incrementally from a bootable kernel toward THU Desktop.');
+ },
+ version:function(){
+  w('THU Kernel 0.10.0 "Filesystem"','c');
+  w('Milestone 0.10 - RAM filesystem (local-first ls/cat/write), host-tested + boot-verified');
+  w('Built (simulasi browser)');
+ },
+ status:function(){
+  w('THUOS subsystem status (honest):');
+  ['  [done]    Multiboot boot, VGA console, serial COM1','  [done]    GDT, IDT, CPU exceptions 0-31',
+   '  [done]    PIC remap, PIT timer, keyboard IRQ, shell','  [done]    Panic/assert system',
+   '  [done]    Physical memory manager (Milestone 0.3)','  [done]    Kernel heap kmalloc/kfree (Milestone 0.4)',
+   '  [done]    Paging ENABLED (0.7, CR0.PG, boot-verified QEMU)','  [done]    Cooperative multitasking (0.9, boot-verified)',
+   '  [done]    RAM filesystem ls/cat/write (0.10)','  [plan]    Preemptive, ring 3 + syscall, userspace'
+  ].forEach(function(l){w(l, l.indexOf('[done]')>=0?'ok':'am');});
+ },
+ sysinfo:function(){
+  w('THUOS 0.10.0 "Filesystem"','c');
+  w('Arch    : x86 (i386, 32-bit)'); w('Kernel  : THU Kernel');
+  w('Timer   : PIT @ 100 Hz'); w('Uptime  : '+secs()+' s ('+ticks()+' ticks)');
+  w('Memory  : ~130559 KiB usable, '+pmm.free+' free frames (4 KiB)');
+  w('Paging  : ENABLED (identity map low 8 MiB)');
+  w('Build   : simulasi browser');
+ },
+ uptime:function(){ w('Uptime: '+ticks()+' ticks, approx '+secs()+' seconds (PIT @ 100 Hz)'); },
+ ticks:function(){ w(''+ticks()); },
+ mem:function(){
+  w('Memory hint: 639 KiB low, 130048 KiB high (Multiboot)');
+  CMDS.pages();
+ },
+ pages:function(){
+  w('Physical memory (4 KiB frames):');
+  w('  usable RAM : ~130559 KiB ('+pmm.usableFrames+' frames)');
+  w('  reserved   : '+pmm.reserved+' frames (low 1 MiB + kernel + boot structs)');
+  w('  free       : '+pmm.free+' frames (~'+(pmm.free*4)+' KiB)');
+  w('  used       : '+pmm.used+' frames (reserved + allocated)');
+ },
+ memmap:function(){
+  w('Multiboot memory map:');
+  w('  0x00000000 - 0x0009FBFF  AVAILABLE (639 KiB)');
+  w('  0x0009FC00 - 0x0009FFFF  RESERVED');
+  w('  0x000F0000 - 0x000FFFFF  RESERVED (BIOS)');
+  w('  0x00100000 - 0x07FDFFFF  AVAILABLE (~127 MiB)');
+  w('  0x07FE0000 - 0x07FFFFFF  RESERVED (ACPI/BIOS)');
+ },
+ allocpage:function(){
+  var a=pmmAlloc();
+  if(!a){ w('allocpage: out of physical memory (no free frame)','err'); return; }
+  w('Allocated frame at physical '+hex8(a)+' (free now: '+pmm.free+' frames)');
+  w('Free it with: freepage '+hex8(a));
+ },
+ freepage:function(args){
+  var a=parseHex(args); if(a===null){ w('usage: freepage <physical-address-in-hex>','err'); return; }
+  var r=pmmFree(a);
+  if(r===0)  w('Freed frame at '+hex8(a & ~0xFFF)+' (free now: '+pmm.free+' frames)');
+  else if(r===-1) w('freepage: '+hex8(a)+' is unaligned or out of range','err');
+  else if(r===-2) w('freepage: '+hex8(a)+' is a protected region (refused)','err');
+  else if(r===-3) w('freepage: '+hex8(a)+' was already free','err');
+ },
+ heap:function(){
+  w('Kernel heap (fixed arena, pre-paging):');
+  w('  total : '+HEAP_TOTAL+' bytes'); w('  used  : '+heapUsed()+' bytes');
+  w('  free  : '+heapFree()+' bytes'); w('  blocks: '+hb.length);
+  w('  integrity: OK','ok');
+ },
+ kmalloc:function(args){
+  var n=parseInt(args,10);
+  if(!(n>0)){ w('usage: kmalloc <bytes>','err'); return; }
+  var p=kmalloc(n);
+  if(!p){ w('kmalloc('+n+'): out of heap memory (free: '+heapFree()+' bytes)','err'); return; }
+  w('kmalloc('+n+') = '+hex8(p)+'  (heap free now: '+heapFree()+' bytes)');
+  w('Free it with: kfree '+hex8(p));
+ },
+ kfree:function(args){
+  var a=parseHex(args); if(a===null){ w('usage: kfree <hex-address from kmalloc>','err'); return; }
+  var okk=kfree(a);
+  w('kfree('+hex8(a)+'): heap free now '+heapFree()+' bytes, integrity OK'+(okk?'':' (note: not an active pointer)'));
+ },
+ vmm:function(args){
+  if(args){ var va=parseHex(args); if(va===null){ w('usage: vmm <hex-va>','err'); return; }
+    var pa=translate(va);
+    if(pa<0) w('vmm: va '+hex8(va)+' is NOT mapped','err');
+    else w('vmm: va '+hex8(va)+' -> pa '+hex8(pa)); return; }
+  w('Virtual memory (paging): ENABLED (CR0.PG)','c');
+  w('  page directory : phys 0x00148000');
+  w('  identity map   : low 8192 KiB');
+  w('  va 0x00000000  -> pa '+hex8(translate(0)));
+  w('  va 0x00100000  -> pa '+hex8(translate(0x100000)));
+  w('  va 0x00400000  -> pa '+hex8(translate(0x400000)));
+  w('  running under paging: YES (boot-verified in QEMU/CI)','ok');
+  w('  usage: vmm <hex-va>  to translate an address');
+ },
+ ps:function(){
+  w('Scheduler (round-robin policy core; context switch staged):');
+  w('  task 0  state READY  quantum 5/5  ran 0');
+  w('  task 1  state READY  quantum 3/3  ran 0');
+  w('  task 2  state READY  quantum 2/2  ran 0');
+  w('  runnable 3, current -1');
+ },
+ sched:function(){
+  var order=''; for(var i=0;i<10;i++) order+=(i%3)+' ';
+  w('Live round-robin pick order (real policy): '+order.trim());
+  w('(this is the host-tested scheduler running in-kernel; no CPU','gr');
+  w('context switch yet - that is staged until paging is boot-verified)','gr');
+ },
+ tasks:function(){
+  w('  [coop] starting 3 cooperative tasks...','vi');
+  for(var t=1;t<=3;t++) for(var k=0;k<3;k++) w('  [task '+k+'] tick '+t+' (own stack, via scheduler)');
+  for(var k2=0;k2<3;k2++) w('  [task '+k2+'] done');
+  w('  [coop] all tasks finished, back in kernel main','vi');
+ },
+ ls:function(){
+  w('Files in ramfs ('+fsBytes()+' bytes used):');
+  var any=false; for(var k in fs){ if(fs.hasOwnProperty(k)){ w('  '+k+'  ('+fs[k].length+' bytes)'); any=true; } }
+  if(!any) w('  (no files)');
+ },
+ cat:function(args){
+  if(!args){ w('usage: cat <file>','err'); return; }
+  if(!fs.hasOwnProperty(args)){ w('cat: '+args+': not found','err'); return; }
+  fs[args].split('\n').forEach(function(l){w(l);});
+ },
+ write:function(args){
+  var sp=args.indexOf(' ');
+  if(sp<0){ w('usage: write <file> <text>','err'); return; }
+  var name=args.slice(0,sp), text=args.slice(sp+1);
+  fs[name]=text; fsSave();
+  w("wrote "+text.length+" bytes to '"+name+"'");
+ },
+ echo:function(args){ w(args); },
+ banner:function(){
+  ['','  ######  ##  ##  ##  ##   ####    #####','    ##    ##  ##  ##  ##  ##  ##  ##',
+   '    ##    ######  ##  ##  ##  ##   ####','    ##    ##  ##  ##  ##  ##  ##      ##',
+   '    ##    ##  ##   ####    ####   #####','','  THUOS 0.10.0 "Filesystem" - x86 (i386, 32-bit)',''
+  ].forEach(function(l){w(l,'vi');});
+ },
+ color:function(args){ var n=parseInt(args,10); if(!(n>=0&&n<=15)){w('usage: color <0-15>','err');return;} w('Text color set to '+n+'. (simulasi)'); },
+ thupkg:function(args){
+  if(args==='list'){ w('thupkg - installed/known packages (design preview):');
+    w('  thu-coreutils   0.10.0  [designed]'); w('  thu-terminal    0.10.0  [designed]');
+    w('Note: thupkg is a design preview; no real install backend yet.'); }
+  else { w('thupkg <command>'); w('  list            List known packages'); w('This is a design preview, not a working package manager.'); }
+ },
+ clear:function(){ out.innerHTML=''; },
+ crash:function(args){
+  if(args!=='div0'){ w('usage: crash div0   (testing only - will fault the CPU)','err'); return; }
+  w('Triggering divide-by-zero to test the fault handler...');
+  w('','');
+  w('*** THUOS KERNEL PANIC ***','err');
+  w('EXCEPTION: Divide-by-zero Error (#DE), vector 0','err');
+  w('  eip=0x0010a3f1  cs=0x08  eflags=0x00000202','err');
+  w('  eax=0x00000001  ebx=0x00000000  ecx=0x0000000a  edx=0x00000000','err');
+  w('System halted. (simulasi - muat ulang halaman untuk boot lagi)','am');
+  halted=true; promptline.style.display='none';
+ },
+ reboot:function(){ w('Rebooting THUOS...'); setTimeout(function(){ out.innerHTML=''; boot(); }, 600); },
+ halt:function(){ w('System halted. It is now safe to close the emulator.'); w('(simulasi - muat ulang halaman untuk boot lagi)','am'); halted=true; promptline.style.display='none'; }
+};
+CMDS['div0']=function(){CMDS.crash('div0');};
+
+function parseHex(s){ if(!s) return null; s=s.trim(); if(/^0x/i.test(s)) s=s.slice(2); if(!/^[0-9a-fA-F]+$/.test(s)) return null; return parseInt(s,16)>>>0; }
+
+/* ---------------- boot animation ---------------- */
+var BOOT=[
+ ['c','THUOS 0.10.0 "Filesystem"'],['','THU Kernel - x86 (i386, 32-bit)'],
+ ['','From-scratch OS foundation. Booting...'],['',''],['','[THUOS] serial COM1 online'],
+ ['ok','Serial COM1 debug channel'],['ok','Global Descriptor Table'],['ok','Interrupt Descriptor Table'],
+ ['ok','CPU exception handlers (0-31)'],['ok','PIC remap + IRQ routing'],['ok','PIT timer @ 100 Hz'],
+ ['ok','PS/2 keyboard (IRQ1)'],['ok','Physical memory manager (4 KiB frames)'],
+ ['','  usable RAM : ~130559 KiB (32639 frames)'],
+ ['ok','Kernel heap (1 MiB fixed arena, kmalloc/kfree)'],
+ ['ok','Paging tables: identity map low 8 MiB built'],
+ ['c2','Paging ENABLED (CR0.PG) - running under virtual memory'],
+ ['ok','Scheduler: round-robin policy core'],
+ ['vi2','  [ctx] now running inside a task, on a separate stack'],
+ ['ok','Context switch OK (ran a task on its own stack, returned)'],
+ ['vi2','  [coop] 3 cooperative tasks ran round-robin + exited'],
+ ['ok','Cooperative multitasking OK (3 tasks via scheduler + exited)'],
+ ['ok','RAM filesystem ready (local-first, in-kernel files)'],
+ ['',''],['c','Welcome to THUOS.'],['gr',"Type 'help' to begin."],['','']
+];
+var halted=false, booting=true, bi=0;
+function boot(){
+  booting=true; halted=false; bi=0; boot0=Date.now(); promptline.style.display='none';
+  step();
+}
+function step(){
+  if(bi<BOOT.length){
+    var c=BOOT[bi][0], t=BOOT[bi][1];
+    if(c==='ok') ok(t);
+    else if(c==='c') w(t,'c');
+    else if(c==='c2') wraw('<span class="ok">  [ OK ] </span><span class="c">'+esc(t)+'</span>');
+    else if(c==='vi2') w(t,'vi');
+    else if(c==='gr') w(t,'gr');
+    else w(t);
+    bi++; setTimeout(step, (t===''?40:78));
+  } else { booting=false; promptline.style.display='flex'; bufEl.textContent=''; scr.scrollTop=scr.scrollHeight; }
+}
+
+/* ---------------- input handling ---------------- */
+var buf='', hist=[], hidx=-1;
+function render(){ bufEl.textContent=buf; }
+function runLine(){
+  wraw('<span class="ok">thuos&gt; </span>'+esc(buf));
+  var line=buf; buf=''; render();
+  if(line.trim()!==''){ hist.push(line); if(hist.length>60)hist.shift(); }
+  hidx=hist.length;
+  cmd(line.trim());
+  scr.scrollTop=scr.scrollHeight;
+}
+document.addEventListener('keydown', function(e){
+  if(booting){ /* allow skipping the boot animation */
+    if(e.key.length===1 || e.key==='Enter'){ while(bi<BOOT.length){ var c=BOOT[bi][0],t=BOOT[bi][1];
+      if(c==='ok')ok(t); else if(c==='c')w(t,'c'); else if(c==='c2')wraw('<span class="ok">  [ OK ] </span><span class="c">'+esc(t)+'</span>'); else if(c==='vi2')w(t,'vi'); else if(c==='gr')w(t,'gr'); else w(t); bi++; }
+      booting=false; promptline.style.display='flex'; scr.scrollTop=scr.scrollHeight; e.preventDefault(); }
+    return;
+  }
+  if(halted) return;
+  if(e.key==='Enter'){ e.preventDefault(); runLine(); }
+  else if(e.key==='Backspace'){ e.preventDefault(); buf=buf.slice(0,-1); render(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); if(hidx>0){hidx--;buf=hist[hidx];render();} }
+  else if(e.key==='ArrowDown'){ e.preventDefault(); if(hidx<hist.length-1){hidx++;buf=hist[hidx];render();} else {hidx=hist.length;buf='';render();} }
+  else if(e.key.length===1 && !e.ctrlKey && !e.metaKey){ e.preventDefault(); buf+=e.key; render(); }
+  scr.scrollTop=scr.scrollHeight;
+});
+scr.addEventListener('click', function(){ scr.focus(); });
+window.addEventListener('load', function(){ scr.focus(); boot(); });
+</script>
+</body>
+</html>

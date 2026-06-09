@@ -1,0 +1,114 @@
+# Changelog
+
+All notable changes to THUOS are documented here. Format loosely follows
+[Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
+
+## [0.3.0] — "Memory Foundation" — 2026-06-05
+
+Milestone 0.3: the physical memory manager. THUOS can now parse the Multiboot
+memory map and hand out / reclaim physical memory one 4 KiB frame at a time,
+with the protected regions reserved.
+
+### Added — kernel (memory management)
+- `kernel/mm/multiboot.h` — full Multiboot info + memory-map entry structures.
+- `kernel/mm/frame_bitmap.{c,h}` — pure page-frame bitmap (1 bit/frame), free of
+  kernel/hardware dependencies so it can be unit-tested on the host.
+- `kernel/mm/pmm.{c,h}` — physical memory manager: parse the map, build a 4 GiB
+  bitmap in `.bss`, mark `AVAILABLE` regions free, reserve protected regions,
+  and allocate/free frames with statistics.
+- Reserved regions: low 1 MiB (BIOS/IVT/EBDA/VGA), the kernel image
+  (`thuos_kernel_start..end`, including the 16 KiB stack and the PMM bitmap),
+  the Multiboot info structure, and the memory-map buffer.
+- `pmm_alloc_frame` / `pmm_free_frame` (with protected-region refusal) and
+  statistics: usable / reserved / free / used frames and usable bytes.
+- `kernel_main` now calls `pmm_init` and prints memory statistics at boot.
+
+### Added — shell commands
+- `memmap` — dump the Multiboot memory map (base / length / type).
+- `pages` — page-frame statistics.
+- `allocpage` — allocate one 4 KiB physical frame and print its address.
+- `freepage <hex>` — free a frame by physical address (refuses protected/unaligned).
+- `mem` now reports the PMM summary; `sysinfo` shows usable memory + free frames.
+- Shell command count: 17 → **21**.
+
+### Added — verification & build
+- `tests/test_pmm.c` — host unit test of the allocator core (native gcc, no QEMU):
+  init/used/free, region reserve, alloc-skips-reserved, free+realloc reuse,
+  exhaustion → `FB_NONE`, last-frame boundary.
+- `make test` target; `make verify` now also checks `pmm_*` symbols and runs the
+  allocator test. Verification: **16 checks passed, 0 failed**.
+
+### Added — documentation
+- `docs/09_MEMORY_FOUNDATION.md` (implemented PMM),
+  `docs/10_PAGING_PLAN.md` and `docs/11_KERNEL_HEAP_PLAN.md` (design only).
+
+### Changed
+- Version bumped to 0.3.0 "Memory Foundation". `status`/`PROJECT_STATUS` updated.
+
+### Not implemented (clearly planned)
+- **Paging** and the **kernel heap** are design documents only (`docs/10`, `docs/11`),
+  not code — they will be implemented when they can be boot-verified.
+
+### Known limitations (honest)
+- Still **not booted** here: `qemu-system-i386` is not installed in this
+  environment, so the PMM's behavior on a real Multiboot map is unverified
+  locally (the allocator core is, however, host unit-tested). No ISO built
+  (`grub-mkrescue`/`xorriso` absent). No faked boot/ISO/screenshot results.
+
+## [0.2.0] — "Boot Seed" — 2026-06-05
+
+Milestone 0.2: Kernel Stability, Diagnostics, Timer, and Preview. This is the
+first substantial THUOS milestone: a real freestanding x86 kernel that builds
+into a valid Multiboot ELF, plus an interactive THU Desktop concept preview.
+
+### Added — kernel
+- Multiboot 1 boot stub and 1 MiB load via `kernel/boot/boot.S` + `linker.ld`.
+- VGA 80×25 text console with scrolling, hardware cursor, and color (`drivers/vga.c`).
+- COM1 serial debug channel with a loopback self-test (`drivers/serial.c`).
+- `kprintf` formatted output mirrored to VGA and serial (`core/kprintf.c`).
+- Flat 32-bit GDT with 5 descriptors and segment reload (`arch/x86/gdt.c`, `gdt_flush.S`).
+- IDT plus CPU exception handlers for vectors 0–31 with named crash reports
+  (`arch/x86/idt.c`, `isr.c`, `isr_stubs.S`).
+- 8259 PIC remap to 0x20/0x28 and IRQ routing with end-of-interrupt
+  (`arch/x86/pic.c`, `irq.c`).
+- PIT timer at 100 Hz with a tick counter and `uptime` (`arch/x86/pit.c`).
+- PS/2 keyboard driver on IRQ1, scancode set 1, shift handling, ring buffer
+  (`drivers/keyboard.c`).
+- Kernel panic / assert system that halts loudly instead of failing silently
+  (`core/panic.c`).
+- Interactive `thuos>` shell with 17 commands: `help`, `about`, `version`,
+  `status`, `sysinfo`, `uptime`, `ticks`, `mem`, `echo`, `banner`, `color`,
+  `thupkg`, `clear`, `crash`, `reboot`, `halt` (`shell/shell.c`).
+- Freestanding `mem*` / `str*` helpers; no host libc dependency (`lib/string.c`).
+
+### Added — build & verification
+- `Makefile` targets: `kernel`, `verify`, `status`, `demo`, `iso`, `run`,
+  `run-serial`, `clean`. `iso` and `run` degrade gracefully when their tools
+  are missing instead of pretending to succeed.
+- `scripts/verify_multiboot.py` — confirms the Multiboot magic and checksum sit
+  within the first 8 KiB of the kernel image.
+- `scripts/run_verify.sh` — full verification battery written to `BUILD_VERIFICATION.txt`.
+- `scripts/status.sh` — one-screen honest project status.
+
+### Added — THU Desktop preview
+- `preview/thuos_preview.html` — self-contained (no CDN) concept preview with a
+  boot screen, **login screen**, desktop, dock/sidebar, draggable windows, a
+  terminal that simulates the `thuos>` shell (`help`, `about`, `clear`, `uptime`,
+  `mem`, `version`, `echo`, `panic`, `reboot`, `halt`, and more), a **Kernel
+  Status** panel, and a **Build Verification** window.
+- `preview/thuos_desktop_preview.html` — forwards to the interactive preview.
+
+### Added — documentation
+- `README.md`, `PROJECT_STATUS.md`, `CHANGELOG.md`, `BUILD_VERIFICATION.txt`.
+- `docs/00`–`docs/08` milestone docs and `docs/design/` deep specifications.
+
+### Known limitations (honest)
+- The kernel has **not** been booted in this environment: `qemu-system-i386` is
+  not installed here. Boot is therefore unverified locally; see `make run`.
+- No bootable ISO was produced here: `grub-mkrescue` / `xorriso` are not installed.
+- No memory manager, filesystem, userspace, networking, or graphics yet — those
+  are designed/planned for later milestones.
+
+## [0.0.1] — "Boot Seed (baseline)"
+- Project conception: a from-scratch, Multiboot, x86 32-bit kernel with VGA text
+  output, keyboard input, and a minimal shell, established as the THUOS direction.
