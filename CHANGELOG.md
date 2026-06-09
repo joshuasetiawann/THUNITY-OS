@@ -3,6 +3,41 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.15.0] — "Apps" — 2026-06-09
+
+**A usable desktop.** THUOS gains a **PS/2 mouse** with a composited arrow
+cursor, a **clickable dock**, and built-in **apps** that run in the window: a
+**Terminal** (the shell), a working **Calculator**, a **Files** browser over the
+RAM filesystem, an honest **System / Devices** panel, and **About**. Click a dock
+icon to switch apps; `Esc` returns to the terminal (apps are also reachable by
+the `calc`/`files`/`devices`/`about` commands).
+
+Honest scope: this answers "basic apps that run here" for the apps that are
+actually possible on a from-scratch OS. The **System** panel reports devices
+truthfully — Display/Keyboard/Mouse/Storage/Timer **OK**; networking is an
+*emulated NIC with no driver yet*; and **Camera, Wi-Fi and Bluetooth are
+not supported** (no device / would need vendor firmware + drivers far beyond a
+solo from-scratch OS). Nothing is faked. "Installing apps" (loading programs
+from files via an ELF loader) is a later milestone.
+
+### Added — kernel (desktop apps)
+- `kernel/drivers/mouse.{c,h}` — PS/2 mouse (IRQ12): 8042 setup, 3-byte packet
+  decode, clamped cursor position + buttons.
+- `kernel/gui/apps.{c,h}` — Calculator (button grid + keyboard, integer math),
+  Files (ramfs list + viewer), System/Devices (honest status), About.
+- `kernel/gui/desktop.c` — a real event loop (`desktop_run`): composited mouse
+  cursor (save/restore via `lfb_blit_*`), clickable dock, per-app keyboard/mouse
+  routing, and the terminal as one app. Replaces the old blocking shell loop as
+  the top level (text-mode `shell_run` kept as a fallback).
+- Shell refactored into `shell_start` + `shell_feed_char`; non-blocking
+  `keyboard_haskey`/`keyboard_trygetchar`; `lfb_blit_get/put`; `gcon_set_active`.
+
+### Verification
+- `make test` 8 host suites, `make verify` 16/0. Boot-smoke still asserts the
+  `THU Desktop` marker and reaches `thuos>` over serial (the terminal is the
+  default app). BOOT-VERIFIED in QEMU; the desktop, cursor, dock-click and apps
+  are verified by QEMU screenshots (incl. a scripted dock click opening an app).
+
 ## [0.14.0] — "Aurora" — 2026-06-09
 
 **A modern desktop.** THUOS moves off the 320×200 retro VGA mode onto a real

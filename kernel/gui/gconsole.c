@@ -21,6 +21,7 @@ void gcon_init(int x, int y, int c, int r, int s, uint32_t f, uint32_t b) {
 }
 
 int  gcon_active(void) { return active; }
+void gcon_set_active(int on) { active = on; }
 void gcon_set_color(uint32_t f, long b) { fg = f; if (b >= 0) bg = (uint32_t)b; }
 
 void gcon_clear(void) {

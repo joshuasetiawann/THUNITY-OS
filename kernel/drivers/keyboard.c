@@ -65,3 +65,12 @@ char keyboard_getchar(void) {
     tail = (tail + 1) % BUF_SIZE;
     return c;
 }
+
+int keyboard_haskey(void) { return head != tail; }
+
+char keyboard_trygetchar(void) {        /* 0 if no key is pending */
+    if (head == tail) return 0;
+    char c = buffer[tail];
+    tail = (tail + 1) % BUF_SIZE;
+    return c;
+}

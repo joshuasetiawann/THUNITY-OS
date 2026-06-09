@@ -141,3 +141,21 @@ void lfb_scroll_up(int x, int y, int w, int h, int dy, uint32_t fill) {
     }
     lfb_fill(x, y + h - dy, w, dy, fill);
 }
+
+void lfb_blit_get(int x, int y, int w, int h, uint32_t *buf) {
+    for (int j = 0; j < h; j++)
+        for (int i = 0; i < w; i++) {
+            int xx = x + i, yy = y + j;
+            buf[j * w + i] = ((unsigned)xx < (unsigned)W && (unsigned)yy < (unsigned)H)
+                             ? fbp[yy * pitch_px + xx] : 0;
+        }
+}
+
+void lfb_blit_put(int x, int y, int w, int h, const uint32_t *buf) {
+    for (int j = 0; j < h; j++)
+        for (int i = 0; i < w; i++) {
+            int xx = x + i, yy = y + j;
+            if ((unsigned)xx < (unsigned)W && (unsigned)yy < (unsigned)H)
+                fbp[yy * pitch_px + xx] = buf[j * w + i];
+        }
+}
