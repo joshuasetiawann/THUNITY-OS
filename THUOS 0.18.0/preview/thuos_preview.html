@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>THUOS — THU Desktop (Concept Preview)</title>
+<style>
+  :root{
+    --bg:#05060f; --accent:#63e6ff; --accent2:#a477ff; --accent3:#6c8cff;
+    --text:#eaf2ff; --muted:rgba(234,242,255,.62); --line:rgba(255,255,255,.12);
+    --glass:rgba(255,255,255,.06); --glass2:rgba(255,255,255,.10);
+    --ok:#6dffbd; --warn:#ffd166; --plan:#b9c4ff;
+    --win:rgba(10,14,30,.78); --radius:18px; --shadow:0 30px 70px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; overflow:hidden; color:var(--text);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:
+      radial-gradient(1200px 700px at 18% 8%, rgba(99,230,255,.18), transparent 45%),
+      radial-gradient(1000px 700px at 82% 12%, rgba(164,119,255,.16), transparent 45%),
+      radial-gradient(1100px 800px at 50% 100%, rgba(108,140,255,.14), transparent 50%),
+      linear-gradient(150deg,#05060f 0%,#081127 55%,#120a25 100%);
+  }
+  .grid-overlay{position:fixed;inset:0;pointer-events:none;opacity:.05;
+    background-image:linear-gradient(rgba(255,255,255,.6) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.6) 1px,transparent 1px);
+    background-size:48px 48px;mask-image:radial-gradient(circle at center,#000,transparent 78%)}
+
+  /* ---------- Boot screen ---------- */
+  #boot{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;
+    background:radial-gradient(circle at 50% 40%,#0a1430,#05060f 70%);transition:opacity .6s ease}
+  #boot.hide{opacity:0;pointer-events:none}
+  .boot-inner{width:min(560px,90vw);text-align:center}
+  .boot-logo{width:84px;height:84px;border-radius:24px;margin:0 auto 18px;display:grid;place-items:center;
+    font-weight:900;font-size:30px;letter-spacing:-2px;color:#04101f;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    box-shadow:0 18px 50px rgba(99,230,255,.35);animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{50%{transform:translateY(-4px) scale(1.03)}}
+  .boot-title{font-size:34px;font-weight:800;letter-spacing:-.03em}
+  .boot-sub{color:var(--muted);font-size:13px;margin-top:4px}
+  .boot-bar{height:6px;border-radius:99px;background:rgba(255,255,255,.1);margin:22px 0 16px;overflow:hidden}
+  .boot-bar > i{display:block;height:100%;width:0;border-radius:99px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .25s ease}
+  .boot-log{font:12px/1.6 ui-monospace,Menlo,Consolas,monospace;color:var(--muted);
+    text-align:left;height:120px;overflow:hidden;border:1px solid var(--line);border-radius:12px;
+    padding:10px 12px;background:rgba(0,0,0,.25)}
+  .boot-log b{color:var(--ok);font-weight:600}
+  .boot-skip{margin-top:14px;color:var(--muted);font-size:12px}
+
+  /* ---------- Login screen ---------- */
+  #login{position:fixed;inset:0;z-index:900;display:none;place-items:center;
+    background:radial-gradient(circle at 50% 35%,#0a1430,#05060f 72%);transition:opacity .5s ease}
+  #login.show{display:grid}
+  #login.hide{opacity:0;pointer-events:none}
+  .login-card{width:min(360px,90vw);text-align:center;border:1px solid var(--line);border-radius:22px;
+    padding:30px 28px;background:rgba(255,255,255,.05);backdrop-filter:blur(20px);box-shadow:var(--shadow)}
+  .login-av{width:72px;height:72px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;
+    font-weight:800;font-size:24px;color:#04101f;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    box-shadow:0 14px 40px rgba(99,230,255,.3)}
+  .login-card h3{margin:0 0 2px;font-size:18px}
+  .login-card .who{color:var(--muted);font-size:13px;margin-bottom:18px}
+  .login-card input{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:11px;
+    color:var(--text);padding:11px 13px;font-size:14px;outline:none;text-align:center}
+  .login-card input:focus{border-color:var(--accent)}
+  .login-btn{margin-top:12px;width:100%;border:none;border-radius:11px;cursor:pointer;padding:11px;
+    font-size:14px;font-weight:600;color:#04101f;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+  .login-hint{margin-top:12px;color:var(--muted);font-size:11.5px}
+
+  /* ---------- Top bar ---------- */
+  #desktop{position:fixed;inset:0;opacity:0;transition:opacity .6s ease}
+  #desktop.show{opacity:1}
+  .topbar{position:absolute;top:0;left:0;right:0;height:46px;display:flex;align-items:center;
+    justify-content:space-between;padding:0 14px;z-index:50;
+    background:linear-gradient(180deg,rgba(8,12,28,.7),rgba(8,12,28,.25));
+    border-bottom:1px solid var(--line);backdrop-filter:blur(18px)}
+  .tb-left,.tb-right{display:flex;align-items:center;gap:12px}
+  .tb-logo{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;color:#04101f;
+    font-weight:900;font-size:12px;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+  .tb-name{font-weight:700;letter-spacing:.02em}
+  .tb-mile{color:var(--muted);font-size:12px;border-left:1px solid var(--line);padding-left:12px}
+  .chip{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:99px;
+    padding:5px 10px;background:var(--glass);display:flex;align-items:center;gap:6px}
+  .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+  .badge-preview{color:#04101f;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    font-weight:700;border:none}
+  #clock{font-variant-numeric:tabular-nums;font-weight:600}
+
+  /* ---------- Dock / sidebar ---------- */
+  .dock{position:absolute;left:14px;top:60px;z-index:40;width:62px;padding:10px 9px;
+    display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:22px;
+    background:rgba(6,9,22,.55);backdrop-filter:blur(20px);box-shadow:var(--shadow)}
+  .dock-label{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);
+    text-align:center;margin:2px 0 2px}
+  .dock-ico{position:relative;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;
+    cursor:pointer;color:var(--text);border:1px solid transparent;background:var(--glass);
+    transition:transform .14s ease,background .14s ease,border-color .14s}
+  .dock-ico:hover{background:var(--glass2);transform:translateX(3px) scale(1.05);border-color:var(--line)}
+  .dock-ico.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+  .dock-ico.active::before{content:"";position:absolute;left:-9px;top:50%;transform:translateY(-50%);
+    width:4px;height:18px;border-radius:99px;background:linear-gradient(var(--accent),var(--accent2))}
+  .dock-ico svg{width:21px;height:21px}
+  .dock-ico .tip{position:absolute;left:54px;top:50%;transform:translateY(-50%);white-space:nowrap;
+    background:#0b1124;border:1px solid var(--line);color:var(--text);font-size:12px;padding:5px 9px;
+    border-radius:8px;opacity:0;pointer-events:none;transition:opacity .12s;box-shadow:var(--shadow)}
+  .dock-ico:hover .tip{opacity:1}
+
+  /* ---------- Windows ---------- */
+  .win{position:absolute;min-width:260px;border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--win);backdrop-filter:blur(22px);box-shadow:var(--shadow);overflow:hidden;
+    display:flex;flex-direction:column;animation:pop .18s ease}
+  @keyframes pop{from{opacity:0;transform:scale(.97) translateY(6px)}}
+  .win.closing{opacity:0;transform:scale(.97);transition:.15s ease}
+  .win-bar{height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 12px;
+    cursor:grab;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02))}
+  .win-bar:active{cursor:grabbing}
+  .win-title{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:var(--text)}
+  .win-title svg{width:15px;height:15px;opacity:.85}
+  .traffic{display:flex;gap:7px}
+  .traffic i{width:12px;height:12px;border-radius:50%;display:inline-block;cursor:pointer}
+  .traffic .c{background:#ff5f57}.traffic .m{background:#febc2e}.traffic .g{background:#28c840}
+  .win-body{padding:14px;overflow:auto;flex:1}
+  .win-body::-webkit-scrollbar{width:9px}.win-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:9px}
+
+  h4.sec{margin:0 0 10px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;
+    padding:4px 9px;font-size:11px;color:var(--muted);margin:3px 4px 0 0}
+  .tag::before{content:"";width:7px;height:7px;border-radius:50%}
+  .tag.ok::before{background:var(--ok)}.tag.wip::before{background:var(--warn)}.tag.plan::before{background:var(--plan)}
+
+  /* terminal */
+  .term{background:rgba(0,0,0,.42);border-radius:12px;height:100%;display:flex;flex-direction:column}
+  .term-out{flex:1;overflow:auto;padding:12px 13px;font:12.5px/1.55 ui-monospace,Menlo,Consolas,monospace;
+    color:#dff6ff;white-space:pre-wrap;word-break:break-word}
+  .term-out::-webkit-scrollbar{width:9px}.term-out::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:9px}
+  .term-line{padding:1px 0}
+  .term-in{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding:9px 12px;
+    font:12.5px/1.4 ui-monospace,Menlo,Consolas,monospace}
+  .term-prompt{color:var(--accent);font-weight:700}
+  .term-in input{flex:1;background:transparent;border:none;outline:none;color:var(--text);
+    font:inherit;caret-color:var(--accent)}
+  .muted{color:var(--muted)}.ok{color:var(--ok)}.warn{color:var(--warn)}.acc{color:var(--accent)}
+
+  /* files */
+  .frow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;
+    border:1px solid var(--line);border-radius:11px;margin-bottom:7px;background:var(--glass);font-size:13px}
+  .frow:hover{background:var(--glass2)}
+  .frow .nm{display:flex;align-items:center;gap:9px}.frow svg{width:16px;height:16px;opacity:.8}
+
+  /* settings */
+  .srow{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;border-bottom:1px solid var(--line)}
+  .srow:last-child{border-bottom:none}
+  .srow .lbl{font-size:13px}.srow .sub{font-size:11px;color:var(--muted)}
+  .switch{width:44px;height:24px;border-radius:99px;background:rgba(255,255,255,.16);position:relative;cursor:pointer;transition:.18s}
+  .switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.18s}
+  .switch.on{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  .switch.on::after{left:23px}
+  .swatches{display:flex;gap:8px;margin-top:4px}
+  .swatch{width:24px;height:24px;border-radius:8px;cursor:pointer;border:2px solid transparent}
+  .swatch.sel{border-color:#fff}
+
+  /* monitor */
+  .metric{margin-bottom:12px}
+  .metric .top{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+  .bar{height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent3),var(--accent2))}
+  .statline{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:5px 0;border-bottom:1px dashed var(--line)}
+
+  /* pkg */
+  .pkg{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);
+    border-radius:12px;padding:10px 12px;margin-bottom:8px;background:var(--glass)}
+  .pkg .meta{font-size:11px;color:var(--muted)}
+  .btn{border:1px solid var(--line);background:var(--glass2);color:var(--text);border-radius:9px;
+    padding:6px 11px;font-size:12px;cursor:pointer;transition:.15s}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+
+  textarea.editor{width:100%;height:100%;min-height:180px;resize:none;background:rgba(0,0,0,.32);
+    border:1px solid var(--line);border-radius:12px;color:#dff6ff;padding:12px;
+    font:12.5px/1.6 ui-monospace,Menlo,Consolas,monospace;outline:none}
+
+  .about-logo{width:60px;height:60px;border-radius:18px;display:grid;place-items:center;color:#04101f;
+    font-weight:900;font-size:22px;background:linear-gradient(135deg,var(--accent),var(--accent2));margin-bottom:12px}
+  .about h2{margin:.2em 0}.about p{color:var(--muted);font-size:13px;line-height:1.6}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;margin-top:10px}
+  .kv b{color:var(--muted);font-weight:500}
+
+  /* honesty footer */
+  .footer{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:30;
+    font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:99px;
+    padding:6px 14px;background:rgba(6,9,22,.6);backdrop-filter:blur(14px)}
+  .footer b{color:var(--accent);font-weight:600}
+
+  /* toasts */
+  #toasts{position:absolute;right:16px;bottom:16px;z-index:80;display:flex;flex-direction:column;gap:8px}
+  .toast{border:1px solid var(--line);background:rgba(10,14,30,.9);backdrop-filter:blur(14px);
+    border-radius:12px;padding:11px 14px;font-size:13px;box-shadow:var(--shadow);animation:pop .18s ease;max-width:300px}
+  .toast b{color:var(--accent)}
+
+  @media (max-width:720px){
+    .tb-mile,.chip.hide-sm{display:none}
+    .dock{flex-direction:row;left:50%;transform:translateX(-50%);top:auto;bottom:14px;width:auto}
+    .dock-label{display:none}.dock-ico:hover{transform:scale(1.06)}
+    .dock-ico .tip{left:50%;top:-40px;transform:translateX(-50%)}
+    .footer{bottom:78px}
+  }
+</style>
+</head>
+<body>
+<div class="grid-overlay"></div>
+
+<!-- BOOT -->
+<div id="boot">
+  <div class="boot-inner">
+    <div class="boot-logo">TH</div>
+    <div class="boot-title">THUOS</div>
+    <div class="boot-sub">THU Kernel 0.3.0 "Memory Foundation" · x86 (i386, 32-bit)</div>
+    <div class="boot-bar"><i id="bootbar"></i></div>
+    <div class="boot-log" id="bootlog"></div>
+    <div class="boot-skip">click anywhere to skip →</div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-card">
+    <div class="login-av">T</div>
+    <h3>thu</h3>
+    <div class="who">THUOS · sign in to THU Desktop</div>
+    <input id="login-pass" type="password" placeholder="password (any value)" />
+    <button class="login-btn" id="login-go">Sign in</button>
+    <div class="login-hint">Concept preview — no real authentication. Press Enter to continue.</div>
+  </div>
+</div>
+
+<!-- DESKTOP -->
+<div id="desktop">
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-logo">TH</div>
+      <div class="tb-name">THUOS</div>
+      <div class="tb-mile">THU Desktop · Milestone 0.3 — Memory Foundation</div>
+    </div>
+    <div class="tb-right">
+      <div class="chip hide-sm"><span class="dot"></span>Local-first</div>
+      <div class="chip hide-sm">Secure mode</div>
+      <div class="chip badge-preview">Concept Preview</div>
+      <div class="chip"><span id="clock">--:--</span></div>
+    </div>
+  </div>
+
+  <div class="dock" id="dock"><div class="dock-label">Apps</div></div>
+
+  <div class="footer">THUOS <b>Concept Preview</b> — an interactive mock of THU Desktop. The real kernel GUI is built from the framebuffer in a later milestone.</div>
+
+  <div id="windows"></div>
+  <div id="toasts"></div>
+</div>
+
+<script>
+/* ============================ THUOS demo ============================ */
+const ICON = {
+  terminal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9l3 3-3 3"/><path d="M13 15h4"/></svg>',
+  files:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+  settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  monitor:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>',
+  pkg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></svg>',
+  editor:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  about:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>',
+  folder:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+  kstatus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+  build:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+};
+
+/* ---- boot sequence ---- */
+const bootLines = [
+  'THU Kernel 0.3.0 "Memory Foundation" — x86 (i386, 32-bit)',
+  'From-scratch OS foundation. Booting...',
+  '[ <b>OK</b> ] Serial COM1 debug channel',
+  '[ <b>OK</b> ] Global Descriptor Table',
+  '[ <b>OK</b> ] Interrupt Descriptor Table',
+  '[ <b>OK</b> ] CPU exception handlers (0-31)',
+  '[ <b>OK</b> ] PIC remap + IRQ routing',
+  '[ <b>OK</b> ] PIT timer @ 100 Hz',
+  '[ <b>OK</b> ] PS/2 keyboard (IRQ1)',
+  '[ <b>OK</b> ] Physical memory manager (4 KiB frames)',
+  'Welcome to THUOS.',
+];
+const bootlog = document.getElementById('bootlog');
+const bootbar = document.getElementById('bootbar');
+let bi = 0, booted = false;
+function stepBoot(){
+  if (bi < bootLines.length){
+    const d = document.createElement('div');
+    d.innerHTML = bootLines[bi];
+    bootlog.appendChild(d);
+    bootlog.scrollTop = bootlog.scrollHeight;
+    bootbar.style.width = Math.round(((bi+1)/bootLines.length)*100)+'%';
+    bi++;
+    setTimeout(stepBoot, 230 + Math.random()*180);
+  } else {
+    setTimeout(finishBoot, 500);
+  }
+}
+function finishBoot(){
+  if (booted) return; booted = true;
+  document.getElementById('boot').classList.add('hide');
+  document.getElementById('login').classList.add('show');
+  setTimeout(()=>{ const p=document.getElementById('login-pass'); if(p) p.focus(); }, 300);
+}
+function doLogin(){
+  const lg=document.getElementById('login'); lg.classList.add('hide');
+  setTimeout(()=>{ lg.classList.remove('show'); lg.style.display='none'; }, 480);
+  document.getElementById('desktop').classList.add('show');
+  setTimeout(()=>{ openApp('terminal'); }, 520);
+}
+document.getElementById('boot').addEventListener('click', finishBoot);
+document.getElementById('login-go').addEventListener('click', doLogin);
+document.getElementById('login-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+setTimeout(stepBoot, 400);
+
+/* ---- clock ---- */
+function tick(){
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+}
+setInterval(tick, 1000); tick();
+
+/* ---- demo uptime (honest: counts since page load) ---- */
+const startedAt = Date.now();
+function uptimeStr(){
+  const s = Math.floor((Date.now()-startedAt)/1000);
+  return Math.floor(s/3600)+'h '+Math.floor((s%3600)/60)+'m '+(s%60)+'s';
+}
+
+/* ---- toast ---- */
+function toast(html){
+  const t = document.createElement('div'); t.className='toast'; t.innerHTML = html;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(()=>{ t.style.opacity=0; t.style.transition='.3s'; setTimeout(()=>t.remove(),320); }, 2600);
+}
+
+/* ---- window manager ---- */
+let zTop = 10;
+const open = {};   // id -> element
+const APPS = {
+  terminal:{title:'THU Terminal', w:560, h:360, x:120, y:84, render:renderTerminal},
+  files:   {title:'THU Files',    w:380, h:330, x:710, y:96, render:renderFiles},
+  monitor: {title:'System Monitor',w:400, h:360, x:300, y:150, render:renderMonitor},
+  settings:{title:'THU Settings', w:400, h:340, x:560, y:140, render:renderSettings},
+  pkg:     {title:'thupkg — Packages', w:420, h:340, x:200, y:120, render:renderPkg},
+  editor:  {title:'Text Editor',  w:460, h:340, x:360, y:110, render:renderEditor},
+  about:   {title:'About THUOS',  w:380, h:360, x:640, y:120, render:renderAbout},
+  kstatus: {title:'Kernel Status',w:440, h:340, x:250, y:130, render:renderKStatus},
+  build:   {title:'Build Verification', w:480, h:380, x:300, y:110, render:renderBuild},
+};
+
+function focusWin(el){ el.style.zIndex = ++zTop; }
+
+function openApp(id){
+  const def = APPS[id];
+  if (open[id]){ focusWin(open[id]); flashDock(id); return; }
+
+  const win = document.createElement('div');
+  win.className = 'win';
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const w = Math.min(def.w, vw-40), h = Math.min(def.h, vh-120);
+  win.style.width = w+'px'; win.style.height = h+'px';
+  win.style.left = Math.min(def.x, vw-w-20)+'px';
+  win.style.top  = Math.min(def.y, vh-h-20)+'px';
+  win.style.zIndex = ++zTop;
+
+  win.innerHTML =
+    '<div class="win-bar">'+
+      '<div class="win-title">'+ICON[id]+'<span>'+def.title+'</span></div>'+
+      '<div class="traffic"><i class="c" title="close"></i><i class="m"></i><i class="g"></i></div>'+
+    '</div>'+
+    '<div class="win-body"></div>';
+
+  document.getElementById('windows').appendChild(win);
+  open[id] = win;
+  def.render(win.querySelector('.win-body'), win);
+
+  win.addEventListener('mousedown', ()=>focusWin(win));
+  win.querySelector('.traffic .c').addEventListener('click', (e)=>{ e.stopPropagation(); closeApp(id); });
+  makeDraggable(win, win.querySelector('.win-bar'));
+  flashDock(id);
+}
+function closeApp(id){
+  const el = open[id]; if(!el) return;
+  el.classList.add('closing');
+  setTimeout(()=>{ el.remove(); delete open[id]; flashDock(id); }, 150);
+}
+function makeDraggable(win, handle){
+  let sx,sy,ox,oy,drag=false;
+  handle.addEventListener('mousedown',(e)=>{
+    if(e.target.closest('.traffic')) return;
+    drag=true; sx=e.clientX; sy=e.clientY; ox=win.offsetLeft; oy=win.offsetTop;
+    focusWin(win); e.preventDefault();
+  });
+  window.addEventListener('mousemove',(e)=>{
+    if(!drag) return;
+    let nx=ox+e.clientX-sx, ny=oy+e.clientY-sy;
+    nx=Math.max(2,Math.min(nx,window.innerWidth-60));
+    ny=Math.max(50,Math.min(ny,window.innerHeight-40));
+    win.style.left=nx+'px'; win.style.top=ny+'px';
+  });
+  window.addEventListener('mouseup',()=>drag=false);
+}
+
+/* ---- dock ---- */
+const dock = document.getElementById('dock');
+Object.keys(APPS).forEach(id=>{
+  const b=document.createElement('div'); b.className='dock-ico'; b.dataset.app=id;
+  b.innerHTML = ICON[id]+'<span class="tip">'+APPS[id].title+'</span>';
+  b.addEventListener('click',()=>openApp(id));
+  dock.appendChild(b);
+});
+function flashDock(){ document.querySelectorAll('.dock-ico').forEach(b=>{
+  b.classList.toggle('active', !!open[b.dataset.app]); }); }
+
+/* ======================= app renderers ======================= */
+function renderFiles(body){
+  const rows=[
+    ['kernel/','Implemented','ok'],['kernel/arch/x86/','Implemented','ok'],
+    ['kernel/drivers/','Implemented','ok'],['kernel/shell/','Implemented','ok'],
+    ['docs/','Active','ok'],['preview/','Concept','plan'],
+    ['mm/  (memory)','Milestone 0.3','wip'],['fs/  (THUFS)','Planned','plan'],
+    ['userspace/','Planned','plan'],['apps/','Planned','plan'],
+  ];
+  body.innerHTML='<h4 class="sec">THUOS root · honest status</h4>'+
+    rows.map(r=>'<div class="frow"><div class="nm">'+ICON.folder+'<span>'+r[0]+'</span></div>'+
+      '<span class="tag '+r[2]+'">'+r[1]+'</span></div>').join('');
+}
+
+function renderMonitor(body){
+  const metrics=[
+    ['Boot + console',100],['Interrupts / timer / keyboard',95],
+    ['Kernel diagnostics',80],['Memory manager (0.3)',15],
+    ['Filesystem / VFS (0.4)',6],['THU Desktop GUI',12],
+  ];
+  body.innerHTML='<h4 class="sec">Implementation progress (honest)</h4>'+
+    metrics.map(m=>'<div class="metric"><div class="top"><span>'+m[0]+'</span><span>'+m[1]+'%</span></div>'+
+      '<div class="bar"><i style="width:'+m[1]+'%"></i></div></div>').join('')+
+    '<h4 class="sec" style="margin-top:14px">Live demo session</h4>'+
+    '<div class="statline"><span>Demo uptime</span><span id="upt">'+uptimeStr()+'</span></div>'+
+    '<div class="statline"><span>Timer model</span><span>PIT @ 100 Hz</span></div>'+
+    '<div class="statline"><span>Open windows</span><span id="wc">0</span></div>'+
+    '<div class="statline"><span>Boot verified</span><span class="ok">multiboot ELF ✓</span></div>';
+  const iv=setInterval(()=>{
+    const u=body.querySelector('#upt'); if(!u){clearInterval(iv);return;}
+    u.textContent=uptimeStr(); body.querySelector('#wc').textContent=Object.keys(open).length;
+  },1000);
+}
+
+function renderSettings(body){
+  const toggles=[
+    ['Privacy-first mode','No hidden telemetry, ever',true],
+    ['Local logs only','Keep diagnostics on-device',true],
+    ['Safe install guard','Confirm before any disk write',true],
+    ['Telemetry','Disabled by design',false],
+  ];
+  body.innerHTML='<h4 class="sec">System</h4>'+
+    toggles.map((t,i)=>'<div class="srow"><div><div class="lbl">'+t[0]+'</div><div class="sub">'+t[1]+'</div></div>'+
+      '<div class="switch'+(t[2]?' on':'')+'" data-i="'+i+'"></div></div>').join('')+
+    '<h4 class="sec" style="margin-top:16px">Accent theme</h4>'+
+    '<div class="swatches" id="sw"></div>';
+  body.querySelectorAll('.switch').forEach(s=>s.addEventListener('click',()=>{
+    s.classList.toggle('on');
+    toast('Setting updated <span class="muted">(demo only)</span>');
+  }));
+  const accents=[['#63e6ff','#a477ff'],['#6dffbd','#37b6ff'],['#ffd166','#ff7a7a'],['#a477ff','#ff7ad9'],['#7CFFCB','#6c8cff']];
+  const sw=body.querySelector('#sw');
+  accents.forEach((a,i)=>{
+    const el=document.createElement('div'); el.className='swatch'+(i===0?' sel':'');
+    el.style.background='linear-gradient(135deg,'+a[0]+','+a[1]+')';
+    el.addEventListener('click',()=>{
+      document.documentElement.style.setProperty('--accent',a[0]);
+      document.documentElement.style.setProperty('--accent2',a[1]);
+      sw.querySelectorAll('.swatch').forEach(x=>x.classList.remove('sel')); el.classList.add('sel');
+    });
+    sw.appendChild(el);
+  });
+}
+
+function renderPkg(body){
+  const pkgs=[
+    ['thu-coreutils','0.2.0','shell built-ins (ls, echo, cat …)','designed'],
+    ['thu-terminal','0.2.0','THU Desktop terminal app','designed'],
+    ['thu-files','0.1.0','file manager','planned'],
+    ['thu-settings','0.1.0','settings panel','planned'],
+    ['thufs-tools','0.0.1','filesystem utilities','planned'],
+  ];
+  body.innerHTML='<h4 class="sec">thupkg · design preview (no real backend yet)</h4>'+
+    pkgs.map(p=>'<div class="pkg"><div><div>'+p[0]+' <span class="muted">'+p[1]+'</span></div>'+
+      '<div class="meta">'+p[2]+' · '+p[3]+'</div></div>'+
+      '<button class="btn" data-n="'+p[0]+'">install</button></div>').join('');
+  body.querySelectorAll('.btn').forEach(b=>b.addEventListener('click',()=>
+    toast('<b>thupkg</b> '+b.dataset.n+': design preview only — no install backend exists yet.')));
+}
+
+function renderEditor(body){
+  body.innerHTML='<textarea class="editor" spellcheck="false">'
+    +'# THUOS notes (scratch)\n\n'
+    +'THUOS is a from-scratch OS built in stages:\n'
+    +'  0.2  Boot Seed      — kernel, console, interrupts, timer, shell  [now]\n'
+    +'  0.3  Memory         — Multiboot map, page allocator, kernel heap\n'
+    +'  0.4  Filesystem     — initrd + VFS + ls/cat/pwd\n'
+    +'  0.5  Userspace      — ELF loader, ring 3, syscalls, init\n'
+    +'  0.6  Graphics       — framebuffer, fonts, mouse cursor\n'
+    +'  0.7  THU Desktop    — window manager inside the kernel\n\n'
+    +'Principle: local-first, privacy-first, honest engineering.\n'
+    +'(This editor is part of the concept preview — type freely.)\n</textarea>';
+}
+
+function renderAbout(body){
+  body.innerHTML='<div class="about">'
+    +'<div class="about-logo">TH</div>'
+    +'<h2>THUOS <span class="muted" style="font-size:15px">0.3.0</span></h2>'
+    +'<p>A from-scratch personal operating system: a real bootable kernel today, a calm local-first desktop tomorrow. Built with honest engineering and verified builds.</p>'
+    +'<div class="kv">'
+    +'<b>Kernel</b><span>THU Kernel · x86 (i386, 32-bit)</span>'
+    +'<b>Codename</b><span>Memory Foundation</span>'
+    +'<b>Boot</b><span>Multiboot 1 (GRUB-compatible)</span>'
+    +'<b>Verified</b><span class="ok">build + link + multiboot header ✓</span>'
+    +'<b>Not yet</b><span class="muted">QEMU boot (no emulator in build env)</span>'
+    +'<b>Desktop</b><span>THU Desktop — concept preview</span>'
+    +'</div>'
+    +'<div style="margin-top:14px"><span class="tag ok">Kernel foundation</span>'
+    +'<span class="tag ok">Memory manager</span><span class="tag plan">Paging</span><span class="tag plan">Filesystem</span>'
+    +'<span class="tag plan">GUI</span></div></div>';
+}
+
+function renderKStatus(body){
+  body.innerHTML=
+    '<h4 class="sec">Kernel status — honesty panel</h4>'
+    +'<div style="border:1px solid var(--line);border-radius:12px;padding:12px 13px;'
+    +'background:rgba(255,209,102,.09);font-size:13px;line-height:1.55">'
+    +'<b class="warn">Notice:</b> Preview UI is web-based; kernel boot not verified '
+    +'here because QEMU is unavailable.</div>'
+    +'<div class="kv" style="margin-top:14px">'
+    +'<b>Kernel</b><span>THU Kernel 0.3.0 &quot;Memory Foundation&quot;</span>'
+    +'<b>Build</b><span class="ok">compiles + links to Multiboot ELF ✓</span>'
+    +'<b>Boot</b><span class="warn">not run here (no qemu-system-i386)</span>'
+    +'<b>To boot</b><span>qemu-system-i386 -kernel build/kernel.elf</span>'
+    +'</div>'
+    +'<h4 class="sec" style="margin-top:14px">Subsystems</h4>'
+    +'<span class="tag ok">boot</span><span class="tag ok">VGA</span><span class="tag ok">serial</span>'
+    +'<span class="tag ok">GDT/IDT</span><span class="tag ok">exceptions</span><span class="tag ok">PIC/IRQ</span>'
+    +'<span class="tag ok">PIT</span><span class="tag ok">keyboard</span><span class="tag ok">shell</span>'
+    +'<span class="tag ok">memory</span><span class="tag plan">paging</span><span class="tag plan">filesystem</span>'
+    +'<span class="tag plan">userspace</span><span class="tag plan">GUI</span>';
+}
+
+function renderBuild(body){
+  const rows=[
+    ['ELF class','32-bit Intel 80386',true],
+    ['Link','static / freestanding (-nostdlib -no-pie)',true],
+    ['Multiboot header','found at file offset 4096',true],
+    ['Multiboot magic','0x1BADB002',true],
+    ['Checksum','magic+flags+checksum = 0 (mod 2^32)',true],
+    ['Symbol _start','present',true],
+    ['Symbol kernel_main','present',true],
+    ['Symbol isr_handler','present',true],
+    ['Symbol irq_handler','present',true],
+    ['Symbol shell_run','present',true],
+    ['Symbol pmm_init / pmm_alloc_frame','present',true],
+    ['Allocator unit test','make test — passed',true],
+    ['QEMU boot','not verified here (no emulator)',false],
+    ['Bootable ISO','not built here (no grub-mkrescue)',false],
+  ];
+  body.innerHTML='<h4 class="sec">make verify — real results</h4>'
+    +'<div class="muted" style="font-size:12px;margin-bottom:10px">Source of truth: '
+    +'BUILD_VERIFICATION.txt (regenerate with <span class="acc">make verify</span>).</div>'
+    +rows.map(r=>'<div class="statline"><span>'+r[0]+'</span>'
+      +'<span class="'+(r[2]?'ok':'warn')+'">'+(r[2]?'✓ ':'— ')+r[1]+'</span></div>').join('')
+    +'<div style="margin-top:12px;font-size:12px" class="muted">16 checks passed, 0 failed in the '
+    +'recorded run. These are structural checks (build + format), not a boot.</div>';
+}
+
+/* ======================= terminal ======================= */
+function renderTerminal(body){
+  body.style.padding='0';
+  body.innerHTML='<div class="term"><div class="term-out" id="to"></div>'+
+    '<div class="term-in"><span class="term-prompt">thuos&gt;</span>'+
+    '<input id="ti" autocomplete="off" spellcheck="false" autofocus></div></div>';
+  const out=body.querySelector('#to'), inp=body.querySelector('#ti');
+  const hist=[]; let hp=-1;
+  const w=(html,cls)=>{const d=document.createElement('div');d.className='term-line'+(cls?' '+cls:'');d.innerHTML=html;out.appendChild(d);out.scrollTop=out.scrollHeight;};
+
+  const banner=()=>{
+    w('  ######  ##  ##  ##  ##   ####    #####','acc');
+    w('    ##    ######  ##  ##  ##  ##   ####','acc');
+    w('    ##    ##  ##   ####    ####   #####','acc');
+    w('THUOS 0.3.0 "Memory Foundation" — THU Kernel · x86 (i386, 32-bit)','muted');
+  };
+  banner();
+  w('THU Terminal — a browser simulation of the THUOS kernel shell.','muted');
+  w("Type <span class='acc'>help</span> for commands. (The real shell lives in kernel/shell/shell.c)",'muted');
+  w('');
+
+  const cmds={
+    help(){return [
+      'THUOS shell commands (mirrors the real kernel shell):',
+      "  <span class='acc'>help</span>     show this help          <span class='acc'>about</span>    about THUOS",
+      "  <span class='acc'>version</span>  kernel version          <span class='acc'>status</span>   subsystem status",
+      "  <span class='acc'>sysinfo</span>  system summary          <span class='acc'>uptime</span>   demo uptime",
+      "  <span class='acc'>ls</span>       list THUOS tree         <span class='acc'>cat F</span>    show a file note",
+      "  <span class='acc'>thupkg</span>   package design preview   <span class='acc'>roadmap</span>  release roadmap",
+      "  <span class='acc'>neofetch</span> system art              <span class='acc'>echo X</span>   print text",
+      "  <span class='acc'>clear</span>    clear screen            <span class='acc'>banner</span>   THUOS banner",
+      "  <span class='acc'>mem</span>      memory summary          <span class='acc'>memmap</span>   multiboot memory map",
+      "  <span class='acc'>pages</span>    frame statistics        <span class='acc'>allocpage</span> alloc a 4 KiB frame",
+      "  <span class='acc'>panic</span>    simulated kernel panic   <span class='acc'>reboot</span>   simulated reboot",
+      "  <span class='acc'>halt</span>     simulated halt",
+    ];},
+    about(){return['THUOS — a from-scratch personal operating system.',
+      'Kernel : THU Kernel','Goal   : local-first, privacy-first, honest engineering.',
+      'Built incrementally from a bootable kernel toward THU Desktop.'];},
+    version(){return['THU Kernel 0.3.0 "Memory Foundation"',
+      'Milestone 0.3 — Memory Foundation (physical memory manager)'];},
+    status(){return['THUOS subsystem status (honest):',
+      "  [<span class='ok'>done</span>]  Multiboot boot, VGA console, serial COM1",
+      "  [<span class='ok'>done</span>]  GDT, IDT, CPU exceptions 0-31",
+      "  [<span class='ok'>done</span>]  PIC remap, PIT timer, keyboard IRQ, shell",
+      "  [<span class='ok'>done</span>]  Panic / assert system",
+      "  [<span class='ok'>done</span>]  Physical memory manager (4 KiB frames)",
+      "  [<span class='warn'>plan</span>] Paging + kernel heap (designed, not built)",
+      "  [<span class='muted'>plan</span>]  VFS + initrd (0.4), userspace (0.5), GUI (0.6+)"];},
+    sysinfo(){return['THUOS 0.3.0 "Memory Foundation"','Arch    : x86 (i386, 32-bit)',
+      'Kernel  : THU Kernel','Timer   : PIT @ 100 Hz','Memory  : PMM, 4 KiB frames',
+      'Uptime  : '+uptimeStr()+' (demo)','Boot    : Multiboot 1 ELF (verified)'];},
+    uptime(){return['Demo uptime: '+uptimeStr()+'  (browser preview session)'];},
+    mem(){return['Memory summary (preview values):',
+      '  usable : ~130048 KiB  (32512 frames)','  free   : 32194 frames',
+      '  used   : 318 frames (reserved + allocated)',
+      'Physical memory manager active (4 KiB frames).'];},
+    memmap(){return['Multiboot memory map (base / length / type) — preview:',
+      '  0x00000000  0x0009fc00  available','  0x0009fc00  0x00000400  reserved',
+      '  0x000f0000  0x00010000  reserved','  0x00100000  0x07ee0000  available'];},
+    pages(){return['Physical memory (4 KiB frames):',
+      '  usable RAM : ~130048 KiB (32512 frames)',
+      '  reserved   : 318 frames (low 1 MiB + kernel + boot structs)',
+      '  free       : 32194 frames','  used       : 318 frames (reserved + allocated)'];},
+    allocpage(){return['Allocated frame at physical 0x0012a000 (free now: 32193 frames)',
+      'Free it with: freepage 0x0012a000','(preview simulation of pmm_alloc_frame)'];},
+    panic(){
+      w("<span style='color:#ff6b6b;font-weight:700'>*** THUOS KERNEL PANIC (simulated) ***</span>");
+      w("panic: user-requested panic test",'warn');
+      w("at kernel/shell/shell.c — preview simulation",'muted');
+      w("In the real kernel this disables interrupts and halts the CPU.",'muted');
+      return null;
+    },
+    reboot(){return['Rebooting THUOS... (preview simulation — the real kernel pulses the 8042 reset line)'];},
+    halt(){return['System halted. It is now safe to close the emulator. (preview simulation)'];},
+    ls(){return['kernel/   docs/   preview/   scripts/   Makefile   linker.ld   README.md',
+      'kernel/: arch/  boot/  core/  drivers/  lib/  shell/  include/'];},
+    cat(a){const f={'readme':'THUOS — from-scratch OS. See README.md for the full picture.',
+      'roadmap':'0.2 Boot Seed → 0.3 Memory → 0.4 FS → 0.5 Userspace → 0.6 Graphics → 0.7 THU Desktop',
+      'linker.ld':'Kernel loads at 1 MiB; .multiboot placed first so GRUB can find the header.'};
+      if(!a) return ["usage: cat <readme|roadmap|linker.ld>"];
+      return [f[a.toLowerCase()]||('cat: '+a+': no such file in this preview')];},
+    thupkg(a){if((a||'').trim()==='list')return['thupkg — known packages (design preview):',
+      '  thu-coreutils  0.2.0  [designed]','  thu-terminal   0.2.0  [designed]',
+      '  thu-files      0.1.0  [planned]','  thu-settings   0.1.0  [planned]',
+      'Note: design preview only; no real install backend yet.'];
+      return['thupkg <list|info|install> — design preview, no backend yet.'];},
+    roadmap(){return['THUOS release roadmap:',
+      "  0.2  Boot Seed     kernel, console, interrupts, timer, shell  <span class='ok'>(now)</span>",
+      '  0.3  Memory        Multiboot map, page allocator, kernel heap',
+      '  0.4  Filesystem    initrd + VFS + ls/cat/pwd',
+      '  0.5  Userspace     ELF loader, ring 3, syscalls, init',
+      '  0.6  Graphics      framebuffer, fonts, mouse',
+      '  0.7  THU Desktop   in-kernel window manager',
+      '  1.0  Dev Preview   bootable ISO + docs'];},
+    neofetch(){return[
+      "  <span class='acc'>TH</span>   THUOS 0.3.0 \"Memory Foundation\"",
+      "  <span class='acc'>██</span>   ---------------------",
+      "  <span class='acc'>██</span>   kernel : THU Kernel (i386)",
+      "       boot   : Multiboot 1 ELF ✓",
+      "       timer  : PIT 100 Hz",
+      "       memory : PMM, 4 KiB frames",
+      "       shell  : thuos>  (21 commands)",
+      "       gui    : THU Desktop (concept)"];},
+    banner(){return["  ######  ##  ##  ##  ##   ####    #####",
+      "    ##    ######  ##  ##  ##  ##   ####",
+      "    ##    ##  ##   ####    ####   #####  THUOS"];},
+    echo(a){return[a||''];},
+    whoami(){return['thu']},
+    date(){return[new Date().toString()]},
+    clear(){out.innerHTML='';return null;},
+  };
+
+  function run(raw){
+    const line=raw.trim(); if(!line){w("<span class='term-prompt'>thuos&gt;</span> ");return;}
+    w("<span class='term-prompt'>thuos&gt;</span> "+esc(line));
+    const sp=line.indexOf(' ');
+    const cmd=(sp<0?line:line.slice(0,sp)).toLowerCase();
+    const arg=sp<0?'':line.slice(sp+1);
+    if(cmd in cmds){const r=cmds[cmd](arg); if(r) r.forEach(x=>w(x));}
+    else w("Unknown command: "+esc(cmd)+" (try 'help')",'warn');
+  }
+  function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+  inp.addEventListener('keydown',(e)=>{
+    if(e.key==='Enter'){const v=inp.value; if(v.trim())hist.push(v); hp=hist.length; run(v); inp.value='';}
+    else if(e.key==='ArrowUp'){if(hp>0){hp--;inp.value=hist[hp]||'';}e.preventDefault();}
+    else if(e.key==='ArrowDown'){if(hp<hist.length-1){hp++;inp.value=hist[hp]||'';}else{hp=hist.length;inp.value='';}e.preventDefault();}
+  });
+  body.addEventListener('mousedown',()=>setTimeout(()=>inp.focus(),0));
+}
+</script>
+</body>
+</html>
