@@ -19,5 +19,6 @@ void     vmm_enable(void);           /* load CR3 + set CR0.PG (identity map) */
 int      vmm_is_enabled(void);       /* 1 once paging is on */
 int      vmm_map_lfb(uint32_t phys, uint32_t bytes); /* identity-map a high MMIO region (e.g. the framebuffer) */
 uint32_t vmm_lfb_capacity(void);     /* max bytes vmm_map_lfb can cover */
+int      vmm_map_mmio(uint32_t phys, uint32_t bytes); /* identity-map device MMIO (xHCI BAR), cache-disabled */
 
 #endif /* THUOS_VMM_H */

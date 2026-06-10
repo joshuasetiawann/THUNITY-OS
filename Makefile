@@ -13,7 +13,7 @@ CC      := gcc
 LD      := gcc
 
 INCLUDES := -Ikernel/lib -Ikernel/arch/x86 -Ikernel/core \
-            -Ikernel/drivers -Ikernel/shell -Ikernel/mm -Ikernel/sched -Ikernel/fs \
+            -Ikernel/drivers -Ikernel/drivers/usb -Ikernel/shell -Ikernel/mm -Ikernel/sched -Ikernel/fs \
             -Ikernel/gui -Ikernel/include -Ikernel/include/thuos
 
 # Freestanding 32-bit kernel. We provide our own mem*/str* so we disable the
