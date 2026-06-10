@@ -13,4 +13,9 @@ void xhci_init(void);
 /* 1 once a controller has been found and started. */
 int  xhci_present(void);
 
+/* Drain the event ring: deliver HID keyboard/mouse reports into the keyboard and
+ * mouse input buffers, and re-arm the interrupt transfers. Called from the
+ * desktop/shell input loops (we poll; USB interrupts are not wired to the IDT). */
+void usb_poll(void);
+
 #endif /* THUOS_XHCI_H */

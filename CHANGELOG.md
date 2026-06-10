@@ -3,6 +3,47 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.19.0] — "USB" — 2026-06-10
+
+**USB keyboard and mouse — input on real laptops, which have no PS/2.** THUOS
+gains an **xHCI** host-controller driver (the USB 1/2/3 controller modern
+Intel/AMD machines expose; legacy UHCI/OHCI/EHCI are gone there) and a
+**USB-HID boot-protocol** driver, so a USB keyboard and mouse drive the shell
+and the desktop cursor — alongside the existing PS/2 path.
+
+- **xHCI bring-up** — PCI discovery, BIOS→OS handoff (USBLEGSUP), controller
+  reset, command + event rings, DCBAA + scratchpad, run, and a No-Op command to
+  prove the data path.
+- **Device enumeration** — per connected port: port reset, Enable Slot, Address
+  Device, read device + configuration descriptors, Set Configuration.
+- **HID** — Set Protocol (boot), configure the interrupt-IN endpoint, then poll
+  it: 8-byte keyboard reports become characters (`keyboard_inject`, with a HID
+  usage→ASCII map + shift) and mouse reports become cursor movement + buttons
+  (`mouse_inject`). Polled from the desktop loop (`usb_poll`); USB interrupts are
+  not wired to the IDT yet.
+- **Memory safety** — a dedicated cache-disabled MMIO window (`vmm_map_mmio`)
+  for the controller BAR, independent of the framebuffer window.
+
+### Verified
+- QEMU `-device qemu-xhci -device usb-kbd -device usb-mouse`: both devices
+  enumerate (627:1), keyboard typing reaches the `thuos>` shell, and mouse
+  movement/buttons move the cursor.
+- The CI path (`qemu -kernel`, no controller) prints "no xHCI" and stays green;
+  `make test` and the boottest smoke test pass.
+
+### Added / Changed — kernel
+- `kernel/drivers/usb/xhci.{c,h}` — the xHCI + USB-HID driver, and `usb_poll()`.
+- `kernel/drivers/keyboard.{c,h}` — `keyboard_inject()`.
+- `kernel/drivers/mouse.{c,h}` — `mouse_inject()`.
+- `kernel/mm/vmm.{c,h}` — `vmm_map_mmio()` (cache-disabled device MMIO window).
+- `kernel/gui/desktop.c`, `kernel/core/kernel.c` — call `usb_poll()` / `xhci_init()`.
+
+### Honest limits
+- Boot keyboards/mice only (HID boot protocol). No hubs, no USB mass storage, no
+  full report-descriptor parsing yet. USB is **polled** (~100 Hz from the
+  desktop loop), not interrupt-driven. Booting a UEFI laptop still needs a UEFI
+  GRUB (the remaining moat); the USB input itself is now in place.
+
 ## [0.18.0] — "Portable" — 2026-06-10
 
 **Graphics that work on real Intel/AMD hardware, not just QEMU.** Until now the

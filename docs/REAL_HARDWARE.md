@@ -29,11 +29,13 @@ and THUOS renders the desktop through it.
 |------|-------------|----------------------------|
 | **Boot / firmware** | Legacy **BIOS / CSM** via GRUB (Multiboot 1) | Most laptops are **UEFI-only** → need **grub-efi** (a UEFI GRUB build) |
 | **Graphics** | ✅ bootloader framebuffer (BIOS VBE **or** UEFI GOP via GRUB-EFI), 32bpp | Exotic pixel layouts not yet handled; native GPU drivers out of scope |
-| **Input** | **PS/2** keyboard + mouse (desktops, or laptops whose EC emulates PS/2) | Most laptops are **USB / I²C-HID** → need a **USB-HID** stack (xHCI + HID) |
+| **Input** | **PS/2** keyboard + mouse, **and USB-HID** keyboard + mouse via an **xHCI** controller (0.19+) | I²C-HID touchpads (some laptops) still need their own driver |
 
-So the machine most likely to boot THUOS **today** is a **desktop/PC with a
-legacy or CSM-enabled BIOS and PS/2 (or PS/2-emulated) keyboard**. A modern
-UEFI laptop needs the two future milestones above (grub-efi boot + USB-HID).
+USB input (0.19) closes most of the input moat: xHCI is the controller modern
+laptops use, and the HID boot keyboard/mouse now drive the shell and cursor. So
+the remaining gap for a **modern UEFI laptop** is mainly the **firmware/boot**
+row — it needs a UEFI-capable GRUB (grub-efi). A **desktop/PC with a legacy or
+CSM-enabled BIOS** should work today (PS/2 or USB input, framebuffer graphics).
 
 ## Making a bootable USB (BIOS / CSM machines)
 
@@ -66,7 +68,9 @@ usable (wrong bpp/layout) and the kernel fell back; send the serial log.
   the above is verified in QEMU (incl. the GRUB path) and reasoned from the
   Multiboot/GOP specs.
 - No **UEFI** boot path yet (needs grub-efi or a UEFI stub).
-- No **USB** stack yet → USB-only keyboards/touchpads won't work.
+- **USB-HID** boot keyboard/mouse work via xHCI (0.19); no USB hubs, mass
+  storage, or full HID report-descriptor parsing yet, and USB is polled (~100 Hz)
+  rather than interrupt-driven.
 - No storage/network drivers; the desktop runs entirely from RAM.
 
 See also [`THUOS_REALITY_CHECK.md`](THUOS_REALITY_CHECK.md).

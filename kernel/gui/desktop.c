@@ -12,6 +12,7 @@
 #include "shell.h"
 #include "apps.h"
 #include "kprintf.h"
+#include "xhci.h"
 #include "pit.h"
 
 #define NAPP 6
@@ -236,6 +237,7 @@ void desktop_run(void) {
     uint32_t last_sec = 0xffffffffu;
     for (;;) {
         __asm__ volatile("hlt");
+        usb_poll();                 /* deliver USB HID keyboard/mouse reports */
         int evt = 0;
         uint32_t s = pit_seconds();
         if (s != last_sec) { last_sec = s; if (!evt) { cursor_hide(); evt = 1; } draw_clock(); }
