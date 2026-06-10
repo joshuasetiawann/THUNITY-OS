@@ -1,15 +1,28 @@
-# THUOS — Version Archive (`master`)
+<div align="center">
 
-A frozen archive of **every released version of THUOS**, one **top-level folder
-per release** (`THUOS 0.2.0` … `THUOS 0.19.0`) — each a faithful snapshot of the
-source tree at that version, taken from git history.
+# THUOS — Version Archive
 
-- The latest, live, **buildable** kernel is on the **[`main`](../../tree/main)**
-  branch — build and run from there.
-- This `master` branch only collects the historical snapshots for browsing; it
-  is not built by CI.
-- The **Date** column is each release's date (matching `CHANGELOG.md`); new
+**A frozen, dated archive of every released version of THUOS** — one folder per release.
+
+[![latest](https://img.shields.io/badge/latest-0.19.0%20%22USB%22-6aa9ff?style=flat-square)](THUOS%200.19.0)
+[![releases](https://img.shields.io/badge/releases-19%20·%200.2.0%20→%200.19.0-2bb5a0?style=flat-square)](#release-history)
+[![live code](https://img.shields.io/badge/live%20code-main%20branch-3d8bdc?style=flat-square)](../../tree/main)
+
+<img src="preview/screenshots/desktop.png" width="760" alt="THUOS 0.19.0 desktop in QEMU"><br>
+<sub>The latest release — <b>0.19.0 "USB"</b> — running in QEMU (real screenshot).</sub>
+
+</div>
+
+This `master` branch is a **version museum**: one top-level folder per release
+(`THUOS 0.2.0` … `THUOS 0.19.0`), each a faithful snapshot of the source tree at
+that version, taken from git history.
+
+- The latest, live, **buildable** kernel is on **[`main`](../../tree/main)** — build and run from there.
+- This branch is for **browsing history**; it is not built by CI.
+- The **Date** column is each release's date (matching its `CHANGELOG.md`). New
   releases are appended here with their date as they ship.
+
+## Release history
 
 | Version | Codename | Date | What it added |
 |---------|----------|------|---------------|
@@ -36,3 +49,22 @@ source tree at that version, taken from git history.
 > There is no `v0.1` source — `0.2.0 "Boot Seed"` is the first bootable kernel.
 > Full per-release notes live in `CHANGELOG.md` inside any snapshot
 > (e.g. `THUOS 0.19.0/CHANGELOG.md`).
+
+## The latest release in pictures
+
+Real screenshots of `THUOS 0.19.0` running in QEMU:
+
+<table>
+<tr>
+<td align="center" width="50%"><img src="preview/screenshots/terminal.png" width="380" alt="Terminal"><br><b>Terminal</b> — the <code>thuos&gt;</code> shell</td>
+<td align="center" width="50%"><img src="preview/screenshots/settings.png" width="380" alt="Settings"><br><b>Settings</b> — live themes</td>
+</tr>
+<tr>
+<td align="center"><img src="preview/screenshots/files.png" width="380" alt="Files"><br><b>Files</b> — in-RAM filesystem</td>
+<td align="center"><img src="preview/screenshots/calculator.png" width="380" alt="Calculator"><br><b>Calculator</b></td>
+</tr>
+<tr>
+<td align="center"><img src="preview/screenshots/notes.png" width="380" alt="Notes"><br><b>Notes</b> — typed via the USB keyboard</td>
+<td align="center"><img src="preview/screenshots/paint.png" width="380" alt="Paint"><br><b>Paint</b> — drawn with the USB mouse</td>
+</tr>
+</table>
