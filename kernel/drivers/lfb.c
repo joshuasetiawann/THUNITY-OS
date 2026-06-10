@@ -3,6 +3,8 @@
 #include "io.h"
 #include "vmm.h"
 #include "gfx.h"   /* gfx_glyph(): the 8x16 VGA font extracted at boot */
+#include "kprintf.h"
+#include "multiboot.h"
 
 /* ---- PCI: find the display controller's linear framebuffer (BAR0) ---- */
 static uint32_t pci_cfg_read(uint8_t bus, uint8_t slot, uint8_t func, uint8_t off) {
@@ -57,6 +59,50 @@ int lfb_init(int w, int h) {
     active = 1;
     lfb_clear(0x000000);
     return 1;
+}
+
+/* ---- bootloader-provided framebuffer (the portable, real-hardware path) ----
+ * GRUB on a BIOS machine sets a linear VBE mode; GRUB-EFI hands through the UEFI
+ * GOP framebuffer. Either way it reports addr/pitch/width/height/bpp in the
+ * Multiboot info, and we draw straight into it — no Bochs VBE device needed.
+ * The crucial detail real GPUs need: `pitch` (bytes per scanline) is usually
+ * larger than width*4, so the row stride must come from the loader, not width.
+ * Only 32bpp direct-colour is supported here (the common GOP/VBE format whose
+ * little-endian byte order matches THUOS's 0x00RRGGBB pixels). */
+static int lfb_init_fb(uint32_t addr, uint32_t pitch_bytes, uint32_t w, uint32_t h, uint32_t bpp) {
+    if (!addr || bpp != 32 || w == 0 || h == 0 || pitch_bytes < w * 4u) return 0;
+
+    uint32_t cap = vmm_lfb_capacity();
+    uint32_t need = pitch_bytes * h + 0x1000u;
+    if (need > cap) h = (cap - 0x1000u) / pitch_bytes;   /* clamp: never draw past the map */
+    if (h == 0) return 0;
+
+    if (!vmm_map_lfb(addr, pitch_bytes * h + 0x1000u)) return 0;
+
+    fbp = (volatile uint32_t *)(uintptr_t)addr;
+    W = (int)w; H = (int)h; pitch_px = (int)(pitch_bytes / 4u);
+    active = 1;
+    lfb_clear(0x000000);
+    return 1;
+}
+
+/* Choose the display: prefer the framebuffer the bootloader already set up
+ * (works on real Intel/AMD HW), and fall back to the Bochs/QEMU VBE device when
+ * there is no Multiboot framebuffer (e.g. `qemu -kernel`, which CI uses). */
+int lfb_init_auto(uint32_t mb_info_addr) {
+    const multiboot_info_t *mbi = (const multiboot_info_t *)(uintptr_t)mb_info_addr;
+    if (mb_info_addr && (mbi->flags & MB_FLAG_FB) &&
+        mbi->framebuffer_type == MB_FB_TYPE_RGB) {
+        kprintf("  [lfb] bootloader framebuffer %ux%u x%ubpp pitch=%u @0x%x type=%u\n",
+                mbi->framebuffer_width, mbi->framebuffer_height, mbi->framebuffer_bpp,
+                mbi->framebuffer_pitch, (uint32_t)mbi->framebuffer_addr, mbi->framebuffer_type);
+        if (lfb_init_fb((uint32_t)mbi->framebuffer_addr, mbi->framebuffer_pitch,
+                        mbi->framebuffer_width, mbi->framebuffer_height, mbi->framebuffer_bpp))
+            return 1;
+        kprintf("  [lfb] that framebuffer is unusable here (need 32bpp RGB); trying VBE\n");
+    }
+    kprintf("  [lfb] no Multiboot framebuffer; using Bochs/QEMU VBE (1024x768x32)\n");
+    return lfb_init(1024, 768);
 }
 
 int lfb_active(void) { return active; }
