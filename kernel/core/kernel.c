@@ -25,6 +25,7 @@
 #include "gfx.h"
 #include "lfb.h"
 #include "xhci.h"
+#include "ai.h"
 #include "desktop.h"
 #include "shell.h"
 
@@ -109,6 +110,9 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
     ok_line("User mode (ring 3): entered CPL 3 and returned via int 0x80");
 
     xhci_init();               /* USB: bring up the xHCI controller (real-HW USB path) */
+
+    ai_init();                 /* AI-native layer: registry + local-only policy (no inference) */
+    ok_line("AI-native layer: service/model/task/policy/audit core (host-tested)");
 
     vga_font_extract();        /* copy the VGA font while still in text mode */
     ok_line("THU Desktop: high-res framebuffer (1024x768x32 truecolor)");

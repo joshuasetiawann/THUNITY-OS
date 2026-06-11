@@ -12,10 +12,28 @@ void k_serial_mirror(bool enabled) {
     serial_mirror = enabled;
 }
 
-void kputc(char c) {
-    if (gcon_active()) gcon_putc(c);   /* graphical desktop console */
-    else               vga_putc(c);    /* text-mode VGA            */
+/* Kernel log ring buffer — every console char is captured here so `dmesg`/`logs`
+ * can replay the boot log + recent output (a real general-OS feature). */
+#define KLOG_CAP 8192
+static char     klog_buf[KLOG_CAP];
+static uint32_t klog_w = 0;             /* total chars ever written */
+
+static void raw_putc(char c) {          /* sink WITHOUT capture (used by the dump) */
+    if (gcon_active()) gcon_putc(c);    /* graphical desktop console */
+    else               vga_putc(c);     /* text-mode VGA            */
     if (serial_mirror) serial_write_char(c);
+}
+
+void kputc(char c) {
+    raw_putc(c);
+    klog_buf[klog_w % KLOG_CAP] = c;    /* capture into the ring */
+    klog_w++;
+}
+
+void klog_dump(void) {                  /* replay the captured log (newest KLOG_CAP bytes) */
+    uint32_t total = klog_w;
+    uint32_t start = total > KLOG_CAP ? total - KLOG_CAP : 0;
+    for (uint32_t i = start; i < total; i++) raw_putc(klog_buf[i % KLOG_CAP]);
 }
 
 void kputs(const char *s) {

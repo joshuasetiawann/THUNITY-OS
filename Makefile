@@ -14,7 +14,7 @@ LD      := gcc
 
 INCLUDES := -Ikernel/lib -Ikernel/arch/x86 -Ikernel/core \
             -Ikernel/drivers -Ikernel/drivers/usb -Ikernel/shell -Ikernel/mm -Ikernel/sched -Ikernel/fs \
-            -Ikernel/gui -Ikernel/include -Ikernel/include/thuos
+            -Ikernel/ai -Ikernel/os -Ikernel/gui -Ikernel/include -Ikernel/include/thuos
 
 # Freestanding 32-bit kernel. We provide our own mem*/str* so we disable the
 # builtin recognition and loop-idiom rewrites that would otherwise recurse.
@@ -39,7 +39,7 @@ SRCS_S  := $(shell find kernel -name '*.S' | sort)
 OBJS    := $(patsubst kernel/%,$(OBJDIR)/%,$(SRCS_C:.c=.o)) \
            $(patsubst kernel/%,$(OBJDIR)/%,$(SRCS_S:.S=.o))
 
-.PHONY: all kernel verify status test boottest iso run run-serial demo clean
+.PHONY: all kernel verify status test stress deep-verify scan package export boottest iso run run-serial demo clean
 
 all: kernel
 
@@ -84,6 +84,10 @@ test:
 	@./$(BUILD)/test_syscall
 	@gcc -O2 -std=gnu11 -Wall -Wextra -o $(BUILD)/test_usermode tests/test_usermode.c
 	@./$(BUILD)/test_usermode
+	@gcc -O2 -std=gnu11 -Wall -Wextra -o $(BUILD)/test_ai tests/test_ai.c
+	@./$(BUILD)/test_ai
+	@gcc -O2 -std=gnu11 -Wall -Wextra -o $(BUILD)/test_features tests/test_features.c
+	@./$(BUILD)/test_features
 
 iso: kernel
 	@if command -v grub-mkrescue >/dev/null 2>&1 && command -v xorriso >/dev/null 2>&1; then \
@@ -120,6 +124,43 @@ boottest: kernel
 demo:
 	@echo "==> THU Desktop demo: http://localhost:8080/preview/thuos_os.html"
 	@python3 -m http.server 8080
+
+# Stress: re-run the already-built host test binaries many times to shake out
+# any nondeterminism in the pure cores. Non-destructive (no Docker, no volumes).
+stress: test
+	@echo "==> stress: re-running host test binaries 50x"
+	@for i in $$(seq 1 50); do \
+	  for t in test_pmm test_kheap test_vmm test_sched test_task test_fs test_syscall test_usermode test_ai test_features; do \
+	    ./$(BUILD)/$$t >/dev/null 2>&1 || { echo "stress FAILED: $$t (iteration $$i)"; exit 1; }; \
+	  done; \
+	done
+	@echo "==> stress OK (50 iterations x 10 host tests)"
+
+# Overclaim / fake-claim scan: fail if forbidden marketing claims appear as
+# positive statements (honesty doctrine). Negated/qualified mentions are allowed.
+scan:
+	@bash scripts/check_overclaims.sh
+
+# Deep verify: build + multiboot verify + host tests + overclaim scan + shell
+# script syntax. The honest "everything we can check here" gate.
+deep-verify: kernel verify test scan
+	@bash -n scripts/*.sh && echo "==> shell scripts: syntax OK"
+	@echo "==> deep-verify OK (build + verify + host tests + scan + shell syntax)"
+
+# Package: clean source+docs+verification release archive (existing script).
+package: verify
+	@bash scripts/package.sh
+
+# Export: collect the buildable artifacts + verification into build/export/ with
+# a manifest, for handing the milestone off. Never touches Docker/volumes.
+export: kernel verify
+	@mkdir -p $(BUILD)/export
+	@cp $(KERNEL) BUILD_VERIFICATION.txt CHANGELOG.md $(BUILD)/export/ 2>/dev/null || true
+	@cp -r preview/screenshots $(BUILD)/export/screenshots 2>/dev/null || true
+	@{ echo "THUOS export manifest"; date; echo; \
+	   echo "kernel.elf:"; ls -l $(KERNEL); \
+	   echo; echo "contents:"; ls -1 $(BUILD)/export; } > $(BUILD)/export/MANIFEST.txt
+	@echo "==> export -> $(BUILD)/export/ (kernel.elf, verification, screenshots, manifest)"
 
 clean:
 	rm -rf $(BUILD)
