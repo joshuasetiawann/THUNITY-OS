@@ -3,6 +3,24 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.9.0] — "Cooperative Tasks" — 2026-06-06
+
+Real **multitasking**: several kernel tasks run concurrently, each on its own
+stack, handing off through the round-robin scheduler — combining the host-tested
+scheduler policy (0.6) with the boot-verified context switch (0.8). **Boot-verified.**
+
+### Added — kernel (multitasking)
+- `kernel/sched/coop.{c,h}` — `coop_yield()` asks `sched_pick_next` who runs next
+  and `thuos_context_switch`es to it; tasks loop, print, yield, then exit; once
+  none are runnable, control returns to the kernel main/shell context.
+- `kernel_main` runs the demo at boot (3 tasks, round-robin, to completion); shell
+  gains `tasks` to run it live.
+
+### Verification
+- `scripts/boottest.sh` now asserts the `all tasks finished` marker, so CI proves
+  the tasks actually ran via the scheduler, switched stacks, exited, and returned
+  to main — then the kernel still reaches `thuos>`. BOOT-VERIFIED in QEMU.
+
 ## [0.8.0] — "Context Switch" — 2026-06-06
 
 A real cooperative **context switch** — the primitive that makes processes

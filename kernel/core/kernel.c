@@ -18,6 +18,7 @@
 #include "vmm.h"
 #include "sched.h"
 #include "task.h"
+#include "coop.h"
 #include "shell.h"
 
 static void ok_line(const char *label) {
@@ -85,6 +86,9 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
 
     ctx_switch_demo();
     ok_line("Context switch OK (ran a task on its own stack, returned)");
+
+    coop_run_demo();
+    ok_line("Cooperative multitasking OK (3 tasks via scheduler + exited)");
 
     __asm__ volatile("sti");   /* interrupts on: timer + keyboard now live */
 
