@@ -109,9 +109,9 @@ static void cmd_status(void) {
     kprintf("  [done]    Physical memory manager (Milestone 0.3)\n");
     kprintf("  [done]    Kernel heap kmalloc/kfree (Milestone 0.4)\n");
     kprintf("  [done]    Paging ENABLED (0.7, CR0.PG, boot-verified QEMU)\n");
-    kprintf("  [done]    Round-robin scheduler policy core (0.6)\n");
-    kprintf("  [plan]    Context switch -> live processes (next)\n");
-    kprintf("  [plan]    Ring 3 + syscall, VFS, userspace\n");
+    kprintf("  [done]    Cooperative context switch (0.8, boot-verified)\n");
+    kprintf("  [plan]    Preemptive multitasking -> ring 3 + syscall\n");
+    kprintf("  [plan]    VFS + initrd, userspace, in-VM terminal\n");
 }
 
 static void cmd_sysinfo(void) {

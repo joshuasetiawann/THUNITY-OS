@@ -3,6 +3,27 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.8.0] — "Context Switch" — 2026-06-06
+
+A real cooperative **context switch** — the primitive that makes processes
+possible — running under the now-enabled paging, and **boot-verified in QEMU**.
+
+### Added — kernel (tasks)
+- `kernel/sched/context.S` — `thuos_context_switch(save_old_esp, new_esp)`:
+  saves callee-saved registers, swaps the stack, restores and returns into the
+  target context.
+- `kernel/sched/task.{c,h}` — `task_init` builds a fresh task's initial stack so
+  the first switch-in begins in `entry()` on its own stack. Pure setup,
+  host-tested.
+- `kernel_main` runs a context-switch self-test at boot: it switches into a task
+  on a separate 4 KiB stack, which prints and switches back. If the switch were
+  wrong the kernel would crash before the shell.
+
+### Verification
+- `tests/test_task.c` (+ `make test`, now 5 host suites) checks the initial
+  stack frame. `scripts/boottest.sh` asserts the `Context switch OK` marker, so
+  CI proves the switch works on real (emulated) hardware. BOOT-VERIFIED in QEMU.
+
 ## [0.7.0] — "Virtual Memory" — 2026-06-06
 
 Paging is now **actually enabled** — the kernel runs under virtual memory, and

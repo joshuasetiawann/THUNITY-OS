@@ -17,6 +17,7 @@
 #include "kheap.h"
 #include "vmm.h"
 #include "sched.h"
+#include "task.h"
 #include "shell.h"
 
 static void ok_line(const char *label) {
@@ -24,6 +25,25 @@ static void ok_line(const char *label) {
     kprintf("  [ OK ] ");
     vga_set_color(VGA_LIGHT_GREY, VGA_BLACK);
     kprintf("%s\n", label);
+}
+
+/* Cooperative context-switch self-test: switch into a task that runs on its own
+ * stack and immediately switches back. Proves real register/stack switching.
+ * Boot-verified in QEMU by CI: if the switch were wrong, the kernel would crash
+ * here and never reach the shell. */
+static ktask_t  ctx_task;
+static uint8_t  ctx_task_stack[4096] __attribute__((aligned(16)));
+static uint32_t ctx_main_esp;
+
+static void ctx_task_entry(void) {
+    kprintf("  [ctx] now running inside a task, on a separate stack\n");
+    thuos_context_switch(&ctx_task.esp, ctx_main_esp);   /* yield back to main */
+    for (;;) __asm__ volatile("hlt");                    /* not reached here   */
+}
+
+static void ctx_switch_demo(void) {
+    task_init(&ctx_task, ctx_task_stack, sizeof ctx_task_stack, ctx_task_entry);
+    thuos_context_switch(&ctx_main_esp, ctx_task.esp);   /* -> ctx_task_entry  */
 }
 
 void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
@@ -61,7 +81,10 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
     ok_line("Paging ENABLED (CR0.PG) - running under virtual memory");
 
     sched_kinit();
-    ok_line("Scheduler: round-robin policy core (context switch staged)");
+    ok_line("Scheduler: round-robin policy core");
+
+    ctx_switch_demo();
+    ok_line("Context switch OK (ran a task on its own stack, returned)");
 
     __asm__ volatile("sti");   /* interrupts on: timer + keyboard now live */
 
