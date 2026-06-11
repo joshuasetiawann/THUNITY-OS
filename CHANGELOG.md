@@ -3,6 +3,51 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.20.0] — "AI-Native" — 2026-06-11
+
+**AI-Native General OS Foundation** (founder milestone tag **0.6G**). THUOS starts
+modeling AI as a first-class OS concern — *honestly*. This adds **host-tested**
+in-kernel foundations and an `ai` shell namespace, but **no inference, no
+networking, no Docker/Python/Node/Ollama**: the bridge to a local Thunity AI /
+Ollama server is **design-only**.
+
+### Added — AI-native layer (host-tested + boot-verified)
+- `kernel/ai/ai_core.{c,h}` — pure, no-deps core: **service registry**, **model
+  registry**, **AI task state machine**, **permission policy**, **audit ring**.
+  Unit-tested in `tests/test_ai.c` (`make test`).
+- `kernel/ai/ai.{c,h}` — kernel instance + `ai status|models|tasks|policy|bridge`.
+  Default policy encodes the **local-only doctrine**: local-inference + file-read
+  ON; **net-bridge, file-write, tool-exec, and cloud OFF** until explicitly
+  enabled — nothing silently turned on. `ai bridge` runs the create→policy→audit
+  pipeline and then **denies/fails the task, sending nothing** (no TCP/IP).
+
+### Added — general-OS foundation
+- `kernel/os/feature_registry.{c,h}` + `osreport.c` — an **OS feature/status
+  registry** that tags every capability `implemented / host-tested / compile-only
+  / design-only / not-verified`. Surfaced by the new `features` command and used
+  as the one source of truth for docs/report. Tested in `tests/test_features.c`.
+- `dmesg`/`logs` — replay a new in-kernel **log ring** (`kprintf` capture).
+- `history` — recent shell commands.
+
+### Added — verification & honesty tooling
+- `scripts/check_overclaims.sh` + `make scan` — fails if forbidden capability
+  claims (e.g. running Thunity AI, a Docker/Python/Node/Ollama runtime, a working
+  network stack, a verified AI runtime) appear as positive (non-negated) statements.
+- `make stress` (re-run host tests 50×), `make deep-verify` (build + verify +
+  test + scan + shell syntax), `make export` (artifacts + manifest). `make
+  package` name refreshed.
+
+### Docs
+- `docs/39_AI_NATIVE_GENERAL_OS_FOUNDATION.md`, `40_THUNITY_AI_BRIDGE_STRATEGY.md`,
+  `41_GENERAL_OS_ROADMAP.md`, `42_DESKTOP_AND_APP_MODEL.md`,
+  `MILESTONE_0_6G_REPORT.md`, `43_MILESTONE_0_6G_PROOF_AUDIT.md`.
+
+### Explicitly NOT claimed
+- THUOS does **not** run Thunity AI, Docker, Python, Node, or Ollama; has **no**
+  TCP/IP networking and **no** AI inference. The desktop is real but has no movable
+  windows yet. Not verified on physical hardware. To run Thunity AI today, use the
+  separate Linux appliance (see doc 40).
+
 ## [0.19.0] — "USB" — 2026-06-10
 
 **USB keyboard and mouse — input on real laptops, which have no PS/2.** THUOS
