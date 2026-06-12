@@ -1,8 +1,8 @@
-/* THUOS — AI-native OS core (pure logic, no kernel/hardware dependency).
+/* THUOS - AI-native OS core (pure logic, no kernel/hardware dependency).
  *
  * This is the honest foundation of THUOS's AI-native design: an in-kernel model
  * of AI *services*, *models*, *tasks*, a *permission policy*, and an *audit log*.
- * It is policy/bookkeeping only — it does NOT perform inference, open sockets, or
+ * It is policy/bookkeeping only - it does NOT perform inference, open sockets, or
  * run any external program. THUOS has no TCP/IP stack or language runtime yet, so
  * the "bridge" to a local AI server (Thunity backend / Ollama) is DESIGN-ONLY:
  * this core records the request, applies the local-only policy, and audits the
@@ -27,11 +27,11 @@
 #define AI_MAX_TASKS     16
 #define AI_AUDIT_CAP     32
 
-/* How honest a thing is — mirrors the OS feature-registry status labels. */
+/* How honest a thing is - mirrors the OS feature-registry status labels. */
 typedef enum {
     AI_STAT_DESIGN_ONLY = 0,  /* designed, no code path that connects     */
     AI_STAT_CONFIGURED,       /* endpoint configured, not verified here   */
-    AI_STAT_REACHABLE,        /* verified reachable (needs networking — not in THUOS yet) */
+    AI_STAT_REACHABLE,        /* verified reachable (needs networking - not in THUOS yet) */
     AI_STAT_UNREACHABLE
 } ai_status_t;
 
@@ -45,7 +45,7 @@ typedef struct {
     int           used;
 } ai_service_t;
 
-typedef enum { AI_MODEL_DECLARED = 0, AI_MODEL_PRESENT } ai_model_state_t; /* PRESENT needs a runtime — not in THUOS yet */
+typedef enum { AI_MODEL_DECLARED = 0, AI_MODEL_PRESENT } ai_model_state_t; /* PRESENT needs a runtime - not in THUOS yet */
 typedef enum { AI_ROLE_CHAT = 0, AI_ROLE_CODE, AI_ROLE_EMBED, AI_ROLE_VISION } ai_role_t;
 
 typedef struct {
@@ -64,7 +64,7 @@ enum {
     AI_PERM_FILE_READ   = 1u << 2,
     AI_PERM_FILE_WRITE  = 1u << 3,
     AI_PERM_TOOL_EXEC   = 1u << 4,
-    AI_PERM_CLOUD       = 1u << 5    /* external/cloud providers — denied by doctrine */
+    AI_PERM_CLOUD       = 1u << 5    /* external/cloud providers - denied by doctrine */
 };
 
 typedef enum {
@@ -123,7 +123,7 @@ int  ai_model_count(const ai_world_t *w);
 int  ai_policy_allows(const ai_world_t *w, uint32_t perm);
 void ai_policy_set(ai_world_t *w, uint32_t perm, int allow);
 
-/* tasks (transition rules validated; pure — no policy/networking here) */
+/* tasks (transition rules validated; pure - no policy/networking here) */
 int  ai_task_create(ai_world_t *w, ai_task_kind_t kind, int service, const char *label);
 int  ai_task_set_state(ai_world_t *w, int task_id, ai_task_state_t to);  /* 1 ok, 0 invalid */
 int  ai_task_count(const ai_world_t *w);

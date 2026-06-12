@@ -1,4 +1,4 @@
-/* THUOS — `features` command. Builds the honest capability map. See header. */
+/* THUOS - `features` command. Builds the honest capability map. See header. */
 #include "types.h"
 #include "kprintf.h"
 #include "feature_registry.h"
@@ -27,7 +27,7 @@ static void build(void) {
     feat_add(&g_reg, "Scheduler / fs / syscall / usermode",  FEAT_HOST_TESTED);
     feat_add(&g_reg, "AI core: registry/policy/task/audit",  FEAT_HOST_TESTED);
     feat_add(&g_reg, "OS feature/status registry",           FEAT_HOST_TESTED);
-    /* designed, but NO runtime code path yet — the honest frontier */
+    /* designed, but NO runtime code path yet - the honest frontier */
     feat_add(&g_reg, "Thunity AI bridge (to local server)",  FEAT_DESIGN_ONLY);
     feat_add(&g_reg, "AI model runtime / inference",         FEAT_DESIGN_ONLY);
     feat_add(&g_reg, "TCP/IP networking",                    FEAT_DESIGN_ONLY);
@@ -43,7 +43,7 @@ static void build(void) {
 
 void osreport_print(void) {
     build();
-    kprintf("THUOS feature map — honest status (one source of truth)\n");
+    kprintf("THUOS feature map - honest status (one source of truth)\n");
     kprintf("  implemented=%d host-tested=%d compile-only=%d design-only=%d not-verified=%d\n",
             feat_count_by(&g_reg, FEAT_IMPLEMENTED), feat_count_by(&g_reg, FEAT_HOST_TESTED),
             feat_count_by(&g_reg, FEAT_COMPILE_ONLY), feat_count_by(&g_reg, FEAT_DESIGN_ONLY),
