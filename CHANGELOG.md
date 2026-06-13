@@ -3,6 +3,27 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.10.0] — "Filesystem" — 2026-06-06
+
+A real, usable **in-RAM filesystem** — the local-first storage foundation from
+the strategy in `THUOS_VISION.md`. Sequenced ahead of preemptive multitasking
+because it is host-testable (fits the verify-everything discipline) and higher
+value for THUOS's wedge.
+
+### Added — kernel (filesystem)
+- `kernel/fs/ramfs_core.{c,h}` — pure file table over a caller-provided entry
+  array + byte arena: create-or-replace `write`, `read`, `find`, listing,
+  bump-allocation with an out-of-space guard. No kernel deps -> host-tested.
+- `kernel/fs/fs.{c,h}` — static kernel filesystem (32 files, 64 KiB arena) seeded
+  at boot with `welcome.txt` and `readme`.
+- Shell: `ls`, `cat <file>`, `write <file> <text>` — create and read real files
+  live in the booted kernel.
+
+### Verification
+- `tests/test_fs.c` (+ `make test`, now 6 host suites): create/write/read,
+  create-or-replace, listing, arena-exhaustion guard.
+- `scripts/boottest.sh` asserts the `RAM filesystem` boot marker. BOOT-VERIFIED in QEMU.
+
 ## [0.9.0] — "Cooperative Tasks" — 2026-06-06
 
 Real **multitasking**: several kernel tasks run concurrently, each on its own
