@@ -3,383 +3,554 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>THUOS 0.10 — Live Desktop</title>
+<title>THUOS 0.10 — Desktop</title>
 <style>
 :root{
-  --bg:#05060f; --ink:#eef3ff; --ink2:#bcc8e8; --ink3:#7d8cb4;
+  --bg:#04050d; --ink:#eef3ff; --ink2:#c3cdec; --ink3:#7e8cb6;
   --teal:#2de2c6; --violet:#8b6dff; --magenta:#ff6db0; --amber:#ffcf76; --green:#54e6a6; --cyan:#7ad7ff;
-  --edge:rgba(255,255,255,.12); --glass:rgba(18,22,40,.66); --glass2:rgba(255,255,255,.04);
+  --edge:rgba(255,255,255,.11); --edge2:rgba(255,255,255,.07);
+  --glass:rgba(20,24,44,.66); --glass2:rgba(255,255,255,.045);
+  --accent:#8b6dff; --accent2:#2de2c6;
   --ff:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,'SF Mono','JetBrains Mono',Menlo,Consolas,monospace;
-  --accent:#8b6dff;
+  --r:14px;
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--ff);-webkit-font-smoothing:antialiased;user-select:none}
-#sky{position:fixed;inset:0;z-index:0;background:
-  radial-gradient(1100px 760px at 16% 8%,rgba(45,226,198,.13),transparent 60%),
-  radial-gradient(1000px 820px at 88% 18%,rgba(139,109,255,.17),transparent 62%),
-  radial-gradient(1200px 900px at 60% 106%,rgba(255,109,176,.10),transparent 60%),
-  linear-gradient(160deg,#05060f,#080b1a 55%,#06080f)}
-#vig{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(140% 120% at 50% 40%,transparent 56%,rgba(2,3,8,.6))}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
+  font-family:var(--ff);-webkit-font-smoothing:antialiased;user-select:none}
+.reduce *{animation:none!important;transition:none!important}
 
-/* top bar */
-#bar{position:fixed;top:0;left:0;right:0;height:38px;z-index:9000;display:flex;align-items:center;gap:13px;
-  padding:0 14px;background:rgba(10,13,26,.5);backdrop-filter:blur(18px) saturate(150%);border-bottom:1px solid rgba(255,255,255,.07);font-size:13px}
-#bar .logo{width:20px;height:20px;border-radius:6px;background:radial-gradient(circle at 36% 32%,#fff,#bda9ff 32%,#6f4ff0 66%,#241a63);box-shadow:0 0 14px -3px var(--violet)}
-#bar b{font-weight:650;letter-spacing:.3px}
-#bar .mi{color:var(--ink3);font-size:12.5px}
+/* wallpaper */
+#sky{position:fixed;inset:0;z-index:0;transition:background .6s}
+#sky.aurora{background:
+  radial-gradient(1200px 800px at 14% 6%,rgba(45,226,198,.14),transparent 58%),
+  radial-gradient(1100px 860px at 88% 16%,rgba(139,109,255,.20),transparent 60%),
+  radial-gradient(1200px 900px at 60% 108%,rgba(255,109,176,.11),transparent 60%),
+  linear-gradient(160deg,#05060f,#0a0c1e 55%,#06080f)}
+#sky.dusk{background:
+  radial-gradient(1100px 820px at 26% 96%,rgba(255,150,90,.16),transparent 60%),
+  radial-gradient(1100px 820px at 82% 8%,rgba(140,90,255,.18),transparent 60%),
+  linear-gradient(160deg,#0c0712,#140a18 55%,#08060f)}
+#sky.mono{background:
+  radial-gradient(1100px 820px at 80% 10%,rgba(120,150,200,.10),transparent 60%),
+  linear-gradient(160deg,#070810,#0b0e16 60%,#070810)}
+#stars{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.6}
+#vig{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(140% 120% at 50% 38%,transparent 55%,rgba(2,3,8,.62))}
+#dim{position:fixed;inset:0;z-index:3;pointer-events:none;background:#000;opacity:0;transition:opacity .3s}
+
+/* menu bar */
+#bar{position:fixed;top:0;left:0;right:0;height:40px;z-index:9000;display:flex;align-items:center;gap:14px;
+  padding:0 14px;background:rgba(9,12,24,.52);backdrop-filter:blur(20px) saturate(160%);
+  border-bottom:1px solid var(--edge2);font-size:13px}
+#bar .logo{width:21px;height:21px;border-radius:6px;background:radial-gradient(circle at 36% 30%,#fff,#bda9ff 30%,#6f4ff0 66%,#241a63);box-shadow:0 0 14px -3px var(--violet)}
+#bar .app{font-weight:680;letter-spacing:.3px}
+#bar .mi{color:var(--ink3);font-size:12.5px;cursor:default}
+#bar .mi:hover{color:var(--ink2)}
 #bar .sp{flex:1}
-.badge{font-size:10.5px;border-radius:999px;padding:2px 9px}
-.badge.ok{color:#06121a;background:linear-gradient(90deg,var(--green),var(--teal));font-weight:700}
-.badge.v{color:var(--violet);border:1px solid rgba(139,109,255,.4)}
-#clock{font-variant-numeric:tabular-nums;font-weight:600}
+#bar .stat{display:flex;align-items:center;gap:7px;color:var(--ink2);font-size:12px}
+#bar .stat .seg{font-variant-numeric:tabular-nums}
+#bar .cc{cursor:pointer;padding:4px 8px;border-radius:8px}
+#bar .cc:hover{background:rgba(255,255,255,.08)}
+#clock{font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink)}
+.bdg{font-size:10px;border-radius:999px;padding:2px 9px}
+.bdg.ok{color:#06121a;background:linear-gradient(90deg,var(--green),var(--teal));font-weight:700}
 
-/* desktop */
-#desk{position:fixed;inset:38px 0 0 0;z-index:5}
+#desk{position:fixed;inset:40px 0 0 0;z-index:5}
+
+/* control center */
+#cc{position:fixed;top:46px;right:12px;z-index:9500;width:280px;border-radius:18px;padding:15px;
+  background:rgba(14,17,32,.94);backdrop-filter:blur(26px);border:1px solid var(--edge);
+  box-shadow:0 30px 90px rgba(0,0,0,.6);display:none}
+#cc.on{display:block}
+#cc h4{margin:6px 2px 8px;font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px}
+.ccrow{display:flex;align-items:center;justify-content:space-between;padding:7px 2px;font-size:13px;color:var(--ink2)}
+.sw{display:flex;gap:8px;margin:4px 2px}
+.swb{width:26px;height:26px;border-radius:8px;cursor:pointer;border:2px solid transparent}
+.swb.on{border-color:#fff}
+.wp{display:flex;gap:7px;margin:4px 2px}
+.wpb{flex:1;all:unset;cursor:pointer;text-align:center;font-size:11.5px;color:var(--ink2);padding:7px 0;border-radius:9px;border:1px solid var(--edge);background:rgba(255,255,255,.03)}
+.wpb.on{border-color:var(--accent);color:var(--ink)}
+.slider{width:120px;accent-color:var(--accent)}
 
 /* dock */
-#dock{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:9000;display:flex;gap:8px;
-  padding:8px 10px;border-radius:18px;background:rgba(12,15,30,.55);backdrop-filter:blur(22px) saturate(150%);border:1px solid var(--edge);box-shadow:0 20px 60px rgba(0,0,0,.5)}
-.di{width:52px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 3px;border-radius:13px;transition:.15s}
-.di:hover{background:rgba(255,255,255,.08);transform:translateY(-3px)}
-.di .ic{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03));border:1px solid var(--edge);color:var(--dc,var(--teal))}
-.di .ic svg{width:22px;height:22px} .di .lb{font-size:9.5px;color:var(--ink3)}
-.di:hover .lb{color:var(--ink2)} .di.run .ic{border-color:var(--dc,var(--teal))}
+#dock{position:fixed;bottom:11px;left:50%;transform:translateX(-50%);z-index:9000;display:flex;gap:7px;
+  padding:8px 11px;border-radius:20px;background:rgba(12,15,30,.55);backdrop-filter:blur(24px) saturate(160%);
+  border:1px solid var(--edge);box-shadow:0 22px 64px rgba(0,0,0,.5)}
+.di{position:relative;width:54px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 3px;border-radius:14px;transition:transform .16s,background .16s}
+.di:hover{background:rgba(255,255,255,.08);transform:translateY(-4px)}
+.di .ic{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;
+  background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.03));border:1px solid var(--edge);
+  color:var(--dc,var(--teal));box-shadow:0 8px 20px -10px var(--dc,var(--teal)),inset 0 1px 0 rgba(255,255,255,.08)}
+.di .ic svg{width:23px;height:23px}
+.di .lb{font-size:9.5px;color:var(--ink3);white-space:nowrap}
+.di:hover .lb{color:var(--ink2)}
+.di .run{position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:transparent}
+.di.on .run{background:var(--dc,var(--teal));box-shadow:0 0 8px var(--dc,var(--teal))}
 
 /* windows */
-.win{position:absolute;min-width:300px;border-radius:14px;overflow:hidden;background:var(--glass);
-  backdrop-filter:blur(22px) saturate(150%);border:1px solid var(--edge);box-shadow:0 30px 80px rgba(0,0,0,.5);display:flex;flex-direction:column;opacity:0;transform:scale(.98);animation:wi .16s ease forwards}
+.win{position:absolute;min-width:300px;min-height:200px;border-radius:var(--r);overflow:hidden;background:var(--glass);
+  backdrop-filter:blur(24px) saturate(155%);border:1px solid var(--edge);
+  box-shadow:0 30px 80px rgba(0,0,0,.52),inset 0 1px 0 rgba(255,255,255,.05);display:flex;flex-direction:column;
+  opacity:0;transform:scale(.97);animation:wi .17s cubic-bezier(.2,.9,.3,1) forwards}
 @keyframes wi{to{opacity:1;transform:scale(1)}}
-.win.act{box-shadow:0 36px 100px rgba(0,0,0,.6),0 0 0 1px var(--accent),0 0 50px -18px var(--accent)}
-.tb{height:38px;flex:0 0 38px;display:flex;align-items:center;gap:9px;padding:0 12px;cursor:grab;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01));border-bottom:1px solid rgba(255,255,255,.07)}
+.win.act{box-shadow:0 38px 100px rgba(0,0,0,.62),0 0 0 1px var(--accent),0 0 60px -20px var(--accent)}
+.tb{height:40px;flex:0 0 40px;display:flex;align-items:center;gap:10px;padding:0 13px;cursor:grab;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.012));border-bottom:1px solid var(--edge2)}
 .tb.drag{cursor:grabbing}
-.lights{display:flex;gap:7px}
-.lights b{width:12px;height:12px;border-radius:50%;display:block;cursor:pointer;border:none}
+.lt{display:flex;gap:8px;align-items:center}
+.lt b{width:12px;height:12px;border-radius:50%;display:grid;place-items:center;cursor:pointer;border:none;position:relative}
+.lt b::after{font-size:8px;font-weight:800;color:rgba(0,0,0,.55);opacity:0;transition:.1s}
 .lc{background:#ff5f57}.lm{background:#febc2e}.lx{background:#28c840}
-.tb .ti{font-size:13px;font-weight:600;color:var(--ink2)} .tb .sp{flex:1}
-.bd{flex:1;overflow:auto;padding:14px 16px;font-size:13px;color:var(--ink2);line-height:1.5}
+.lt:hover .lc::after{content:"✕";opacity:1}.lt:hover .lm::after{content:"–";opacity:1}.lt:hover .lx::after{content:"+";opacity:1}
+.win:not(.act) .lt b{background:rgba(255,255,255,.2)}
+.tb .wi{width:22px;height:22px;display:grid;place-items:center;color:var(--accent2)}.tb .wi svg{width:15px;height:15px}
+.tb .ti{font-size:13px;font-weight:620;color:var(--ink2)}.tb .sp{flex:1}
+.bd{flex:1;overflow:auto;padding:15px 17px;font-size:13px;color:var(--ink2);line-height:1.5;position:relative}
 .bd::-webkit-scrollbar{width:9px}.bd::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:9px}
-h3{margin:0 0 6px;font-size:15px;color:var(--ink)} h4{margin:0 0 6px;font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px}
-.ps{font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
-
-/* terminal */
-.term{margin:-14px -16px;height:calc(100% + 28px);display:flex;flex-direction:column;background:rgba(4,6,14,.6)}
-.term .o{flex:1;overflow:auto;padding:12px 14px;font-family:var(--mono);font-size:12.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
-.term .pl{display:flex;padding:0 14px 12px;font-family:var(--mono);font-size:12.5px}
-.term .pl .ps1{color:var(--green)} .cur{display:inline-block;width:7px;height:14px;background:var(--teal);vertical-align:-2px;animation:bl 1.05s steps(1) infinite}
-@keyframes bl{50%{opacity:0}}
+.rsz{position:absolute;right:0;bottom:0;width:18px;height:18px;cursor:nwse-resize;z-index:6}
+.rsz::after{content:"";position:absolute;right:3px;bottom:3px;width:8px;height:8px;border-right:2px solid rgba(255,255,255,.28);border-bottom:2px solid rgba(255,255,255,.28)}
+h3{margin:0 0 6px;font-size:15.5px;color:var(--ink)}
+.ps{font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+h4{margin:14px 0 7px;font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px}
+.note{font-size:11.5px;color:var(--ink3);line-height:1.6}
 .ok{color:var(--green)}.err{color:var(--magenta)}.c{color:var(--cyan)}.am{color:var(--amber)}.gr{color:var(--ink3)}.vi{color:var(--violet)}
 
-/* monitor */
-.gauge{margin:11px 0}
-.gauge .l{display:flex;justify-content:space-between;font-size:12px;color:var(--ink2);margin-bottom:5px}
+/* terminal */
+.term{margin:-15px -17px;height:calc(100% + 30px);display:flex;flex-direction:column;background:rgba(3,5,12,.55)}
+.term .o{flex:1;overflow:auto;padding:13px 15px;font-family:var(--mono);font-size:12.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.term .pl{display:flex;padding:0 15px 13px;font-family:var(--mono);font-size:12.5px}
+.term .ps1{color:var(--green)}
+.cur{display:inline-block;width:7px;height:14px;background:var(--accent2);vertical-align:-2px;animation:bl 1.05s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+
+/* stat kv + gauges */
+.kv{display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0;border-top:1px solid var(--edge2)}
+.kv span:last-child{font-family:var(--mono);color:var(--ink)}
+.pill{display:inline-block;font-size:10.5px;border-radius:999px;padding:2px 9px;background:rgba(84,230,166,.16);color:var(--green);border:1px solid rgba(84,230,166,.34)}
+.gauge .l{display:flex;justify-content:space-between;font-size:12px;color:var(--ink2);margin:9px 0 5px}
 .track{height:9px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
 .fill{height:100%;border-radius:99px;transition:width .5s ease}
-.f1{background:linear-gradient(90deg,var(--teal),var(--violet))}.f2{background:linear-gradient(90deg,var(--violet),var(--magenta))}.f3{background:linear-gradient(90deg,var(--amber),var(--magenta))}
-.kv{display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-top:1px solid rgba(255,255,255,.05)}
-.kv span:last-child{font-family:var(--mono);color:var(--ink)}
-.pill{display:inline-block;font-size:10.5px;border-radius:999px;padding:2px 9px;background:rgba(84,230,166,.16);color:var(--green);border:1px solid rgba(84,230,166,.35)}
-.tlist .row{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;padding:6px 0;border-top:1px solid rgba(255,255,255,.05)}
+.f1{background:linear-gradient(90deg,var(--teal),var(--violet))}.f2{background:linear-gradient(90deg,var(--violet),var(--magenta))}
+canvas.spark{width:100%;height:90px;display:block;border-radius:10px;background:rgba(0,0,0,.22);border:1px solid var(--edge2);margin-top:4px}
+
+/* memory map */
+.mmap{display:flex;height:34px;border-radius:9px;overflow:hidden;border:1px solid var(--edge);background:rgba(0,0,0,.25)}
+.blk{height:100%;border-right:1px solid rgba(0,0,0,.35);position:relative;transition:width .4s ease}
+.blk.u{background:linear-gradient(180deg,var(--accent),rgba(139,109,255,.55))}
+.blk.f{background:repeating-linear-gradient(45deg,rgba(255,255,255,.05),rgba(255,255,255,.05) 6px,rgba(255,255,255,.09) 6px,rgba(255,255,255,.09) 12px)}
+.frames{display:grid;grid-template-columns:repeat(32,1fr);gap:2px;margin-top:6px}
+.fr{height:7px;border-radius:2px;background:rgba(255,255,255,.08)}
+.fr.u{background:var(--accent2)}
+.btn{all:unset;cursor:pointer;font-size:12px;padding:7px 13px;border-radius:9px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#06121a;font-weight:700}
+.btn.g{background:rgba(255,255,255,.06);color:var(--ink2);border:1px solid var(--edge)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.legend{display:flex;gap:14px;font-size:11.5px;color:var(--ink3);margin-top:9px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px}
 
 /* files */
-.fl{display:flex;gap:12px;height:100%;margin:-14px -16px}
-.fl .side{flex:0 0 150px;border-right:1px solid rgba(255,255,255,.08);overflow:auto;background:rgba(0,0,0,.12)}
-.fl .it{padding:9px 12px;font-size:12.5px;color:var(--ink2);cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fl .it:hover{background:rgba(255,255,255,.05)} .fl .it.on{background:rgba(45,226,198,.14);color:var(--ink)}
-.fl .new{all:unset;cursor:pointer;display:block;text-align:center;padding:9px;color:var(--teal);font-size:12px;border-bottom:1px solid rgba(255,255,255,.08)}
-.fl .main{flex:1;display:flex;flex-direction:column;min-width:0;padding:12px}
-.fl input.fn{background:none;border:none;outline:none;color:var(--ink);font-family:var(--mono);font-size:13px;font-weight:600;margin-bottom:8px}
-.fl textarea{flex:1;background:rgba(0,0,0,.2);border:1px solid var(--edge);border-radius:9px;outline:none;resize:none;color:var(--ink2);font-family:var(--mono);font-size:12.5px;line-height:1.55;padding:10px}
-.fl .fb{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:11.5px;color:var(--ink3)}
-.btn{all:unset;cursor:pointer;font-size:12px;padding:6px 13px;border-radius:9px;background:linear-gradient(135deg,var(--teal),var(--violet));color:#06121a;font-weight:700}
-.btn.ghost{background:rgba(255,255,255,.06);color:var(--ink2);border:1px solid var(--edge)}
+.fl{display:flex;height:100%;margin:-15px -17px}
+.fl .side{flex:0 0 158px;border-right:1px solid var(--edge2);overflow:auto;background:rgba(0,0,0,.14)}
+.fl .new{all:unset;cursor:pointer;display:block;text-align:center;padding:10px;color:var(--accent2);font-size:12px;border-bottom:1px solid var(--edge2)}
+.fl .it{padding:9px 12px;font-size:12.5px;color:var(--ink2);cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px}
+.fl .it:hover{background:rgba(255,255,255,.05)}.fl .it.on{background:rgba(45,226,198,.13);color:var(--ink)}
+.fl .it .fi{color:var(--amber)}
+.fl .main{flex:1;display:flex;flex-direction:column;min-width:0;padding:13px}
+.fl input.fn{background:none;border:none;outline:none;color:var(--ink);font-family:var(--mono);font-size:13.5px;font-weight:650;margin-bottom:9px}
+.fl textarea{flex:1;background:rgba(0,0,0,.22);border:1px solid var(--edge);border-radius:10px;outline:none;resize:none;color:var(--ink2);font-family:var(--mono);font-size:12.5px;line-height:1.55;padding:11px}
+.fl .fb{display:flex;justify-content:space-between;align-items:center;margin-top:9px;font-size:11.5px;color:var(--ink3)}
 
-.note{font-size:11.5px;color:var(--ink3);line-height:1.6}
-.mile{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid rgba(255,255,255,.05);font-size:12.5px}
+/* scheduler */
+.ring{display:flex;gap:10px;justify-content:center;margin:8px 0 4px}
+.tk{flex:1;max-width:120px;border:1px solid var(--edge);border-radius:12px;padding:11px;text-align:center;background:var(--glass2);transition:.25s}
+.tk.run{border-color:var(--accent2);box-shadow:0 0 22px -6px var(--accent2);transform:translateY(-3px)}
+.tk .n{font-family:var(--mono);font-size:18px;color:var(--ink)}
+.tk .s{font-size:10.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;margin-top:3px}
+.tk.run .s{color:var(--accent2)}
+
+/* milestone */
+.mile{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--edge2);font-size:12.5px}
 .mile .d{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex:0 0 auto}
-.mile.pl .d{background:var(--ink3);box-shadow:none} .mile .vv{font-family:var(--mono);color:var(--violet);flex:0 0 42px}
+.mile.pl .d{background:var(--ink3);box-shadow:none}.mile .vv{font-family:var(--mono);color:var(--violet);flex:0 0 42px}
+
+/* notifications */
+#nf{position:fixed;top:48px;right:12px;z-index:9400;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.nt{min-width:230px;max-width:300px;border-radius:13px;padding:11px 14px;background:rgba(14,17,32,.94);backdrop-filter:blur(20px);border:1px solid var(--edge);box-shadow:0 20px 60px rgba(0,0,0,.5);transform:translateX(120%);transition:transform .4s cubic-bezier(.2,.9,.3,1)}
+.nt.on{transform:none}
+.nt .t{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:650;color:var(--ink)}
+.nt .t .i{width:22px;height:22px;display:grid;place-items:center;border-radius:7px;background:rgba(255,255,255,.06);color:var(--accent2)}.nt .t .i svg{width:14px;height:14px}
+.nt .m{font-size:12px;color:var(--ink3);margin-top:5px;line-height:1.45}
 
 /* boot + lock */
 #boot{position:fixed;inset:0;z-index:9800;background:#03040c;display:flex;align-items:center;justify-content:center;transition:opacity .5s}
-#boot .bw{width:min(560px,92vw)}
-#boot .bt{font-family:var(--mono);font-size:12px;line-height:1.55;white-space:pre-wrap;color:var(--ink2);max-height:60vh;overflow:hidden}
+#boot .bt{width:min(560px,92vw);font-family:var(--mono);font-size:12px;line-height:1.55;white-space:pre-wrap;color:var(--ink2)}
 #boot.gone{opacity:0;pointer-events:none}
-#hint{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:8000;font-size:12px;color:var(--ink2);background:rgba(12,15,30,.7);border:1px solid var(--edge);border-radius:999px;padding:7px 14px;backdrop-filter:blur(12px);opacity:0;transition:.4s}
+#lock{position:fixed;inset:0;z-index:9700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  background:rgba(4,6,15,.5);backdrop-filter:blur(8px);transition:opacity .5s,transform .5s}
+#lock.gone{opacity:0;transform:scale(1.04);pointer-events:none}
+#lock .lt{font-size:74px;font-weight:200;letter-spacing:2px;font-variant-numeric:tabular-nums}
+#lock .ld{color:var(--ink2);font-size:14px}
+#lock .av{width:74px;height:74px;border-radius:50%;margin:18px 0 6px;background:radial-gradient(circle at 38% 32%,#fff,#bda9ff 30%,#6f4ff0 66%,#241a63);box-shadow:0 0 30px -6px var(--violet)}
+#lock .lu{font-weight:600}
+#lock .lh{font-size:12px;color:var(--ink3);margin-top:14px}
+#lock .lb{position:absolute;bottom:24px;font-size:11.5px;color:var(--ink3)}
+#lock .lb b{color:var(--amber)}
+#hint{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);z-index:8000;font-size:12px;color:var(--ink2);background:rgba(12,15,30,.72);border:1px solid var(--edge);border-radius:999px;padding:7px 15px;backdrop-filter:blur(12px);opacity:0;transition:.4s}
 #hint.on{opacity:1}
 </style>
 </head>
 <body>
-<div id="sky"></div>
+<div id="sky" class="aurora"></div>
+<canvas id="stars"></canvas>
 <div id="vig"></div>
+<div id="dim"></div>
 
 <div id="bar">
-  <span class="logo"></span><b id="mbApp">THUOS</b>
-  <span class="mi">Berkas</span><span class="mi">Tampilan</span><span class="mi">Bantuan</span>
-  <span class="badge v">v0.10 "Filesystem"</span>
-  <span class="badge ok">● boot-verified · QEMU/CI</span>
+  <span class="logo"></span><span class="app" id="mbApp">THUOS</span>
+  <span class="mi">Berkas</span><span class="mi">Tampilan</span><span class="mi">Jendela</span><span class="mi">Bantuan</span>
+  <span class="bdg ok" style="margin-left:2px">● boot-verified · QEMU/CI</span>
   <span class="sp"></span>
-  <span class="mi" id="memmini">mem —</span>
+  <span class="stat"><span class="seg" id="smem">mem —</span><span class="seg" id="sheap">heap —</span></span>
+  <span class="cc" id="ccBtn" title="Pusat Kontrol"></span>
   <span id="clock">--:--</span>
 </div>
 
+<div id="cc">
+  <h4>Pusat Kontrol</h4>
+  <div class="ccrow"><span>Kecerahan</span><input type="range" min="0" max="55" value="0" class="slider" id="bright"></div>
+  <div class="ccrow"><span>Kurangi gerak</span><span class="btn g" id="tgmotion" style="padding:4px 10px">off</span></div>
+  <h4>Aksen</h4>
+  <div class="sw" id="swatches"></div>
+  <h4>Wallpaper</h4>
+  <div class="wp" id="walls"><button class="wpb on" data-w="aurora">Aurora</button><button class="wpb" data-w="dusk">Senja</button><button class="wpb" data-w="mono">Mono</button></div>
+</div>
+
 <div id="desk"></div>
+<div id="nf"></div>
 <div id="hint"></div>
 <div id="dock"></div>
 
-<div id="boot"><div class="bw"><div class="bt" id="boottext"></div></div></div>
+<div id="lock" class="gone">
+  <div class="lt" id="lclock">--:--</div>
+  <div class="ld" id="ldate">—</div>
+  <div class="av"></div>
+  <div class="lu">thu</div>
+  <div class="lh">klik di mana saja · atau tekan Enter untuk masuk</div>
+  <div class="lb">THUOS 0.10 "Filesystem" · desktop konsep · <b>kernel boot-verified di QEMU</b></div>
+</div>
+
+<div id="boot"><div class="bt" id="boottext"></div></div>
 
 <script>
 "use strict";
-/* ============ faithful kernel state (ported from the real THUOS kernel) ============ */
-var KS={
-  boot0:Date.now(),
+/* ===================== faithful kernel state ===================== */
+var KS={boot0:Date.now(),
   pmm:{usable:32639,reserved:464,free:32175,used:464,next:0x210000,freed:[]},
-  heapTOTAL:1048576, HDR:16, HBASE:0x140000, HALIGN:8,
-  heap:[{size:1048576-16,free:true}],
-  fs:null
-};
+  heapTOTAL:1048576,HDR:16,HBASE:0x140000,HALIGN:8,heap:[{size:1048576-16,free:true}],fs:null};
 function ticks(){return Math.floor((Date.now()-KS.boot0)/10);}
 function secs(){return Math.floor((Date.now()-KS.boot0)/1000);}
 function hex8(n){var s=(n>>>0).toString(16);while(s.length<8)s='0'+s;return '0x'+s;}
 function parseHex(s){if(!s)return null;s=s.trim();if(/^0x/i.test(s))s=s.slice(2);if(!/^[0-9a-fA-F]+$/.test(s))return null;return parseInt(s,16)>>>0;}
 function alignup(v){return (v+(KS.HALIGN-1))&~(KS.HALIGN-1);}
-/* PMM */
 function pmmAlloc(){if(KS.pmm.free<=0)return 0;var a;if(KS.pmm.freed.length)a=KS.pmm.freed.pop();else{a=KS.pmm.next;KS.pmm.next+=0x1000;}KS.pmm.free--;KS.pmm.used++;return a>>>0;}
 function pmmFree(addr){addr=addr&~0xFFF;if(addr<0x100000)return -2;if(addr>=KS.pmm.next&&KS.pmm.freed.indexOf(addr)<0)return -1;if(KS.pmm.freed.indexOf(addr)>=0)return -3;KS.pmm.freed.push(addr);KS.pmm.free++;KS.pmm.used--;return 0;}
-/* heap: first-fit + split + coalesce */
 function payAddr(i){var a=KS.HBASE+KS.HDR;for(var k=0;k<i;k++)a+=KS.HDR+KS.heap[k].size;return a>>>0;}
 function kmalloc(n){n=alignup(n);if(n===0)n=KS.HALIGN;for(var i=0;i<KS.heap.length;i++){if(KS.heap[i].free&&KS.heap[i].size>=n){if(KS.heap[i].size>=n+KS.HDR+KS.HALIGN){var rem=KS.heap[i].size-n-KS.HDR;KS.heap[i].size=n;KS.heap.splice(i+1,0,{size:rem,free:true});}KS.heap[i].free=false;return payAddr(i);}}return 0;}
 function kfree(addr){var hit=false;for(var i=0;i<KS.heap.length;i++){if(payAddr(i)===(addr>>>0)){if(KS.heap[i].free)return false;KS.heap[i].free=true;hit=true;break;}}if(!hit)return false;for(var j=0;j<KS.heap.length-1;){if(KS.heap[j].free&&KS.heap[j+1].free){KS.heap[j].size+=KS.HDR+KS.heap[j+1].size;KS.heap.splice(j+1,1);}else j++;}return true;}
 function heapUsed(){var u=0;KS.heap.forEach(function(b){if(!b.free)u+=b.size;});return u;}
 function heapFree(){var f=0;KS.heap.forEach(function(b){if(b.free)f+=b.size;});return f;}
 function translate(va){va=va>>>0;return va<0x800000?va:-1;}
-/* ramfs persisted */
 var FS_KEY='thuos_sim_fs';
-function fsLoad(){try{KS.fs=JSON.parse(localStorage.getItem(FS_KEY));}catch(e){KS.fs=null;}
- if(!KS.fs||typeof KS.fs!=='object'){KS.fs={
-  'welcome.txt':"Welcome to the THUOS RAM filesystem.\nThese are real files living in kernel memory.\nTry:  ls  |  cat readme  |  write notes hello there",
-  'readme':"THUOS local-first ramfs (milestone 0.10).\nHost-tested core + boot-verified in QEMU.\nFiles are in-memory for now; persistence comes later."};fsSave();}}
+function fsLoad(){try{KS.fs=JSON.parse(localStorage.getItem(FS_KEY));}catch(e){KS.fs=null;}if(!KS.fs||typeof KS.fs!=='object'){KS.fs={'welcome.txt':"Welcome to the THUOS RAM filesystem.\nReal files in kernel memory.\nTry the Terminal: ls | cat readme | write notes hi","readme":"THUOS local-first ramfs (0.10).\nHost-tested + boot-verified in QEMU."};fsSave();}}
 function fsSave(){try{localStorage.setItem(FS_KEY,JSON.stringify(KS.fs));}catch(e){}}
 function fsBytes(){var n=0;for(var k in KS.fs)if(KS.fs.hasOwnProperty(k))n+=KS.fs[k].length;return n;}
 fsLoad();
 
-/* ============ icons ============ */
+/* ===================== icons ===================== */
 var S='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">';
 var ICON={
  terminal:S+'<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9l3 3-3 3"/><path d="M13 15h4"/></svg>',
- monitor:S+'<path d="M3 12h3.5l2.2 6 3.6-12 2.4 8 1.3-2H21"/></svg>',
+ monitor:S+'<path d="M3 12h3.4l2.2 6 3.6-12 2.4 8 1.3-2H21"/></svg>',
+ memory:S+'<rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 7V5M11 7V5M15 7V5M7 19v-2M11 19v-2M15 19v-2"/></svg>',
  files:S+'<path d="M3 8a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
- tasks:S+'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
- about:S+'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6h.01"/></svg>'
+ sched:S+'<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>',
+ settings:S+'<circle cx="12" cy="12" r="3.2"/><path d="M12 2.6v3M12 18.4v3M2.6 12h3M18.4 12h3M5.1 5.1l2.1 2.1M16.8 16.8l2.1 2.1M18.9 5.1l-2.1 2.1M7.2 16.8l-2.1 2.1"/></svg>',
+ about:S+'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6h.01"/></svg>',
+ sliders:S+'<path d="M4 8h9M19 8h1M4 16h1M11 16h9"/><circle cx="16" cy="8" r="2.3"/><circle cx="8" cy="16" r="2.3"/></svg>'
 };
 
-/* ============ window manager ============ */
-var desk=document.getElementById('desk'), wins={}, ztop=20, activeId=null, nopen=0;
+/* ===================== window manager ===================== */
+var desk=document.getElementById('desk'),wins={},ztop=20,activeId=null,nopen=0;
 function focusWin(id){if(!wins[id])return;if(activeId&&wins[activeId])wins[activeId].el.classList.remove('act');activeId=id;wins[id].el.style.zIndex=(++ztop);wins[id].el.classList.add('act');document.getElementById('mbApp').textContent=APPS[id].name;}
-function closeWin(id){if(!wins[id])return;if(wins[id].onclose)try{wins[id].onclose();}catch(e){}wins[id].el.remove();delete wins[id];document.querySelectorAll('.di').forEach(function(d){if(d.dataset.app===id)d.classList.remove('run');});if(activeId===id){activeId=null;document.getElementById('mbApp').textContent='THUOS';}}
+function dockDot(id,on){document.querySelectorAll('.di').forEach(function(d){if(d.dataset.app===id)d.classList.toggle('on',on);});}
+function closeWin(id){if(!wins[id])return;if(wins[id].onclose)try{wins[id].onclose();}catch(e){}wins[id].el.remove();delete wins[id];dockDot(id,false);if(activeId===id){activeId=null;document.getElementById('mbApp').textContent='THUOS';}}
+function toggleMax(id){var w=wins[id];if(!w)return;var el=w.el;if(!w.max){w.prev={l:el.style.left,t:el.style.top,w:el.style.width,h:el.style.height};el.style.left='10px';el.style.top='48px';el.style.width=(innerWidth-20)+'px';el.style.height=(innerHeight-48-72)+'px';w.max=true;}else{el.style.left=w.prev.l;el.style.top=w.prev.t;el.style.width=w.prev.w;el.style.height=w.prev.h;w.max=false;}focusWin(id);}
 function openApp(id){
   var a=APPS[id];if(!a)return;
-  if(wins[id]){focusWin(id);return;}
-  var win=document.createElement('div');win.className='win';
-  win.style.width=a.w+'px';win.style.height=a.h+'px';
-  var n=nopen++;var left=Math.max(12,(innerWidth-a.w)/2 + (n%4)*30 - 50);var top=Math.max(50,(innerHeight-a.h)/2 + (n%4)*26 - 60);
-  win.style.left=left+'px';win.style.top=top+'px';
-  win.innerHTML='<div class="tb"><div class="lights"><button class="lc"></button><button class="lm"></button><button class="lx"></button></div><span class="ti">'+a.name+'</span><span class="sp"></span></div><div class="bd"></div>';
-  desk.appendChild(win);
-  wins[id]={el:win};
-  var bd=win.querySelector('.bd');
+  if(wins[id]){var w=wins[id];if(w.min){w.el.style.display='flex';w.min=false;}focusWin(id);return;}
+  var win=document.createElement('div');win.className='win';win.style.width=a.w+'px';win.style.height=a.h+'px';
+  var n=nopen++;win.style.left=Math.max(12,(innerWidth-a.w)/2+(n%4)*32-50)+'px';win.style.top=Math.max(52,(innerHeight-a.h)/2+(n%4)*26-70)+'px';
+  win.innerHTML='<div class="tb"><div class="lt"><button class="lc"></button><button class="lm"></button><button class="lx"></button></div><span class="wi">'+ICON[a.icon]+'</span><span class="ti">'+a.name+'</span><span class="sp"></span></div><div class="bd"></div><div class="rsz"></div>';
+  desk.appendChild(win);wins[id]={el:win,min:false,max:false};
+  var bd=win.querySelector('.bd'),tb=win.querySelector('.tb');
   win.querySelector('.lc').onclick=function(e){e.stopPropagation();closeWin(id);};
+  win.querySelector('.lm').onclick=function(e){e.stopPropagation();win.style.display='none';wins[id].min=true;};
+  win.querySelector('.lx').onclick=function(e){e.stopPropagation();toggleMax(id);};
+  tb.addEventListener('dblclick',function(){toggleMax(id);});
   win.addEventListener('pointerdown',function(){focusWin(id);});
-  drag(win,win.querySelector('.tb'));
-  document.querySelectorAll('.di').forEach(function(d){if(d.dataset.app===id)d.classList.add('run');});
-  focusWin(id);
-  a.mount(bd, win, id);
+  drag(win,tb,id);resize(win,win.querySelector('.rsz'),id);
+  dockDot(id,true);focusWin(id);a.mount(bd,win,id);
 }
-function drag(win,h){var sx,sy,ox,oy,d=false,pid=null;
-  h.addEventListener('pointerdown',function(e){if(e.target.closest('button'))return;d=true;pid=e.pointerId;sx=e.clientX;sy=e.clientY;ox=parseFloat(win.style.left);oy=parseFloat(win.style.top);h.classList.add('drag');h.setPointerCapture(pid);});
-  h.addEventListener('pointermove',function(e){if(!d||e.pointerId!==pid)return;var nx=ox+(e.clientX-sx),ny=oy+(e.clientY-sy);nx=Math.max(-(win.offsetWidth-90),Math.min(nx,innerWidth-90));ny=Math.max(40,Math.min(ny,innerHeight-50));win.style.left=nx+'px';win.style.top=ny+'px';});
-  function up(e){if(e.pointerId===pid){d=false;h.classList.remove('drag');}}
-  h.addEventListener('pointerup',up);h.addEventListener('pointercancel',up);
+function drag(win,h,id){var sx,sy,ox,oy,d=false,pid=null;
+  h.addEventListener('pointerdown',function(e){if(e.target.closest('button'))return;if(wins[id].max)return;d=true;pid=e.pointerId;sx=e.clientX;sy=e.clientY;ox=parseFloat(win.style.left);oy=parseFloat(win.style.top);h.classList.add('drag');h.setPointerCapture(pid);});
+  h.addEventListener('pointermove',function(e){if(!d||e.pointerId!==pid)return;var nx=ox+(e.clientX-sx),ny=oy+(e.clientY-sy);nx=Math.max(-(win.offsetWidth-90),Math.min(nx,innerWidth-90));ny=Math.max(42,Math.min(ny,innerHeight-52));win.style.left=nx+'px';win.style.top=ny+'px';});
+  function up(e){if(e.pointerId===pid){d=false;h.classList.remove('drag');}}h.addEventListener('pointerup',up);h.addEventListener('pointercancel',up);
+}
+function resize(win,h,id){var sw,sh,sx,sy,r=false,pid=null;
+  h.addEventListener('pointerdown',function(e){if(wins[id].max)return;r=true;pid=e.pointerId;sx=e.clientX;sy=e.clientY;sw=win.offsetWidth;sh=win.offsetHeight;h.setPointerCapture(pid);focusWin(id);e.stopPropagation();});
+  h.addEventListener('pointermove',function(e){if(!r||e.pointerId!==pid)return;win.style.width=Math.max(300,Math.min(sw+(e.clientX-sx),innerWidth-20))+'px';win.style.height=Math.max(200,Math.min(sh+(e.clientY-sy),innerHeight-50))+'px';});
+  function up(e){if(e.pointerId===pid)r=false;}h.addEventListener('pointerup',up);h.addEventListener('pointercancel',up);
 }
 
-/* ============ apps ============ */
+/* ===================== notifications ===================== */
+function notify(title,msg,ic){var nf=document.getElementById('nf');var n=document.createElement('div');n.className='nt';
+  n.innerHTML='<div class="t"><span class="i">'+(ICON[ic]||ICON.about)+'</span>'+title+'</div>'+(msg?'<div class="m">'+msg+'</div>':'');
+  nf.appendChild(n);requestAnimationFrame(function(){n.classList.add('on');});setTimeout(function(){n.classList.remove('on');setTimeout(function(){n.remove();},420);},4200);}
+
+/* ===================== apps ===================== */
 var APPS={
- terminal:{name:'Terminal',icon:'terminal',dc:'#54e6a6',w:560,h:400,mount:mountTerm},
- monitor:{name:'Monitor Sistem',icon:'monitor',dc:'#2de2c6',w:380,h:440,mount:mountMonitor},
- files:{name:'Berkas',icon:'files',dc:'#ffcf76',w:540,h:380,mount:mountFiles},
- tasks:{name:'Tasks',icon:'tasks',dc:'#ff6db0',w:460,h:380,mount:mountTasks},
- about:{name:'Tentang THUOS',icon:'about',dc:'#8b6dff',w:440,h:430,mount:mountAbout}
+ terminal:{name:'Terminal',icon:'terminal',dc:'#54e6a6',w:580,h:404,mount:mountTerm},
+ monitor:{name:'Monitor Sistem',icon:'monitor',dc:'#2de2c6',w:400,h:460,mount:mountMonitor},
+ memory:{name:'Peta Memori',icon:'memory',dc:'#8b6dff',w:520,h:420,mount:mountMemory},
+ files:{name:'Berkas',icon:'files',dc:'#ffcf76',w:560,h:400,mount:mountFiles},
+ sched:{name:'Scheduler',icon:'sched',dc:'#ff6db0',w:460,h:400,mount:mountSched},
+ settings:{name:'Pengaturan',icon:'settings',dc:'#bcc8e8',w:420,h:380,mount:mountSettings},
+ about:{name:'Tentang THUOS',icon:'about',dc:'#7ad7ff',w:460,h:440,mount:mountAbout}
 };
 
-/* ---- Terminal (faithful shell) ---- */
+/* ---- Terminal ---- */
+var termInput=null;
 function mountTerm(bd){
   bd.innerHTML='<div class="term"><div class="o" id="to"></div><div class="pl"><span class="ps1">thuos&gt; </span><span id="tb"></span><span class="cur"></span></div></div>';
-  var o=bd.querySelector('#to'), tb=bd.querySelector('#tb');
-  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-  function W(t,cls){var d=document.createElement('div');if(cls)d.className=cls;d.innerHTML=(t===''?'&nbsp;':esc(t));o.appendChild(d);o.scrollTop=o.scrollHeight;}
+  var o=bd.querySelector('#to'),tbf=bd.querySelector('#tb');
+  function E(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function W(t,cls){var d=document.createElement('div');if(cls)d.className=cls;d.innerHTML=(t===''?'&nbsp;':E(t));o.appendChild(d);o.scrollTop=o.scrollHeight;}
   function Wraw(h){var d=document.createElement('div');d.innerHTML=h;o.appendChild(d);o.scrollTop=o.scrollHeight;}
-  W('THUOS 0.10.0 "Filesystem" — shell','c');
-  W("Type 'help'. Perintah mengubah state nyata (lihat Monitor & Berkas).",'gr');
-  var TC=makeCmds(W,Wraw,esc);
-  var buf='',hist=[],hi=-1;
-  function render(){tb.textContent=buf;}
+  W('THUOS 0.10.0 "Filesystem" — shell','c');W("ketik 'help'. perintah mengubah state nyata (lihat Monitor & Peta Memori).",'gr');
+  var TC=makeCmds(W,Wraw,E,o);var buf='',hist=[],hi=-1;
+  function rnd(){tbf.textContent=buf;}
   termInput=function(e){
-    if(e.key==='Enter'){e.preventDefault();Wraw('<span class="ok">thuos&gt; </span>'+esc(buf));var l=buf;buf='';render();if(l.trim()){hist.push(l);hi=hist.length;}runCmd(TC,l.trim());refreshApps();}
-    else if(e.key==='Backspace'){e.preventDefault();buf=buf.slice(0,-1);render();}
-    else if(e.key==='ArrowUp'){e.preventDefault();if(hi>0){hi--;buf=hist[hi];render();}}
-    else if(e.key==='ArrowDown'){e.preventDefault();if(hi<hist.length-1){hi++;buf=hist[hi];render();}else{hi=hist.length;buf='';render();}}
-    else if(e.key.length===1&&!e.ctrlKey&&!e.metaKey){e.preventDefault();buf+=e.key;render();}
+    if(e.key==='Enter'){e.preventDefault();Wraw('<span class="ok">thuos&gt; </span>'+E(buf));var l=buf;buf='';rnd();if(l.trim()){hist.push(l);hi=hist.length;}runCmd(TC,l.trim());refreshApps();}
+    else if(e.key==='Backspace'){e.preventDefault();buf=buf.slice(0,-1);rnd();}
+    else if(e.key==='ArrowUp'){e.preventDefault();if(hi>0){hi--;buf=hist[hi];rnd();}}
+    else if(e.key==='ArrowDown'){e.preventDefault();if(hi<hist.length-1){hi++;buf=hist[hi];rnd();}else{hi=hist.length;buf='';rnd();}}
+    else if(e.key.length===1&&!e.ctrlKey&&!e.metaKey){e.preventDefault();buf+=e.key;rnd();}
   };
   wins.terminal.onclose=function(){termInput=null;};
 }
-var termInput=null;
-function runCmd(TC,line){var sp=line.indexOf(' ');var name=(sp<0?line:line.slice(0,sp)).trim();var args=(sp<0?'':line.slice(sp+1)).trim();if(name==='')return;if(TC[name])TC[name](args);else TC.__unknown(name);}
-function makeCmds(W,Wraw,esc){
-  function ok(l){Wraw('<span class="ok">  [ OK ] </span><span class="gr">'+esc(l)+'</span>');}
-  var C={
-   __unknown:function(n){W('Unknown command: '+n+" (try 'help')",'err');},
-   help:function(){['THUOS shell commands:','  help about version status sysinfo uptime ticks','  mem pages allocpage freepage','  heap kmalloc N kfree A   vmm [A]','  ps sched tasks','  ls   cat F   write F T','  echo banner color N clear crash div0 reboot'].forEach(function(l){W(l);});},
-   about:function(){W('THUOS - a from-scratch personal operating system.');W('Kernel : THU Kernel');W('Goal   : local-first, privacy-first, honest engineering.');},
-   version:function(){W('THU Kernel 0.10.0 "Filesystem"','c');W('Milestone 0.10 - RAM filesystem (host-tested + boot-verified)');},
-   status:function(){W('THUOS subsystem status (honest):');['  [done] PMM, kernel heap','  [done] Paging ENABLED (CR0.PG)','  [done] Multitasking + context switch','  [done] RAM filesystem (ls/cat/write)','  [plan] ring 3 + syscall, userspace'].forEach(function(l){W(l,l.indexOf('[done]')>=0?'ok':'am');});},
-   sysinfo:function(){W('THUOS 0.10.0 "Filesystem"','c');W('Arch    : x86 (i386, 32-bit)');W('Timer   : PIT @ 100 Hz');W('Uptime  : '+secs()+' s ('+ticks()+' ticks)');W('Memory  : ~130559 KiB usable, '+KS.pmm.free+' free frames');W('Paging  : ENABLED (identity map low 8 MiB)');},
-   uptime:function(){W('Uptime: '+ticks()+' ticks, approx '+secs()+' seconds (PIT @ 100 Hz)');},
+function runCmd(TC,line){var sp=line.indexOf(' ');var name=(sp<0?line:line.slice(0,sp)).trim();var args=(sp<0?'':line.slice(sp+1)).trim();if(name==='')return;if(TC[name])TC[name](args);else TC.__u(name);}
+function makeCmds(W,Wraw,E,o){
+  function ok(l){Wraw('<span class="ok">  [ OK ] </span><span class="gr">'+E(l)+'</span>');}
+  var C={__u:function(n){W('Unknown command: '+n+" (try 'help')",'err');},
+   help:function(){['THUOS shell — perintah:','  help about version status sysinfo uptime ticks','  mem pages allocpage freepage','  heap  kmalloc N  kfree A   vmm [A]','  ps sched tasks','  ls   cat F   write F T','  echo banner clear crash div0 reboot'].forEach(function(l){W(l);});},
+   about:function(){W('THUOS - from-scratch personal OS.');W('local-first · privacy-first · honest engineering.');},
+   version:function(){W('THU Kernel 0.10.0 "Filesystem"','c');W('host-tested + boot-verified in QEMU');},
+   status:function(){['  [done] PMM, kernel heap','  [done] Paging ENABLED (CR0.PG)','  [done] Multitasking + context switch','  [done] RAM filesystem','  [plan] ring 3 + syscall, userspace'].forEach(function(l){W(l,l.indexOf('[done]')>=0?'ok':'am');});},
+   sysinfo:function(){W('THUOS 0.10.0 "Filesystem"','c');W('Arch    : x86 (i386, 32-bit)');W('Timer   : PIT @ 100 Hz');W('Uptime  : '+secs()+' s ('+ticks()+' ticks)');W('Memory  : ~130559 KiB, '+KS.pmm.free+' free frames');W('Paging  : ENABLED (identity map 8 MiB)');},
+   uptime:function(){W('Uptime: '+ticks()+' ticks, ~'+secs()+' s (PIT @ 100 Hz)');},
    ticks:function(){W(''+ticks());},
-   pages:function(){W('Physical memory (4 KiB frames):');W('  usable : ~130559 KiB ('+KS.pmm.usable+' frames)');W('  free   : '+KS.pmm.free+' frames (~'+(KS.pmm.free*4)+' KiB)');W('  used   : '+KS.pmm.used+' frames');},
-   mem:function(){W('Memory hint: 639 KiB low, 130048 KiB high (Multiboot)');C.pages();},
-   allocpage:function(){var a=pmmAlloc();if(!a){W('allocpage: out of physical memory','err');return;}W('Allocated frame at physical '+hex8(a)+' (free now: '+KS.pmm.free+' frames)');W('Free it with: freepage '+hex8(a));},
-   freepage:function(ar){var a=parseHex(ar);if(a===null){W('usage: freepage <hex>','err');return;}var r=pmmFree(a);if(r===0)W('Freed frame at '+hex8(a&~0xFFF)+' (free now: '+KS.pmm.free+' frames)');else if(r===-2)W('freepage: '+hex8(a)+' is a protected region (refused)','err');else if(r===-3)W('freepage: '+hex8(a)+' was already free','err');else W('freepage: '+hex8(a)+' out of range','err');},
-   heap:function(){W('Kernel heap:');W('  total : '+KS.heapTOTAL+' bytes');W('  used  : '+heapUsed()+' bytes');W('  free  : '+heapFree()+' bytes');W('  blocks: '+KS.heap.length);W('  integrity: OK','ok');},
-   kmalloc:function(ar){var n=parseInt(ar,10);if(!(n>0)){W('usage: kmalloc <bytes>','err');return;}var p=kmalloc(n);if(!p){W('kmalloc('+n+'): out of heap memory','err');return;}W('kmalloc('+n+') = '+hex8(p)+'  (heap free now: '+heapFree()+' bytes)');W('Free it with: kfree '+hex8(p));},
-   kfree:function(ar){var a=parseHex(ar);if(a===null){W('usage: kfree <hex>','err');return;}var k=kfree(a);W('kfree('+hex8(a)+'): heap free now '+heapFree()+' bytes, integrity OK'+(k?'':' (not an active pointer)'));},
-   vmm:function(ar){if(ar){var va=parseHex(ar);if(va===null){W('usage: vmm <hex>','err');return;}var pa=translate(va);if(pa<0)W('vmm: va '+hex8(va)+' is NOT mapped','err');else W('vmm: va '+hex8(va)+' -> pa '+hex8(pa));return;}W('Virtual memory (paging): ENABLED (CR0.PG)','c');W('  identity map: low 8192 KiB');W('  va 0x00400000 -> pa '+hex8(translate(0x400000)));W('  running under paging: YES (boot-verified)','ok');},
-   ps:function(){W('Scheduler (round-robin):');W('  task 0  READY  quantum 5/5');W('  task 1  READY  quantum 3/3');W('  task 2  READY  quantum 2/2');W('  runnable 3, current -1');},
-   sched:function(){var s='';for(var i=0;i<10;i++)s+=(i%3)+' ';W('Live round-robin pick order: '+s.trim());},
-   tasks:function(){W('  [coop] starting 3 cooperative tasks...','vi');for(var t=1;t<=3;t++)for(var k=0;k<3;k++)W('  [task '+k+'] tick '+t+' (own stack, via scheduler)');for(var k2=0;k2<3;k2++)W('  [task '+k2+'] done');W('  [coop] all tasks finished, back in kernel main','vi');},
-   ls:function(){W('Files in ramfs ('+fsBytes()+' bytes used):');var any=false;for(var k in KS.fs)if(KS.fs.hasOwnProperty(k)){W('  '+k+'  ('+KS.fs[k].length+' bytes)');any=true;}if(!any)W('  (no files)');},
+   pages:function(){W('Physical memory (4 KiB frames):');W('  usable : ~130559 KiB ('+KS.pmm.usable+' frames)');W('  free   : '+KS.pmm.free+' frames');W('  used   : '+KS.pmm.used+' frames');},
+   mem:function(){W('Memory hint: 639 KiB low, 130048 KiB high');C.pages();},
+   allocpage:function(){var a=pmmAlloc();if(!a){W('out of physical memory','err');return;}W('Allocated frame at '+hex8(a)+' (free now: '+KS.pmm.free+')');},
+   freepage:function(ar){var a=parseHex(ar);if(a===null){W('usage: freepage <hex>','err');return;}var r=pmmFree(a);if(r===0)W('Freed '+hex8(a&~0xFFF)+' (free now: '+KS.pmm.free+')');else if(r===-2)W('protected region (refused)','err');else if(r===-3)W('was already free','err');else W('out of range','err');},
+   heap:function(){W('Kernel heap:');W('  total : '+KS.heapTOTAL+' B');W('  used  : '+heapUsed()+' B');W('  free  : '+heapFree()+' B');W('  blocks: '+KS.heap.length);W('  integrity: OK','ok');},
+   kmalloc:function(ar){var n=parseInt(ar,10);if(!(n>0)){W('usage: kmalloc <bytes>','err');return;}var p=kmalloc(n);if(!p){W('out of heap memory','err');return;}W('kmalloc('+n+') = '+hex8(p)+'  (free now: '+heapFree()+' B)');},
+   kfree:function(ar){var a=parseHex(ar);if(a===null){W('usage: kfree <hex>','err');return;}var k=kfree(a);W('kfree('+hex8(a)+'): free now '+heapFree()+' B'+(k?'':' (not active)'));},
+   vmm:function(ar){if(ar){var va=parseHex(ar);if(va===null){W('usage: vmm <hex>','err');return;}var pa=translate(va);if(pa<0)W('va '+hex8(va)+' NOT mapped','err');else W('va '+hex8(va)+' -> pa '+hex8(pa));return;}W('Paging: ENABLED (CR0.PG)','c');W('  identity map low 8 MiB');W('  running under paging: YES (boot-verified)','ok');},
+   ps:function(){W('Scheduler (round-robin):');W('  task 0 READY q5  · task 1 READY q3 · task 2 READY q2');W('  runnable 3, current -1');},
+   sched:function(){var s='';for(var i=0;i<10;i++)s+=(i%3)+' ';W('round-robin pick order: '+s.trim());},
+   tasks:function(){W('  [coop] starting 3 cooperative tasks...','vi');for(var t=1;t<=3;t++)for(var k=0;k<3;k++)W('  [task '+k+'] tick '+t);for(var k2=0;k2<3;k2++)W('  [task '+k2+'] done');W('  [coop] all tasks finished','vi');},
+   ls:function(){W('Files in ramfs ('+fsBytes()+' bytes):');var a=false;for(var k in KS.fs)if(KS.fs.hasOwnProperty(k)){W('  '+k+'  ('+KS.fs[k].length+' B)');a=true;}if(!a)W('  (no files)');},
    cat:function(ar){if(!ar){W('usage: cat <file>','err');return;}if(!KS.fs.hasOwnProperty(ar)){W('cat: '+ar+': not found','err');return;}KS.fs[ar].split('\n').forEach(function(l){W(l);});},
    write:function(ar){var sp=ar.indexOf(' ');if(sp<0){W('usage: write <file> <text>','err');return;}var nm=ar.slice(0,sp),tx=ar.slice(sp+1);KS.fs[nm]=tx;fsSave();W("wrote "+tx.length+" bytes to '"+nm+"'");},
    echo:function(ar){W(ar);},
-   banner:function(){['','  ##### THUOS #####','  0.10.0 "Filesystem"',''].forEach(function(l){W(l,'vi');});},
-   color:function(ar){W('Text color set to '+(parseInt(ar,10)||0)+'. (simulasi)');},
-   clear:function(){var o=document.querySelector('#to');if(o)o.innerHTML='';},
-   crash:function(ar){if(ar!=='div0'){W('usage: crash div0','err');return;}W('*** KERNEL PANIC ***','err');W('EXCEPTION: Divide-by-zero (#DE), vector 0','err');W('  eip=0x0010a3f1 cs=0x08 eflags=0x00000202','err');W('System halted.','am');},
-   reboot:function(){W('Rebooting THUOS...');}
-  };
-  C['div0']=function(){C.crash('div0');};
-  return C;
+   banner:function(){['','  ##### THUOS 0.10 #####',''].forEach(function(l){W(l,'vi');});},
+   clear:function(){o.innerHTML='';},
+   crash:function(ar){if(ar!=='div0'){W('usage: crash div0','err');return;}W('*** KERNEL PANIC ***','err');W('EXCEPTION: Divide-by-zero (#DE)','err');W('  eip=0x0010a3f1 eflags=0x00000202','err');W('System halted.','am');},
+   reboot:function(){W('Rebooting...');}};
+  C['div0']=function(){C.crash('div0');};return C;
 }
 
-/* ---- Monitor ---- */
+/* ---- Monitor (live sparklines) ---- */
 function mountMonitor(bd){
-  function render(){
-    var hu=heapUsed(),hf=heapFree(),hp=Math.round(hu/KS.heapTOTAL*100);
-    var fu=KS.pmm.used,ff=KS.pmm.free,fp=Math.round(fu/(fu+ff)*100);
-    bd.innerHTML=
-     '<div class="ps">state kernel · live</div>'+
-     '<h4>Memori fisik (PMM)</h4>'+
-     '<div class="gauge"><div class="l"><span>frame terpakai</span><span>'+fu+' / '+(fu+ff)+'</span></div><div class="track"><i class="fill f1" style="width:'+Math.max(3,fp)+'%"></i></div></div>'+
-     '<div class="kv"><span>bebas</span><span>'+ff+' frame (~'+(ff*4)+' KiB)</span></div>'+
-     '<h4 style="margin-top:14px">Kernel heap (kmalloc)</h4>'+
-     '<div class="gauge"><div class="l"><span>terpakai</span><span>'+hu+' / '+KS.heapTOTAL+' B</span></div><div class="track"><i class="fill f2" style="width:'+Math.max(2,hp)+'%"></i></div></div>'+
-     '<div class="kv"><span>blok</span><span>'+KS.heap.length+'</span></div>'+
-     '<div class="kv"><span>integritas</span><span class="pill">OK</span></div>'+
-     '<h4 style="margin-top:14px">Paging</h4>'+
-     '<div class="kv"><span>status</span><span class="pill">ENABLED · CR0.PG</span></div>'+
-     '<div class="kv"><span>identity map</span><span>low 8 MiB</span></div>'+
-     '<h4 style="margin-top:14px">Scheduler</h4>'+
-     '<div class="tlist"><div class="row"><span>task 0</span><span>READY</span></div><div class="row"><span>task 1</span><span>READY</span></div><div class="row"><span>task 2</span><span>READY</span></div></div>'+
-     '<div class="kv"><span>uptime</span><span>'+secs()+' s</span></div>';
+  bd.innerHTML='<div class="ps">state kernel · live</div>'+
+   '<h4 style="margin-top:0">Memori fisik & heap (%)</h4><canvas class="spark" id="spk"></canvas>'+
+   '<div id="mstats"></div>';
+  var cv=bd.querySelector('#spk'),mx=cv.getContext('2d');var memH=[],heapH=[];
+  function draw(){
+    var r=cv.getBoundingClientRect();cv.width=r.width*2;cv.height=r.height*2;mx.scale(2,2);
+    var W=r.width,H=r.height;mx.clearRect(0,0,W,H);
+    function line(arr,col){if(arr.length<2)return;mx.strokeStyle=col;mx.lineWidth=2;mx.beginPath();for(var i=0;i<arr.length;i++){var x=i/(60-1)*W;var y=H-4-(arr[i]/100)*(H-8);if(i===0)mx.moveTo(x,y);else mx.lineTo(x,y);}mx.stroke();}
+    mx.strokeStyle='rgba(255,255,255,.06)';for(var g=1;g<4;g++){mx.beginPath();mx.moveTo(0,H/4*g);mx.lineTo(W,H/4*g);mx.stroke();}
+    line(memH,'#2de2c6');line(heapH,'#8b6dff');
   }
-  render();var iv=setInterval(function(){if(wins.monitor)render();else clearInterval(iv);},900);
+  function stats(){
+    var fp=Math.round(KS.pmm.used/(KS.pmm.used+KS.pmm.free)*100),hp=Math.round(heapUsed()/KS.heapTOTAL*100);
+    memH.push(fp);heapH.push(hp);if(memH.length>60)memH.shift();if(heapH.length>60)heapH.shift();
+    bd.querySelector('#mstats').innerHTML=
+     '<div class="kv"><span style="color:#2de2c6">■ memori fisik</span><span>'+KS.pmm.used+' / '+(KS.pmm.used+KS.pmm.free)+' frame ('+fp+'%)</span></div>'+
+     '<div class="kv"><span style="color:#8b6dff">■ kernel heap</span><span>'+heapUsed()+' / '+KS.heapTOTAL+' B ('+hp+'%)</span></div>'+
+     '<div class="kv"><span>heap blocks</span><span>'+KS.heap.length+'</span></div>'+
+     '<div class="kv"><span>paging</span><span class="pill">ENABLED · CR0.PG</span></div>'+
+     '<div class="kv"><span>scheduler</span><span>3 task · round-robin</span></div>'+
+     '<div class="kv"><span>uptime</span><span>'+secs()+' s ('+ticks()+' ticks)</span></div>';
+    draw();
+  }
+  stats();var iv=setInterval(function(){if(wins.monitor)stats();else clearInterval(iv);},1000);
   wins.monitor.onclose=function(){clearInterval(iv);};
+  wins.monitor.refresh=stats;
+}
+
+/* ---- Memory map (interactive heap visualizer) ---- */
+function mountMemory(bd){
+  function render(){
+    var total=KS.heapTOTAL;var blocks='';
+    KS.heap.forEach(function(b){var pct=(b.size+KS.HDR)/total*100;blocks+='<div class="blk '+(b.free?'f':'u')+'" style="width:'+pct+'%" title="'+(b.free?'FREE':'USED')+' '+b.size+' B"></div>';});
+    var frU=KS.pmm.used,frT=KS.pmm.used+KS.pmm.free;var frPct=frU/frT;
+    var cells='';for(var i=0;i<96;i++){cells+='<div class="fr '+(i/96<frPct?'u':'')+'"></div>';}
+    bd.innerHTML='<h3 style="margin-top:0">Peta Memori</h3><div class="ps">state allocator nyata (free-list)</div>'+
+     '<h4 style="margin-top:0">Kernel heap (1 MiB) — '+KS.heap.length+' blok</h4>'+
+     '<div class="mmap">'+blocks+'</div>'+
+     '<div class="legend"><span><i style="background:linear-gradient(180deg,var(--accent),rgba(139,109,255,.55))"></i>terpakai ('+heapUsed()+' B)</span><span><i style="background:rgba(255,255,255,.12)"></i>bebas ('+heapFree()+' B)</span></div>'+
+     '<div class="btnrow"><button class="btn" id="m4">kmalloc 4 KiB</button><button class="btn" id="m64">kmalloc 64 KiB</button><button class="btn g" id="mfree">free terakhir</button><button class="btn g" id="mreset">reset heap</button></div>'+
+     '<h4>Memori fisik (PMM) — '+frU+'/'+frT+' frame</h4><div class="frames">'+cells+'</div>'+
+     '<p class="note" style="margin-top:11px">Ini logika alokator yang sama dengan kernel: first-fit + split + coalesce. Sama persis dengan <b>kmalloc/kfree</b> di Terminal.</p>';
+    bd.querySelector('#m4').onclick=function(){var p=kmalloc(4096);if(p){lastAllocs.push(p);notify('kmalloc 4 KiB',hex8(p),'memory');}else notify('Heap penuh','tidak ada blok cukup besar','memory');render();refreshApps();};
+    bd.querySelector('#m64').onclick=function(){var p=kmalloc(65536);if(p){lastAllocs.push(p);notify('kmalloc 64 KiB',hex8(p),'memory');}else notify('Heap penuh','coba reset heap','memory');render();refreshApps();};
+    bd.querySelector('#mfree').onclick=function(){if(lastAllocs.length){var p=lastAllocs.pop();kfree(p);notify('kfree',hex8(p),'memory');}render();refreshApps();};
+    bd.querySelector('#mreset').onclick=function(){KS.heap=[{size:KS.heapTOTAL-KS.HDR,free:true}];lastAllocs=[];render();refreshApps();};
+  }
+  var lastAllocs=[];render();wins.memory.refresh=render;
 }
 
 /* ---- Files ---- */
 function mountFiles(bd){
   var cur=null;
   function render(){
-    var items='';for(var k in KS.fs)if(KS.fs.hasOwnProperty(k))items+='<div class="it'+(k===cur?' on':'')+'" data-f="'+k+'">'+k+'</div>';
-    bd.innerHTML='<div class="fl"><div class="side"><button class="new" id="fnew">＋ berkas baru</button>'+items+'</div>'+
-      '<div class="main">'+(cur===null?'<div class="note">Pilih atau buat berkas. Ini ramfs yang sama dengan perintah ls/cat/write di Terminal.</div>':
-      '<input class="fn" id="fname" value="'+cur+'"><textarea id="fbody">'+(KS.fs[cur]||'').replace(/</g,'&lt;')+'</textarea><div class="fb"><span>local-first · tersimpan di perangkat</span><button class="btn" id="fsave">Simpan</button></div>')+'</div></div>';
+    var items='';for(var k in KS.fs)if(KS.fs.hasOwnProperty(k))items+='<div class="it'+(k===cur?' on':'')+'" data-f="'+k+'"><span class="fi">'+ICON.files+'</span>'+k+'</div>';
+    bd.innerHTML='<div class="fl"><div class="side"><button class="new" id="fnew">＋ berkas baru</button>'+items+'</div><div class="main">'+
+      (cur===null?'<div class="note">Pilih atau buat berkas. Ramfs ini sama dengan ls/cat/write di Terminal — tersimpan di perangkat (local-first).</div>':
+      '<input class="fn" id="fname" value="'+cur+'"><textarea id="fbody">'+(KS.fs[cur]||'').replace(/</g,'&lt;')+'</textarea><div class="fb"><span>local-first</span><span><button class="btn g" id="fdel" style="margin-right:6px">Hapus</button><button class="btn" id="fsave">Simpan</button></span></div>')+
+      '</div></div>';
     bd.querySelectorAll('.it').forEach(function(it){it.onclick=function(){cur=it.dataset.f;render();};});
-    var nb=bd.querySelector('#fnew');if(nb)nb.onclick=function(){var n='catatan'+(Object.keys(KS.fs).length);KS.fs[n]='';fsSave();cur=n;render();};
-    var sv=bd.querySelector('#fsave');if(sv)sv.onclick=function(){var nm=bd.querySelector('#fname').value.trim()||cur;var bdy=bd.querySelector('#fbody').value;if(nm!==cur)delete KS.fs[cur];KS.fs[nm]=bdy;cur=nm;fsSave();render();refreshApps();};
+    var nb=bd.querySelector('#fnew');if(nb)nb.onclick=function(){var n='catatan'+Object.keys(KS.fs).length;KS.fs[n]='';fsSave();cur=n;render();refreshApps();};
+    var sv=bd.querySelector('#fsave');if(sv)sv.onclick=function(){var nm=bd.querySelector('#fname').value.trim()||cur;var bdy=bd.querySelector('#fbody').value;if(nm!==cur)delete KS.fs[cur];KS.fs[nm]=bdy;cur=nm;fsSave();notify('Tersimpan',nm,'files');render();refreshApps();};
+    var dl=bd.querySelector('#fdel');if(dl)dl.onclick=function(){delete KS.fs[cur];cur=null;fsSave();render();refreshApps();};
   }
-  render();
-  wins.files.refresh=render;
+  render();wins.files.refresh=function(){if(cur===null||KS.fs.hasOwnProperty(cur))render();};
 }
 
-/* ---- Tasks ---- */
-function mountTasks(bd){
-  bd.innerHTML='<h3>Multitasking kooperatif</h3><div class="ps">scheduler + context switch (nyata di kernel)</div>'+
-   '<p class="note">3 task jalan bergantian di stack masing-masing lewat scheduler round-robin, lalu keluar — persis demo yang di-boot-verify CI.</p>'+
-   '<button class="btn" id="trun">▸ Jalankan demo</button><div class="o" id="tout" style="font-family:var(--mono);font-size:12px;line-height:1.5;margin-top:12px;white-space:pre-wrap;color:var(--ink2)"></div>';
-  var o=bd.querySelector('#tout');
-  bd.querySelector('#trun').onclick=function(){
-    o.innerHTML='';var lines=[];lines.push(['vi','[coop] starting 3 cooperative tasks...']);
-    for(var t=1;t<=3;t++)for(var k=0;k<3;k++)lines.push(['','  [task '+k+'] tick '+t]);
-    for(var k2=0;k2<3;k2++)lines.push(['gr','  [task '+k2+'] done']);
-    lines.push(['vi','[coop] all tasks finished, back in kernel main']);
-    var i=0;(function nx(){if(i<lines.length){var d=document.createElement('div');if(lines[i][0])d.className=lines[i][0];d.textContent=lines[i][1];o.appendChild(d);o.scrollTop=o.scrollHeight;i++;setTimeout(nx,140);}})();
+/* ---- Scheduler (animated) ---- */
+function mountSched(bd){
+  bd.innerHTML='<h3 style="margin-top:0">Scheduler & Multitasking</h3><div class="ps">round-robin · context switch nyata</div>'+
+   '<div class="ring" id="ring"></div>'+
+   '<div class="btnrow"><button class="btn" id="srun">▸ Jalankan 3 task (kooperatif)</button></div>'+
+   '<div id="slog" style="font-family:var(--mono);font-size:12px;line-height:1.5;margin-top:12px;white-space:pre-wrap;color:var(--ink2);max-height:150px;overflow:auto"></div>'+
+   '<p class="note">3 task jalan bergantian di stack masing-masing lewat scheduler, lalu keluar — demo yang di-boot-verify CI.</p>';
+  var ring=bd.querySelector('#ring');
+  function drawRing(active){var h='';for(var i=0;i<3;i++)h+='<div class="tk'+(i===active?' run':'')+'"><div class="n">T'+i+'</div><div class="s">'+(i===active?'RUNNING':'ready')+'</div></div>';ring.innerHTML=h;}
+  drawRing(-1);
+  bd.querySelector('#srun').onclick=function(){
+    var log=bd.querySelector('#slog');log.innerHTML='';
+    var seq=[];for(var t=1;t<=3;t++)for(var k=0;k<3;k++)seq.push([k,'  [task '+k+'] tick '+t+' (own stack)']);
+    for(var k2=0;k2<3;k2++)seq.push([k2,'  [task '+k2+'] done']);
+    seq.push([-1,'  [coop] all tasks finished, back in main']);
+    var i=0;(function nx(){if(i<seq.length){drawRing(seq[i][0]);var d=document.createElement('div');if(seq[i][0]<0)d.className='vi';d.textContent=seq[i][1];log.appendChild(d);log.scrollTop=log.scrollHeight;i++;setTimeout(nx,180);}else drawRing(-1);})();
   };
+}
+
+/* ---- Settings ---- */
+var ACCENTS=['#8b6dff','#2de2c6','#ff6db0','#ffcf76','#54e6a6','#7ad7ff'];
+function applyAccent(c){document.documentElement.style.setProperty('--accent',c);try{localStorage.setItem('thuos_accent',c);}catch(e){}
+  document.querySelectorAll('#swatches .swb').forEach(function(s){s.classList.toggle('on',s.dataset.c===c);});}
+function applyWall(w){document.getElementById('sky').className=w;try{localStorage.setItem('thuos_wall',w);}catch(e){}
+  document.querySelectorAll('#walls .wpb').forEach(function(b){b.classList.toggle('on',b.dataset.w===w);});}
+function applyBright(v){document.getElementById('dim').style.opacity=(v/100);try{localStorage.setItem('thuos_bright',v);}catch(e){}var s=document.getElementById('bright');if(s&&s.value!=v)s.value=v;}
+function mountSettings(bd){
+  bd.innerHTML='<h3 style="margin-top:0">Pengaturan</h3><div class="ps">tema · tersimpan di perangkat</div>'+
+   '<h4 style="margin-top:0">Aksen</h4><div class="sw" id="sset"></div>'+
+   '<h4>Wallpaper</h4><div class="wp" id="wset"><button class="wpb" data-w="aurora">Aurora</button><button class="wpb" data-w="dusk">Senja</button><button class="wpb" data-w="mono">Mono</button></div>'+
+   '<h4>Kecerahan</h4><input type="range" min="0" max="55" value="'+(localStorage.getItem("thuos_bright")||0)+'" class="slider" id="sbri" style="width:100%">'+
+   '<p class="note" style="margin-top:14px">THUOS local-first: preferensi disimpan di perangkatmu, bukan cloud.</p>';
+  var sset=bd.querySelector('#sset');ACCENTS.forEach(function(c){var b=document.createElement('div');b.className='swb';b.dataset.c=c;b.style.background=c;b.onclick=function(){applyAccent(c);};sset.appendChild(b);});
+  var cur=localStorage.getItem('thuos_accent')||'#8b6dff';sset.querySelectorAll('.swb').forEach(function(s){s.classList.toggle('on',s.dataset.c===cur);});
+  var curw=localStorage.getItem('thuos_wall')||'aurora';bd.querySelectorAll('#wset .wpb').forEach(function(b){b.classList.toggle('on',b.dataset.w===curw);b.onclick=function(){applyWall(b.dataset.w);};});
+  bd.querySelector('#sbri').oninput=function(){applyBright(this.value);};
 }
 
 /* ---- About ---- */
 function mountAbout(bd){
   var ms=[['0.3','Physical memory manager'],['0.4','Kernel heap (kmalloc/kfree)'],['0.5','Paging tables'],['0.6','Scheduler + boot-verified'],['0.7','Paging ENABLED (CR0.PG)'],['0.8','Context switch'],['0.9','Cooperative multitasking'],['0.10','RAM filesystem'],['next','Ring 3 + syscall, userspace',1]];
-  var h='<h3>THUOS 0.10 "Filesystem"</h3><div class="ps">from-scratch OS · x86 i386 · Multiboot 1</div>'+
-   '<p class="note">Kernel from-scratch yang <b>boot di QEMU</b> &amp; diverifikasi CI tiap push. Sudah punya virtual memory, multitasking, dan filesystem — semua host-tested + boot-verified.</p>'+
-   '<h4 style="margin-top:6px">Perjalanan</h4>';
+  var h='<h3 style="margin-top:0">THUOS 0.10 "Filesystem"</h3><div class="ps">from-scratch OS · x86 i386 · Multiboot 1</div>'+
+   '<p class="note">Kernel from-scratch yang <b>boot di QEMU</b> &amp; diverifikasi CI tiap push. Sudah punya virtual memory, multitasking, dan filesystem — host-tested + boot-verified.</p><h4 style="margin-top:4px">Perjalanan</h4>';
   ms.forEach(function(m){h+='<div class="mile'+(m[2]?' pl':'')+'"><span class="d"></span><span class="vv">'+m[0]+'</span><span>'+m[1]+'</span></div>';});
-  h+='<p class="note" style="margin-top:12px"><b style="color:var(--amber)">Jujur:</b> desktop ini visualisasi konsep dari state THUOS sekarang. Kernel asli = shell teks di QEMU (lihat app Terminal — perilakunya setia). Belum menyaingi Windows/macOS; ini fondasi yang tumbuh ke arah yang bisa dimenangkan.</p>';
+  h+='<p class="note" style="margin-top:13px"><b style="color:var(--amber)">Jujur:</b> desktop ini visualisasi konsep dari state THUOS sekarang. Kernel asli = shell teks di QEMU (app Terminal meniru perilakunya dengan setia). Belum menyaingi Windows/macOS; ini fondasi yang tumbuh ke arah yang bisa dimenangkan.</p>';
   bd.innerHTML=h;
 }
 
-/* refresh open monitors/files after state changes */
-function refreshApps(){ if(wins.files&&wins.files.refresh)wins.files.refresh(); }
+function refreshApps(){if(wins.monitor&&wins.monitor.refresh)wins.monitor.refresh();if(wins.memory&&wins.memory.refresh)wins.memory.refresh();if(wins.files&&wins.files.refresh)wins.files.refresh();}
 
-/* ============ dock ============ */
-var DOCK=['terminal','monitor','files','tasks','about'];
+/* ===================== dock + bar ===================== */
+var DOCK=['terminal','monitor','memory','files','sched','settings','about'];
 var dock=document.getElementById('dock');
 DOCK.forEach(function(id){var a=APPS[id];var d=document.createElement('div');d.className='di';d.dataset.app=id;d.style.setProperty('--dc',a.dc);
-  d.innerHTML='<div class="ic">'+ICON[a.icon]+'</div><div class="lb">'+a.name.split(' ')[0]+'</div>';d.onclick=function(){openApp(id);};dock.appendChild(d);});
+  d.innerHTML='<div class="ic">'+ICON[a.icon]+'</div><div class="lb">'+a.name.split(' ')[0]+'</div><span class="run"></span>';d.onclick=function(){openApp(id);};dock.appendChild(d);});
+
+document.getElementById('ccBtn').innerHTML=ICON.sliders;
+var cc=document.getElementById('cc');
+document.getElementById('ccBtn').onclick=function(e){e.stopPropagation();cc.classList.toggle('on');};
+document.addEventListener('pointerdown',function(e){if(!e.target.closest('#cc,#ccBtn'))cc.classList.remove('on');});
+/* control center wiring */
+(function(){var sw=document.getElementById('swatches');ACCENTS.forEach(function(c){var b=document.createElement('div');b.className='swb';b.dataset.c=c;b.style.background=c;b.onclick=function(){applyAccent(c);};sw.appendChild(b);});})();
+document.querySelectorAll('#walls .wpb').forEach(function(b){b.onclick=function(){applyWall(b.dataset.w);};});
+document.getElementById('bright').oninput=function(){applyBright(this.value);};
+var motionOn=false;document.getElementById('tgmotion').onclick=function(){motionOn=!motionOn;document.body.classList.toggle('reduce',motionOn);this.textContent=motionOn?'on':'off';};
 
 /* keyboard -> terminal */
-document.addEventListener('keydown',function(e){if(termInput&&activeId==='terminal'){termInput(e);}});
+document.addEventListener('keydown',function(e){if(termInput&&activeId==='terminal')termInput(e);});
 
-/* clock */
+/* clock + bar stats */
 function pad(n){return (n<10?'0':'')+n;}
-function tick(){var d=new Date();document.getElementById('clock').textContent=pad(d.getHours())+':'+pad(d.getMinutes());
-  document.getElementById('memmini').textContent='mem '+Math.round(KS.pmm.used/(KS.pmm.used+KS.pmm.free)*100)+'% · heap '+Math.round(heapUsed()/KS.heapTOTAL*100)+'%';}
+var DAYS=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'],MON=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+function tick(){var d=new Date();var hm=pad(d.getHours())+':'+pad(d.getMinutes());
+  document.getElementById('clock').textContent=hm;var lc=document.getElementById('lclock');if(lc)lc.textContent=hm;
+  var ld=document.getElementById('ldate');if(ld)ld.textContent=DAYS[d.getDay()]+', '+d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear();
+  document.getElementById('smem').textContent='mem '+Math.round(KS.pmm.used/(KS.pmm.used+KS.pmm.free)*100)+'%';
+  document.getElementById('sheap').textContent='heap '+Math.round(heapUsed()/KS.heapTOTAL*100)+'%';}
 tick();setInterval(tick,1000);
 
-/* ============ boot ============ */
-var BOOT=[
- 'THUOS 0.10.0 "Filesystem"','THU Kernel - x86 (i386, 32-bit)','From-scratch OS foundation. Booting...','',
- '[THUOS] serial COM1 online',
- '  [ OK ] GDT, IDT, exceptions, PIC/IRQ, PIT, keyboard',
- '  [ OK ] Physical memory manager (4 KiB frames)',
- '  [ OK ] Kernel heap (1 MiB, kmalloc/kfree)',
- '  [ OK ] Paging ENABLED (CR0.PG) - virtual memory',
- '  [ OK ] Scheduler + context switch',
- '  [ OK ] Cooperative multitasking (3 tasks)',
- '  [ OK ] RAM filesystem ready',
- '','Welcome to THUOS.'
-];
+/* starfield */
+(function(){var c=document.getElementById('stars'),x=c.getContext('2d'),st=[],vw,vh;
+function ini(){c.width=vw=innerWidth;c.height=vh=innerHeight;st=[];var n=Math.round(vw*vh/16000);for(var i=0;i<n;i++)st.push({x:Math.random()*vw,y:Math.random()*vh,r:Math.random()*1.1+.2,t:Math.random()*6.28,z:Math.random()*.7+.3});}
+function dr(now){x.clearRect(0,0,vw,vh);for(var i=0;i<st.length;i++){var s=st[i];var tw=.5+.5*Math.sin(now/1000+s.t);x.globalAlpha=tw*s.z*.8;x.fillStyle=s.z>.7?'#dfe8ff':'#aebfe8';x.beginPath();x.arc(s.x,s.y,s.r,0,7);x.fill();}x.globalAlpha=1;requestAnimationFrame(dr);}
+addEventListener('resize',ini);ini();requestAnimationFrame(dr);})();
+
+/* restore prefs */
+(function(){var a=localStorage.getItem('thuos_accent');if(a)applyAccent(a);var w=localStorage.getItem('thuos_wall');if(w)applyWall(w);var b=localStorage.getItem('thuos_bright');if(b)applyBright(b);})();
+
+/* ===================== boot -> lock -> desktop ===================== */
+var BOOT=['THUOS 0.10.0 "Filesystem"','THU Kernel - x86 (i386, 32-bit)','From-scratch OS foundation. Booting...','',
+ '[THUOS] serial COM1 online','  [ OK ] GDT, IDT, exceptions, PIC/IRQ, PIT, keyboard','  [ OK ] Physical memory manager (4 KiB frames)',
+ '  [ OK ] Kernel heap (1 MiB, kmalloc/kfree)','  [ OK ] Paging ENABLED (CR0.PG) - virtual memory','  [ OK ] Scheduler + context switch',
+ '  [ OK ] Cooperative multitasking (3 tasks)','  [ OK ] RAM filesystem ready','','Welcome to THUOS.'];
 var bt=document.getElementById('boottext'),bi=0;
-function bstep(){
-  if(bi<BOOT.length){var l=BOOT[bi];
-    bt.innerHTML += (l.indexOf('[ OK ]')>=0 ? '<span style="color:var(--green)">'+l+'</span>' : (l.indexOf('THUOS 0.10')===0?'<span style="color:var(--cyan)">'+l+'</span>':l))+'\n';
-    bi++;setTimeout(bstep, l===''?60:150);
-  } else setTimeout(finishBoot,650);
-}
-function finishBoot(){
-  var b=document.getElementById('boot');b.classList.add('gone');setTimeout(function(){b.style.display='none';},500);
-  openApp('terminal');openApp('monitor');
-  var h=document.getElementById('hint');h.innerHTML='Buka app dari <b>dock</b> ↓ · klik Terminal lalu ketik <b>help</b>';h.classList.add('on');setTimeout(function(){h.classList.remove('on');},6000);
-}
+function bstep(){if(bi<BOOT.length){var l=BOOT[bi];bt.innerHTML+=(l.indexOf('[ OK ]')>=0?'<span style="color:var(--green)">'+l+'</span>':(l.indexOf('THUOS 0.10')===0?'<span style="color:var(--cyan)">'+l+'</span>':l))+'\n';bi++;setTimeout(bstep,l===''?55:140);}else setTimeout(toLock,600);}
+function toLock(){var b=document.getElementById('boot');b.classList.add('gone');setTimeout(function(){b.style.display='none';},500);document.getElementById('lock').classList.remove('gone');}
+var unlocked=false;
+function unlock(){if(unlocked)return;unlocked=true;document.getElementById('lock').classList.add('gone');setTimeout(function(){document.getElementById('lock').style.display='none';},520);
+  setTimeout(function(){openApp('terminal');openApp('monitor');notify('Selamat datang, thu','THUOS 0.10 siap. Buka app dari dock.','about');
+    var h=document.getElementById('hint');h.innerHTML='Klik <b>Terminal</b> lalu ketik <b>help</b> · buka <b>Peta Memori</b> untuk lihat heap';h.classList.add('on');setTimeout(function(){h.classList.remove('on');},6500);},420);}
+document.getElementById('lock').addEventListener('click',unlock);
+document.addEventListener('keydown',function(e){if(!unlocked&&(e.key==='Enter'||e.key===' ')){unlock();}if(e.key==='Escape'){cc.classList.remove('on');}});
 window.addEventListener('load',function(){KS.boot0=Date.now();bstep();});
 </script>
 </body>

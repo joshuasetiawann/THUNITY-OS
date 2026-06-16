@@ -114,7 +114,7 @@ boottest: kernel
 	@bash scripts/boottest.sh $(KERNEL)
 
 demo:
-	@echo "==> THU Desktop demo: http://localhost:8080/preview/thuos_preview.html"
+	@echo "==> THU Desktop demo: http://localhost:8080/preview/thuos_os.html"
 	@python3 -m http.server 8080
 
 clean:
