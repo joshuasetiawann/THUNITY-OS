@@ -1,6 +1,6 @@
 # THUOS — Project Status
 
-**Milestone:** 0.10 "Filesystem" — in-RAM local-first fs (ls/cat/write), host-tested + boot-verified in QEMU (CI)
+**Milestone:** 0.11 "Syscalls" — int 0x80 ABI (uptime/write/getpid/version), host-tested + boot-verified in QEMU (CI)
 **Date of this status:** 2026-06-06
 **Honesty rule:** every "Implemented" item is backed by a source file and passes
 the build + structural verification in [`BUILD_VERIFICATION.txt`](BUILD_VERIFICATION.txt).
@@ -35,6 +35,7 @@ what is actually run/tested.
 | **Cooperative context switch** | **Boot-verified (QEMU/CI)** | `kernel/sched/context.S`, `task.c` (`tests/test_task.c`); boot asserts `Context switch OK` |
 | **Cooperative multitasking** | **Boot-verified (QEMU/CI)** | `kernel/sched/coop.c` (scheduler + context switch); boot asserts `all tasks finished` |
 | **RAM filesystem (ls/cat/write)** | **Host-tested + boot-verified** | `kernel/fs/ramfs_core.c`, `fs.c` (`tests/test_fs.c`); boot asserts `RAM filesystem` |
+| **Syscall interface (int 0x80)** | **Host-tested + boot-verified** | `kernel/arch/x86/syscall_core.c`, `syscall.c`, `syscall_stub.S` (`tests/test_syscall.c`); boot self-test |
 | Freestanding `mem*`/`str*` | Implemented | `kernel/lib/string.c` |
 | **Multiboot memory-map parsing** | **Implemented** | `kernel/mm/multiboot.h`, `pmm.c` |
 | **Physical memory manager (4 KiB frames)** | **Implemented** | `kernel/mm/pmm.c`, `frame_bitmap.c`; unit test `tests/test_pmm.c` |

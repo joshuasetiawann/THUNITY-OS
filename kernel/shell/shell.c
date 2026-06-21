@@ -16,6 +16,7 @@
 #include "sched.h"
 #include "coop.h"
 #include "fs.h"
+#include "syscall.h"
 
 #define LINE_MAX 128
 
@@ -82,6 +83,7 @@ static void cmd_help(void) {
     kprintf("  ls         List files in the RAM filesystem\n");
     kprintf("  cat F      Print file F\n");
     kprintf("  write F T  Write text T to file F\n");
+    kprintf("  sys        Invoke syscalls via int 0x80 (demo)\n");
     kprintf("  echo       Print the rest of the line\n");
     kprintf("  banner     Show the THUOS banner\n");
     kprintf("  color N    Set text color (0-15)\n");
@@ -117,7 +119,8 @@ static void cmd_status(void) {
     kprintf("  [done]    Paging ENABLED (0.7, CR0.PG, boot-verified QEMU)\n");
     kprintf("  [done]    Cooperative multitasking (0.9, boot-verified)\n");
     kprintf("  [done]    RAM filesystem ls/cat/write (0.10)\n");
-    kprintf("  [plan]    Preemptive, ring 3 + syscall, userspace\n");
+    kprintf("  [done]    Syscall interface int 0x80 (0.11)\n");
+    kprintf("  [plan]    Ring 3 (user mode) + more syscalls, userspace\n");
 }
 
 static void cmd_sysinfo(void) {
@@ -270,6 +273,18 @@ static void cmd_write(const char *args) {
     else        kprintf("wrote %d bytes to '%s'\n", w, name);
 }
 
+static void cmd_sys(const char *args) {
+    (void)args;
+    const char *m = "  [sys_write] hello via int 0x80\n";
+    uint32_t len = 0; while (m[len]) len++;
+    kprintf("Invoking syscalls live via int 0x80:\n");
+    syscall_invoke(SYS_WRITE, 1, (uint32_t)(uintptr_t)m, len);
+    kprintf("  SYS_UPTIME  = %d ticks\n", syscall_invoke(SYS_UPTIME, 0, 0, 0));
+    kprintf("  SYS_GETPID  = %d\n",       syscall_invoke(SYS_GETPID, 0, 0, 0));
+    kprintf("  SYS_VERSION = 0x%04x\n",   syscall_invoke(SYS_VERSION, 0, 0, 0));
+    kprintf("  registered syscalls: %d\n", syscall_count());
+}
+
 static void cmd_thupkg(const char *args) {
     if (strcmp(args, "list") == 0) {
         kprintf("thupkg - installed/known packages (design preview):\n");
@@ -357,6 +372,7 @@ static void execute(char *line) {
     else if (strcmp(line, "ls") == 0)        cmd_ls();
     else if (strcmp(line, "cat") == 0)       cmd_cat(args);
     else if (strcmp(line, "write") == 0)     cmd_write(args);
+    else if (strcmp(line, "sys") == 0)       cmd_sys(args);
     else if (strcmp(line, "echo") == 0)      kprintf("%s\n", args);
     else if (strcmp(line, "banner") == 0)    print_banner();
     else if (strcmp(line, "color") == 0)     cmd_color(args);

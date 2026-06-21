@@ -80,6 +80,8 @@ test:
 	@./$(BUILD)/test_task
 	@gcc -O2 -std=gnu11 -Wall -Wextra -o $(BUILD)/test_fs tests/test_fs.c
 	@./$(BUILD)/test_fs
+	@gcc -O2 -std=gnu11 -Wall -Wextra -o $(BUILD)/test_syscall tests/test_syscall.c
+	@./$(BUILD)/test_syscall
 
 iso: kernel
 	@if command -v grub-mkrescue >/dev/null 2>&1 && command -v xorriso >/dev/null 2>&1; then \
