@@ -3,7 +3,8 @@
 #
 # Unlike the host unit tests (which check pure logic with native gcc), this
 # actually BOOTS the kernel on an emulated i386 and reads COM1 serial output,
-# then checks for the boot markers the kernel prints on the way up to its shell.
+# then checks for the boot markers the kernel prints on the way up to its shell
+# (incl. the ring-3 "User mode" round trip and the final thuos> prompt).
 # This is real boot verification. It is wired into CI (which installs QEMU), and
 # skips gracefully when QEMU is not present (e.g. this dev sandbox).
 #
@@ -39,7 +40,7 @@ cat "$LOG" 2>/dev/null || true
 echo "-------------------------"
 
 rc=0
-for marker in "THUOS" "Kernel heap" "Paging ENABLED" "Context switch OK" "all tasks finished" "RAM filesystem" "Syscall interface" "thuos>"; do
+for marker in "THUOS" "Kernel heap" "Paging ENABLED" "Context switch OK" "all tasks finished" "RAM filesystem" "Syscall interface" "User mode" "thuos>"; do
   if grep -qF "$marker" "$LOG" 2>/dev/null; then
     echo "  [ ok ] saw: $marker"
   else

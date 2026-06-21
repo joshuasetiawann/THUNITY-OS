@@ -21,6 +21,7 @@
 #include "coop.h"
 #include "fs.h"
 #include "syscall.h"
+#include "usermode.h"
 #include "shell.h"
 
 static void ok_line(const char *label) {
@@ -98,6 +99,10 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
     syscall_init();
     syscall_selftest();
     ok_line("Syscall interface (int 0x80, ABI for userspace)");
+
+    usermode_init();
+    usermode_selftest();       /* drop to ring 3, syscall back, return to ring 0 */
+    ok_line("User mode (ring 3): entered CPL 3 and returned via int 0x80");
 
     __asm__ volatile("sti");   /* interrupts on: timer + keyboard now live */
 

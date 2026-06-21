@@ -1,6 +1,8 @@
 /* THUOS — Global Descriptor Table.
- * Flat 32-bit memory model: kernel + user code/data segments spanning 4 GiB. */
+ * Flat 32-bit memory model: kernel + user code/data segments spanning 4 GiB,
+ * plus a TSS descriptor so the CPU has a kernel stack for ring 3 -> ring 0. */
 #include "gdt.h"
+#include "tss.h"
 #include "types.h"
 
 struct gdt_entry {
@@ -17,7 +19,7 @@ struct gdt_ptr {
     uint32_t base;
 } __attribute__((packed));
 
-static struct gdt_entry gdt[5];
+static struct gdt_entry gdt[6];
 static struct gdt_ptr   gdtp;
 
 /* Defined in gdt_flush.S: loads the GDTR and reloads the segment registers. */
@@ -43,5 +45,11 @@ void gdt_init(void) {
     gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); /* user code   (ring 3) */
     gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); /* user data   (ring 3) */
 
+    /* TSS: byte-granular system descriptor, access 0x89 (present, DPL 0,
+     * available 32-bit TSS). Fill the TSS first so its base/limit are known. */
+    tss_init();
+    gdt_set_gate(5, tss_base(), tss_limit(), 0x89, 0x00);
+
     gdt_flush((uint32_t)&gdtp);
+    tss_flush(tss_selector());                  /* ltr: load the task register */
 }

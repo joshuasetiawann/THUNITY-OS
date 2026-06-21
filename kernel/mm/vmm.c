@@ -13,8 +13,12 @@ static int      enabled = 0;
 
 void vmm_init(void) {
     uint32_t pts_phys = (uint32_t)(uintptr_t)page_tabs;
+    /* PTE_USER makes the low 8 MiB reachable from ring 3, which is what lets the
+     * user-mode self-test (0.12) execute and use a stack at CPL 3. This is a
+     * single flat map shared by kernel and user — NOT per-process isolation
+     * (a later milestone); ring 0 is unaffected (it can always touch user pages). */
     uint32_t n = vmm_identity_map(page_dir, (uint32_t *)page_tabs, pts_phys,
-                                  VMM_NPTS, VMM_IDMAP_BYTES, PTE_RW);
+                                  VMM_NPTS, VMM_IDMAP_BYTES, PTE_RW | PTE_USER);
     ready = (n == VMM_NPTS);
 }
 

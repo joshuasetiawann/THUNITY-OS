@@ -1,7 +1,7 @@
 # THUOS — Project Status
 
-**Milestone:** 0.11 "Syscalls" — int 0x80 ABI (uptime/write/getpid/version), host-tested + boot-verified in QEMU (CI)
-**Date of this status:** 2026-06-06
+**Milestone:** 0.12 "User Mode" — ring 3 (TSS + `iret` to CPL 3 + `int 0x80` from userspace), host-tested + boot self-test in QEMU (CI)
+**Date of this status:** 2026-06-09
 **Honesty rule:** every "Implemented" item is backed by a source file and passes
 the build + structural verification in [`BUILD_VERIFICATION.txt`](BUILD_VERIFICATION.txt).
 A QEMU boot **is** now performed automatically in CI (`scripts/boottest.sh`): the
@@ -23,7 +23,7 @@ what is actually run/tested.
 | VGA text console | Implemented | `kernel/drivers/vga.c` |
 | Serial COM1 (loopback self-test) | Implemented | `kernel/drivers/serial.c` |
 | `kprintf` formatted output | Implemented | `kernel/core/kprintf.c` |
-| GDT (flat 32-bit) | Implemented | `kernel/arch/x86/gdt.c`, `gdt_flush.S` |
+| GDT (flat 32-bit) + TSS | Implemented | `kernel/arch/x86/gdt.c`, `gdt_flush.S`, `tss.c` |
 | IDT + CPU exceptions 0–31 | Implemented | `kernel/arch/x86/idt.c`, `isr.c`, `isr_stubs.S` |
 | PIC remap + IRQ routing + EOI | Implemented | `kernel/arch/x86/pic.c`, `irq.c` |
 | PIT timer @ 100 Hz + uptime | Implemented | `kernel/arch/x86/pit.c` |
@@ -36,6 +36,7 @@ what is actually run/tested.
 | **Cooperative multitasking** | **Boot-verified (QEMU/CI)** | `kernel/sched/coop.c` (scheduler + context switch); boot asserts `all tasks finished` |
 | **RAM filesystem (ls/cat/write)** | **Host-tested + boot-verified** | `kernel/fs/ramfs_core.c`, `fs.c` (`tests/test_fs.c`); boot asserts `RAM filesystem` |
 | **Syscall interface (int 0x80)** | **Host-tested + boot-verified** | `kernel/arch/x86/syscall_core.c`, `syscall.c`, `syscall_stub.S` (`tests/test_syscall.c`); boot self-test |
+| **User mode (ring 3): TSS + iret + int 0x80 from CPL 3** | **Host-tested + boot self-test (CI)** | `kernel/arch/x86/usermode_core.c`, `usermode.c`, `usermode_entry.S`, `tss.c` (`tests/test_usermode.c`); boot asserts `User mode` |
 | Freestanding `mem*`/`str*` | Implemented | `kernel/lib/string.c` |
 | **Multiboot memory-map parsing** | **Implemented** | `kernel/mm/multiboot.h`, `pmm.c` |
 | **Physical memory manager (4 KiB frames)** | **Implemented** | `kernel/mm/pmm.c`, `frame_bitmap.c`; unit test `tests/test_pmm.c` |
@@ -43,8 +44,8 @@ what is actually run/tested.
 | **Memory shell commands** (`memmap`,`pages`,`allocpage`,`freepage`) | **Implemented** | `kernel/shell/shell.c` |
 | **Paging ENABLED (CR0.PG, identity map)** | **Boot-verified (QEMU/CI)** | `kernel/mm/vmm.c` enables paging; `vmm_core.c` host-tested (`tests/test_vmm.c`); boot-smoke asserts `Paging ENABLED` |
 | **Kernel heap (`kmalloc`/`kfree`)** | **Implemented** | `kernel/mm/kheap_core.c`, `kheap.c`; unit test `tests/test_kheap.c` |
-| VFS + initrd | Planned (0.4) | `docs/design/FILESYSTEM.md` |
-| Userspace, syscalls, ELF loader | Planned (0.5) | `docs/08_ROADMAP.md` |
+| VFS + initrd | Planned | `docs/design/FILESYSTEM.md` |
+| Per-process memory isolation + ELF loader + userspace programs | Planned (next) | `docs/08_ROADMAP.md` |
 | Framebuffer graphics + mouse | Planned (0.6) | `docs/design/GUI_THU_DESKTOP.md` |
 | In-kernel THU Desktop / window manager | Planned (0.7) | `docs/design/GUI_THU_DESKTOP.md` |
 | THUFS filesystem | Designed | `docs/design/FILESYSTEM.md` |
@@ -75,7 +76,8 @@ kept explicit.
 
 ## Next milestone
 
-**THUOS 0.4 — Filesystem Foundation:** initrd/ramdisk, a VFS abstraction
-(inode/file/dir/mount), and `ls`/`cat`/`pwd`. Paging and the kernel heap
-(designed in `docs/10`, `docs/11`) are the other near-term increments, to be
-implemented when they can be boot-verified.
+**THUOS 0.13 — Userspace foundations:** build on the ring-3 mechanism with
+per-process memory isolation (user pages distinct from kernel pages), more
+syscalls (`open`/`read`/`write` over ramfs), and a first loadable userspace
+program. Each step lands as a host-tested core + a boot self-test marker, in the
+verify-first discipline.

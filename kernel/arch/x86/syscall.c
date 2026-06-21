@@ -22,7 +22,7 @@ static int32_t sys_getpid(uint32_t a, uint32_t b, uint32_t c) {
     (void)a; (void)b; (void)c; return 0;                 /* kernel task */
 }
 static int32_t sys_version(uint32_t a, uint32_t b, uint32_t c) {
-    (void)a; (void)b; (void)c; return 0x000A;            /* 0.10 packed */
+    (void)a; (void)b; (void)c; return 0x000C;            /* 0.12 packed */
 }
 
 extern void syscall_stub(void);   /* syscall_stub.S */
@@ -37,11 +37,23 @@ void syscall_init(void) {
     idt_set_gate(0x80, (uint32_t)syscall_stub, 0x08, 0xEE);
 }
 
+/* CS of the most recent int 0x80. For a ring-3 caller the CPU records the user
+ * code selector (RPL 3) here, so (cs & 3) == 3 is hard proof the trap really
+ * originated in user mode rather than being faked from the kernel. */
+static volatile uint32_t last_cs = 0;
+
 /* Called from syscall_stub.S with the saved register frame. The number is in
  * eax and args in ebx/ecx/edx; the result is written back to the saved eax,
  * which `popa` restores so the caller receives it in eax. */
 void syscall_dispatch(registers_t *r) {
+    last_cs = r->cs;
     r->eax = (uint32_t)syscall_call(table, SYS_MAX, r->eax, r->ebx, r->ecx, r->edx);
+}
+
+uint32_t syscall_last_cs(void) { return last_cs; }
+
+int syscall_register_extra(int num, syscall_fn fn) {
+    return syscall_register(table, SYS_MAX, num, fn);
 }
 
 int syscall_count(void) {
