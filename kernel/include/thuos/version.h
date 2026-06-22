@@ -10,7 +10,7 @@
 
 #define THUOS_VERSION      "0.12.0"
 #define THUOS_CODENAME     "User Mode"
-#define THUOS_MILESTONE    "Milestone 0.12 - User mode (ring 3): TSS + iret to CPL 3 + int 0x80 from userspace, host-tested + boot self-test (QEMU/CI)"
+#define THUOS_MILESTONE    "Milestone 0.12 - User mode (ring 3): TSS + iret to CPL 3 + int 0x80 from userspace, host-tested + boot-verified (QEMU/CI)"
 #define THUOS_ARCH         "x86 (i386, 32-bit)"
 
 #define THUOS_BUILD_DATE   __DATE__

@@ -42,7 +42,7 @@ implemented and wired into `kernel_main()`:
 | Paging tables + translation (staged, not enabled) | ✅ Host-tested | `kernel/mm/vmm_core.c`, `vmm.c` (`tests/test_vmm.c`) |
 | Round-robin scheduler policy core | ✅ Host-tested | `kernel/sched/sched_core.c`, `sched.c` (`tests/test_sched.c`) |
 | Cooperative multitasking + RAM filesystem + `int 0x80` syscalls | ✅ Boot-verified (CI) | `kernel/sched/coop.c`, `kernel/fs/fs.c`, `kernel/arch/x86/syscall.c` |
-| User mode (ring 3): TSS + `iret` to CPL 3 + `int 0x80` from userspace | ✅ Host-tested + boot self-test (CI) | `kernel/arch/x86/usermode.c`, `usermode_entry.S`, `tss.c` (`tests/test_usermode.c`) |
+| User mode (ring 3): TSS + `iret` to CPL 3 + `int 0x80` from userspace | ✅ Host-tested + boot-verified (CI) | `kernel/arch/x86/usermode.c`, `usermode_entry.S`, `tss.c` (`tests/test_usermode.c`) |
 | Boot in QEMU → `thuos>` (serial smoke-test) | ✅ Boot-verified (CI) | `scripts/boottest.sh`, CI `boot-smoke` |
 
 > **Honesty:** logic is **host-tested** (`make test`: PMM, heap, paging, scheduler)

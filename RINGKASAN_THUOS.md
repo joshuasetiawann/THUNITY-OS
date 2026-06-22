@@ -6,7 +6,7 @@
 
 ## 0. Mulai cepat untuk sesi baru (PENTING)
 - **Repo GitHub (publik):** https://github.com/joshuasetiawann/THUNITY-OS
-  · milestone 0.11 di branch `claude/loving-ptolemy-JDEAO` (PR #1) · **0.12 "User Mode" di branch `claude/serene-dijkstra-earnge`** (PR baru) · CI: build + boot-smoke.
+  · milestone 0.11 di branch `claude/loving-ptolemy-JDEAO` (PR #1, closed) · **0.12 "User Mode" di branch `claude/serene-dijkstra-earnge`** (PR #2, base loving-ptolemy) · CI build + boot-smoke **hijau** (boot-verified di QEMU).
 - **Sandbox kadang rollback lokal** ke commit lama tiap pergantian giliran. **Selalu** awali sesi dengan menarik kode terbaru dari GitHub (read publik selalu jalan); pakai branch milestone terbaru:
   ```bash
   git clone -b claude/serene-dijkstra-earnge https://github.com/joshuasetiawann/THUNITY-OS.git thuos
@@ -41,7 +41,7 @@ Strateginya **bukan** menyaingi Windows/macOS langsung (mustahil untuk tim kecil
 | 0.9 | Cooperative multitasking (3 task) | boot-verified |
 | 0.10 | RAM filesystem (ls/cat/write) | host-tested + boot-verified |
 | 0.11 | **Syscalls** (`int 0x80`: uptime/write/getpid/version) | host-tested + boot-verified |
-| 0.12 | **User mode (ring 3)** (TSS + `iret` ke CPL 3 + `int 0x80` dari userspace) | host-tested + boot self-test (CI) |
+| 0.12 | **User mode (ring 3)** (TSS + `iret` ke CPL 3 + `int 0x80` dari userspace) | host-tested + boot-verified |
 
 **Verifikasi:** 8 unit test host (`make test`) + 2 job CI (`build-and-test`, `boot-smoke`).
 `boot-smoke` mem-boot kernel di QEMU, baca serial COM1, dan meng-assert marker

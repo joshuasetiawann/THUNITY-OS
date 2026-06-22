@@ -13,9 +13,10 @@ ring 3 → ring 0 transition, and an `iret` performs the ring 0 → ring 3 drop.
 
 Honesty: the address space is still a single flat identity map (now marked
 user-accessible), so this is **not** per-process memory isolation — that is a
-later milestone. What is demonstrated and asserted in CI is the CPL 0→3→0
-transition and a real syscall issued from user mode. Boot self-test wired into
-`scripts/boottest.sh`; CI `boot-smoke` asserts the new `User mode` marker.
+later milestone. What is demonstrated is the CPL 0→3→0 transition and a real
+syscall issued from user mode. **Boot-verified in QEMU** — the `boot-smoke`
+serial log shows `[ring3] hello from CPL 3`, `last int 0x80 came from CS=0x1b =>
+CPL 3`, the asserted `User mode` marker, and the kernel still reaching `thuos>`.
 
 ### Added — kernel (user mode / ring 3)
 - `kernel/arch/x86/usermode_core.{c,h}` — pure descriptor/selector math (segment
@@ -40,7 +41,7 @@ transition and a real syscall issued from user mode. Boot self-test wired into
   composition, ring-3 `EFLAGS` (IF set / NT cleared), TSS descriptor byte layout.
 - `scripts/boottest.sh` asserts the `User mode` boot marker, so CI proves the
   kernel actually enters CPL 3, takes a syscall from there, and returns — then
-  still reaches `thuos>`.
+  still reaches `thuos>`. BOOT-VERIFIED in QEMU (`boot-smoke`).
 
 ## [0.11.0] — "Syscalls" — 2026-06-06
 
