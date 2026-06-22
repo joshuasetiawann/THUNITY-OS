@@ -1,6 +1,6 @@
 THUOS BUILD VERIFICATION
 ------------------------------------------------------------
-Generated : 2026-06-09 09:32:23Z
+Generated : 2026-06-09 10:22:13Z
 Host      : Linux 6.18.5 x86_64
 Toolchain : gcc=13 ld=2.42 make=GNU Make 4.3
 Helpers   : python3=3.11.15 node=v22.22.2
@@ -15,7 +15,7 @@ Helpers   : python3=3.11.15 node=v22.22.2
       Class:                             ELF32
       Type:                              EXEC (Executable file)
       Machine:                           Intel 80386
-      Entry point address:               0x104dd1
+      Entry point address:               0x105d90
   [PASS] Class is ELF32
   [PASS] Machine is Intel 80386
   [PASS] Type is EXEC
@@ -45,7 +45,7 @@ Helpers   : python3=3.11.15 node=v22.22.2
 ------------------------------------------------------------
 5) Section sizes — size(1)
        text	   data	    bss	    dec	    hex	filename
-      29812	      8	1319296	1349116	 1495fc	build/kernel.elf
+      34307	     13	1323392	1357712	 14b790	build/kernel.elf
 ------------------------------------------------------------
 6) Memory allocator — host unit test (tests/test_pmm.c)
     PMM allocator test: OK
@@ -54,7 +54,7 @@ Helpers   : python3=3.11.15 node=v22.22.2
   [PASS] frame allocator unit test
 ------------------------------------------------------------
 NOT VERIFIED IN THIS ENVIRONMENT (honest):
-  - QEMU boot: qemu-system-i386 not installed here, so boot is NOT verified.
+  - QEMU present: you may run 'make run' to boot.
   - Bootable ISO: grub-mkrescue/xorriso not installed here, so no ISO was built.
 ------------------------------------------------------------
 SUMMARY: 16 passed, 0 failed.

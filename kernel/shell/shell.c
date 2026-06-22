@@ -18,6 +18,9 @@
 #include "fs.h"
 #include "syscall.h"
 #include "usermode.h"
+#include "gfx.h"
+#include "gconsole.h"
+#include "desktop.h"
 
 #define LINE_MAX 128
 
@@ -86,6 +89,7 @@ static void cmd_help(void) {
     kprintf("  write F T  Write text T to file F\n");
     kprintf("  sys        Invoke syscalls via int 0x80 (demo)\n");
     kprintf("  user       Drop to ring 3 and round-trip a syscall (CPL 3 demo)\n");
+    kprintf("  gui        Repaint the THU Desktop (graphical mode)\n");
     kprintf("  echo       Print the rest of the line\n");
     kprintf("  banner     Show the THUOS banner\n");
     kprintf("  color N    Set text color (0-15)\n");
@@ -123,7 +127,8 @@ static void cmd_status(void) {
     kprintf("  [done]    RAM filesystem ls/cat/write (0.10)\n");
     kprintf("  [done]    Syscall interface int 0x80 (0.11)\n");
     kprintf("  [done]    User mode (ring 3): TSS + iret + syscall from CPL 3 (0.12)\n");
-    kprintf("  [plan]    Per-process isolation, more syscalls, userspace programs\n");
+    kprintf("  [done]    THU Desktop: VGA graphics + graphical terminal (0.13)\n");
+    kprintf("  [plan]    Per-process isolation, mouse, windows, userspace programs\n");
 }
 
 static void cmd_sysinfo(void) {
@@ -300,6 +305,15 @@ static void cmd_user(const char *args) {
     kprintf("  (ring 3 can reach the kernel only through int 0x80.)\n");
 }
 
+static void cmd_gui(const char *args) {
+    (void)args;
+    if (gfx_active()) {
+        desktop_draw();      /* repaint the THU Desktop + clear the terminal */
+    } else {
+        kprintf("gui: graphics not available\n");
+    }
+}
+
 static void cmd_thupkg(const char *args) {
     if (strcmp(args, "list") == 0) {
         kprintf("thupkg - installed/known packages (design preview):\n");
@@ -389,11 +403,12 @@ static void execute(char *line) {
     else if (strcmp(line, "write") == 0)     cmd_write(args);
     else if (strcmp(line, "sys") == 0)       cmd_sys(args);
     else if (strcmp(line, "user") == 0)      cmd_user(args);
+    else if (strcmp(line, "gui") == 0)       cmd_gui(args);
     else if (strcmp(line, "echo") == 0)      kprintf("%s\n", args);
     else if (strcmp(line, "banner") == 0)    print_banner();
     else if (strcmp(line, "color") == 0)     cmd_color(args);
     else if (strcmp(line, "thupkg") == 0)    cmd_thupkg(args);
-    else if (strcmp(line, "clear") == 0)     vga_clear();
+    else if (strcmp(line, "clear") == 0)     { if (gcon_active()) gcon_clear(); else vga_clear(); }
     else if (strcmp(line, "crash") == 0)     cmd_crash(args);
     else if (strcmp(line, "reboot") == 0)    reboot_machine();
     else if (strcmp(line, "halt") == 0)      halt_machine();

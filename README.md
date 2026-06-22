@@ -10,7 +10,7 @@ built incrementally toward a calm, local-first desktop OS tomorrow.
 
 - **Project:** THUOS · **Kernel:** THU Kernel · **Desktop:** THU Desktop
 - **Filesystem (planned):** THUFS · **Package manager (planned):** thupkg
-- **Version:** `0.12.0` "User Mode" · **Arch:** x86 (i386, 32-bit) · **Boot:** Multiboot 1 · **Boot status:** ✅ boot-verified in QEMU (CI)
+- **Version:** `0.13.0` "Desktop" · **Arch:** x86 (i386, 32-bit) · **Boot:** Multiboot 1 · **Boot status:** ✅ boot-verified in QEMU (CI) · now with a **graphical desktop**
 
 ---
 
@@ -33,7 +33,7 @@ implemented and wired into `kernel_main()`:
 | PIT timer @ 100 Hz + uptime | ✅ Implemented | `kernel/arch/x86/pit.c` |
 | PS/2 keyboard (IRQ1, scancode set 1, shift) | ✅ Implemented | `kernel/drivers/keyboard.c` |
 | Panic / assert system | ✅ Implemented | `kernel/core/panic.c` |
-| Interactive shell (`thuos>`, 28 commands) | ✅ Implemented | `kernel/shell/shell.c` |
+| Interactive shell (`thuos>`, 29 commands) | ✅ Implemented | `kernel/shell/shell.c` |
 | Freestanding `mem*`/`str*` lib | ✅ Implemented | `kernel/lib/string.c` |
 | Multiboot memory-map parsing | ✅ Implemented | `kernel/mm/multiboot.h`, `pmm.c` |
 | Physical memory manager (4 KiB frames) + protected-region reservation | ✅ Implemented | `kernel/mm/pmm.c`, `frame_bitmap.c` (unit-tested: `tests/test_pmm.c`) |
@@ -43,6 +43,7 @@ implemented and wired into `kernel_main()`:
 | Round-robin scheduler policy core | ✅ Host-tested | `kernel/sched/sched_core.c`, `sched.c` (`tests/test_sched.c`) |
 | Cooperative multitasking + RAM filesystem + `int 0x80` syscalls | ✅ Boot-verified (CI) | `kernel/sched/coop.c`, `kernel/fs/fs.c`, `kernel/arch/x86/syscall.c` |
 | User mode (ring 3): TSS + `iret` to CPL 3 + `int 0x80` from userspace | ✅ Host-tested + boot-verified (CI) | `kernel/arch/x86/usermode.c`, `usermode_entry.S`, `tss.c` (`tests/test_usermode.c`) |
+| **VGA graphics (mode 13h) + THU Desktop + graphical terminal** | ✅ Boot-verified (CI) + screenshot | `kernel/drivers/gfx.c`, `kernel/gui/gconsole.c`, `desktop.c` |
 | Boot in QEMU → `thuos>` (serial smoke-test) | ✅ Boot-verified (CI) | `scripts/boottest.sh`, CI `boot-smoke` |
 
 > **Honesty:** logic is **host-tested** (`make test`: PMM, heap, paging, scheduler)
@@ -61,9 +62,10 @@ a VM/microVM** (sidestepping the driver moat). See
 [`docs/THUOS_ARCHITECTURE.md`](docs/THUOS_ARCHITECTURE.md).
 
 Done so far (boot-verified in QEMU): paging enabled · context switch · cooperative
-multitasking · RAM filesystem · `int 0x80` syscalls · **ring 3 (user mode)**.
-Next (staged — need boot-verification first): per-process memory isolation ·
-ELF loader + first userspace program · capability syscalls · a real in-VM terminal.
+multitasking · RAM filesystem · `int 0x80` syscalls · ring 3 (user mode) ·
+**a graphical THU Desktop (VGA mode 13h) with the shell in a window**.
+Next (staged — need boot-verification first): PS/2 mouse + clickable windows ·
+per-process memory isolation · ELF loader + first userspace program.
 
 ---
 

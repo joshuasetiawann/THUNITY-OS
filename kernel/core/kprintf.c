@@ -4,6 +4,7 @@
 #include "kprintf.h"
 #include "vga.h"
 #include "serial.h"
+#include "gconsole.h"
 
 static bool serial_mirror = true;
 
@@ -12,7 +13,8 @@ void k_serial_mirror(bool enabled) {
 }
 
 void kputc(char c) {
-    vga_putc(c);
+    if (gcon_active()) gcon_putc(c);   /* graphical desktop console */
+    else               vga_putc(c);    /* text-mode VGA            */
     if (serial_mirror) serial_write_char(c);
 }
 

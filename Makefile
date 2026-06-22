@@ -14,7 +14,7 @@ LD      := gcc
 
 INCLUDES := -Ikernel/lib -Ikernel/arch/x86 -Ikernel/core \
             -Ikernel/drivers -Ikernel/shell -Ikernel/mm -Ikernel/sched -Ikernel/fs \
-            -Ikernel/include -Ikernel/include/thuos
+            -Ikernel/gui -Ikernel/include -Ikernel/include/thuos
 
 # Freestanding 32-bit kernel. We provide our own mem*/str* so we disable the
 # builtin recognition and loop-idiom rewrites that would otherwise recurse.
