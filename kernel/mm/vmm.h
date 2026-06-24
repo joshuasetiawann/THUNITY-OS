@@ -17,5 +17,6 @@ uint32_t vmm_mapped_bytes(void);    /* bytes identity-mapped */
 uint32_t vmm_phys_of(uint32_t va);  /* translate va -> pa, or 0xFFFFFFFF */
 void     vmm_enable(void);           /* load CR3 + set CR0.PG (identity map) */
 int      vmm_is_enabled(void);       /* 1 once paging is on */
+int      vmm_map_lfb(uint32_t phys, uint32_t bytes); /* identity-map a high MMIO region (e.g. the framebuffer) */
 
 #endif /* THUOS_VMM_H */

@@ -1,35 +1,30 @@
-/* THUOS — graphical text console. See gconsole.h. */
+/* THUOS — graphical text console (high-res framebuffer). See gconsole.h. */
 #include "gconsole.h"
-#include "gfx.h"
+#include "lfb.h"
 
-#define CW 8        /* glyph cell width  */
-#define CH 16       /* glyph cell height */
+static int      active = 0;
+static int      ox, oy, cols, rows, scale, cw, ch;   /* origin px, size cells, cell px */
+static int      cx, cy;                               /* cursor (cells) */
+static uint32_t fg = 0x9defb0, bg = 0x0b0e14;
+static uint32_t accent = 0x6cc7ff;
 
-static int     active = 0;
-static int     ox, oy, cols, rows;   /* origin (px) + size (cells) */
-static int     cx, cy;               /* cursor (cells)             */
-static uint8_t fg = COL_TERMTX;
-static int     bg = COL_TERMBG;
+static void cursor_draw(void)  { lfb_fill(ox + cx * cw, oy + cy * ch + ch - 2 * scale, cw, 2 * scale, accent); }
+static void cursor_erase(void) { lfb_fill(ox + cx * cw, oy + cy * ch + ch - 2 * scale, cw, 2 * scale, bg); }
 
-/* The cursor is a 2px underline drawn in an otherwise-empty cell, so erasing it
- * (refilling bg) never clips a real glyph. */
-static void cursor_draw(void)  { gfx_fill(ox + cx * CW, oy + cy * CH + CH - 2, CW, 2, COL_ACCENT); }
-static void cursor_erase(void) { gfx_fill(ox + cx * CW, oy + cy * CH + CH - 2, CW, 2, (uint8_t)bg); }
-
-void gcon_init(int x, int y, int c, int r) {
-    ox = x; oy = y; cols = c; rows = r; cx = cy = 0;
-    fg = COL_TERMTX; bg = COL_TERMBG;
-    gfx_fill(ox, oy, cols * CW, rows * CH, (uint8_t)bg);
+void gcon_init(int x, int y, int c, int r, int s, uint32_t f, uint32_t b) {
+    ox = x; oy = y; cols = c; rows = r; scale = s;
+    cw = 8 * s; ch = 16 * s;
+    cx = cy = 0; fg = f; bg = b;
+    lfb_fill(ox, oy, cols * cw, rows * ch, bg);
     active = 1;
     cursor_draw();
 }
 
 int  gcon_active(void) { return active; }
-
-void gcon_set_color(uint8_t f, int b) { fg = f; if (b >= 0) bg = b; }
+void gcon_set_color(uint32_t f, long b) { fg = f; if (b >= 0) bg = (uint32_t)b; }
 
 void gcon_clear(void) {
-    gfx_fill(ox, oy, cols * CW, rows * CH, (uint8_t)bg);
+    lfb_fill(ox, oy, cols * cw, rows * ch, bg);
     cx = cy = 0;
     cursor_draw();
 }
@@ -37,23 +32,23 @@ void gcon_clear(void) {
 static void newline(void) {
     cx = 0;
     if (++cy >= rows) {
-        gfx_scroll_up(ox, oy, cols * CW, rows * CH, CH, (uint8_t)bg);
+        lfb_scroll_up(ox, oy, cols * cw, rows * ch, ch, bg);
         cy = rows - 1;
     }
 }
 
-void gcon_putc(char ch) {
+void gcon_putc(char c) {
     if (!active) return;
     cursor_erase();
-    switch (ch) {
+    switch (c) {
         case '\n': newline(); break;
         case '\r': cx = 0; break;
         case '\t': cx = (cx + 4) & ~3; if (cx >= cols) newline(); break;
         case '\b':
-            if (cx > 0) { cx--; gfx_char(ox + cx * CW, oy + cy * CH, ' ', fg, bg); }
+            if (cx > 0) { cx--; lfb_char(ox + cx * cw, oy + cy * ch, ' ', fg, bg, scale); }
             break;
         default:
-            gfx_char(ox + cx * CW, oy + cy * CH, ch, fg, bg);
+            lfb_char(ox + cx * cw, oy + cy * ch, c, fg, bg, scale);
             if (++cx >= cols) newline();
             break;
     }
