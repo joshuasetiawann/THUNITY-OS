@@ -20,6 +20,8 @@ void lfb_fill(int x, int y, int w, int h, uint32_t rgb);
 void lfb_gradient_v(int x, int y, int w, int h, uint32_t top, uint32_t bot);
 void lfb_rect(int x, int y, int w, int h, uint32_t rgb);          /* 1px outline */
 void lfb_round_fill(int x, int y, int w, int h, int r, uint32_t rgb);
+void lfb_disc(int cx, int cy, int r, uint32_t rgb);              /* filled circle */
+void lfb_line(int x0, int y0, int x1, int y1, uint32_t rgb);
 
 /* 8x16 VGA glyphs, scaled by `s` (each font pixel -> s*s block). bg<0 = transparent. */
 void lfb_char(int x, int y, char c, uint32_t fg, long bg, int s);

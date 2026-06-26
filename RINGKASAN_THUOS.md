@@ -1,13 +1,13 @@
 # THUOS / THUNITY-OS — Ringkasan & Handoff
 > Paket konteks untuk melanjutkan proyek di sesi/percakapan baru.
-> Tanggal: 2026-06-09 · Versi terakhir: **0.15.0 "Apps"** (mouse + dock bisa diklik + app: Terminal, Kalkulator, Files, System)
+> Tanggal: 2026-06-09 · Versi terakhir: **0.16.0 "Polish"** (desktop diperhalus + ikon app pictogram + jam + indikator app aktif)
 
 ---
 
 ## 0. Mulai cepat untuk sesi baru (PENTING)
 - **Repo GitHub (publik):** https://github.com/joshuasetiawann/THUNITY-OS
   · **0.12 → 0.15 (User Mode, Desktop, Aurora, Apps) di branch `claude/serene-dijkstra-earnge`** (PR #2, base loving-ptolemy) · CI build + boot-smoke **hijau** (boot-verified di QEMU).
-  · Snapshot tiap versi ada di folder `versions/v0.2.0 … v0.15.0` (root = tree aktif terbaru yang di-build CI).
+  · Snapshot tiap versi ada di folder `versions/v0.2.0 … v0.16.0` (root = tree aktif terbaru yang di-build CI).
 - **Sandbox kadang rollback lokal** ke commit lama tiap pergantian giliran. **Selalu** awali sesi dengan menarik kode terbaru dari GitHub (read publik selalu jalan); pakai branch milestone terbaru:
   ```bash
   git clone -b claude/serene-dijkstra-earnge https://github.com/joshuasetiawann/THUNITY-OS.git thuos
@@ -46,6 +46,7 @@ Strateginya **bukan** menyaingi Windows/macOS langsung (mustahil untuk tim kecil
 | 0.13 | **THU Desktop** (VGA mode 13h grafis + terminal di dalam window) | boot-verified + screenshot |
 | 0.14 | **Aurora** (desktop modern 1024×768×32 truecolor via Bochs VBE; PCI+DISPI+map LFB) | boot-verified + screenshot |
 | 0.15 | **Apps** (PS/2 mouse + kursor, dock bisa diklik, app: Terminal/Kalkulator/Files/System/About) | boot-verified + screenshot |
+| 0.16 | **Polish** (desktop diperhalus, ikon app pictogram, jam top-bar, indikator app aktif) | boot-verified + screenshot |
 
 **Verifikasi:** 8 unit test host (`make test`) + 2 job CI (`build-and-test`, `boot-smoke`).
 `boot-smoke` mem-boot kernel di QEMU, baca serial COM1, dan meng-assert marker
@@ -127,8 +128,9 @@ Makefile README.md CHANGELOG.md PROJECT_STATUS.md linker.ld grub.cfg
 - ✅ **0.12 Ring 3 / user mode** — SELESAI: GDT user segments + **TSS** (`ltr`), `iret` ke ring 3, `int 0x80` dari ring 3, kembali bersih ke ring 0. Bukti CPL 3 = `CS & 3`. Marker `User mode`.
 - ✅ **0.13 THU Desktop (grafis)** — SELESAI: VGA mode 13h (320x200x256), font dari plane 2 VGA, desktop + window, shell di terminal grafis.
 - ✅ **0.14 Aurora (desktop modern)** — SELESAI: framebuffer 1024×768×32 (Bochs VBE/DISPI), LFB via PCI + `vmm_map_lfb`, tema gelap flat (gradien, window ber-shadow, dock).
-- ✅ **0.15 Apps** — SELESAI: PS/2 mouse (IRQ12) + kursor composited, dock bisa diklik (`dock_hit` → buka app), event loop (`desktop_run`), app: Terminal/Kalkulator(integer)/Files(ramfs)/System(jujur)/About. Diverifikasi screenshot QEMU (termasuk klik dock).
-1. **0.16 Window bisa digeser / banyak window** + window manager.
+- ✅ **0.15 Apps** — SELESAI: PS/2 mouse (IRQ12) + kursor composited, dock bisa diklik, event loop (`desktop_run`), app: Terminal/Kalkulator(integer)/Files(ramfs)/System(jujur)/About.
+- ✅ **0.16 Polish** — SELESAI: ikon app jadi pictogram (terminal/kalkulator/folder/sliders/info) via `lfb_disc`+`lfb_line`, jam top-bar (update tiap detik), indikator app aktif di dock, wallpaper/window/dock diperhalus.
+1. **0.17 Window bisa digeser / banyak window** + window manager.
 2. **ELF loader** + isolasi memori per-proses → app **dimuat dari file** (arti realistis "install app"). Lebih banyak syscall (`open`/`read`/`write`).
 3. Jaringan **kabel** (NIC e1000 emulasi + TCP/IP minimal) — track besar terpisah.
 4. Preemptive multitasking, persistensi (initrd), font TrueType/anti-alias.
