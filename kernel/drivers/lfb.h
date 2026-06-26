@@ -27,4 +27,8 @@ void lfb_text(int x, int y, const char *str, uint32_t fg, long bg, int s);
 
 void lfb_scroll_up(int x, int y, int w, int h, int dy, uint32_t fill);
 
+/* Save/restore a rectangle (used to composite a mouse cursor over the desktop). */
+void lfb_blit_get(int x, int y, int w, int h, uint32_t *buf);
+void lfb_blit_put(int x, int y, int w, int h, const uint32_t *buf);
+
 #endif /* THUOS_LFB_H */

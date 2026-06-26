@@ -89,7 +89,8 @@ static void cmd_help(void) {
     kprintf("  write F T  Write text T to file F\n");
     kprintf("  sys        Invoke syscalls via int 0x80 (demo)\n");
     kprintf("  user       Drop to ring 3 and round-trip a syscall (CPL 3 demo)\n");
-    kprintf("  gui        Repaint the THU Desktop (graphical mode)\n");
+    kprintf("  apps       calc | files | devices | about  (or click the dock)\n");
+    kprintf("  gui        Repaint the THU Desktop\n");
     kprintf("  echo       Print the rest of the line\n");
     kprintf("  banner     Show the THUOS banner\n");
     kprintf("  color N    Set text color (0-15)\n");
@@ -129,7 +130,8 @@ static void cmd_status(void) {
     kprintf("  [done]    User mode (ring 3): TSS + iret + syscall from CPL 3 (0.12)\n");
     kprintf("  [done]    THU Desktop: VGA graphics + graphical terminal (0.13)\n");
     kprintf("  [done]    Aurora: high-res 1024x768x32 truecolor desktop (0.14)\n");
-    kprintf("  [plan]    Mouse + clickable windows, per-process isolation, userspace\n");
+    kprintf("  [done]    Apps: mouse + clickable dock, Calculator/Files/System (0.15)\n");
+    kprintf("  [plan]    Movable windows, per-process isolation, ELF userspace apps\n");
 }
 
 static void cmd_sysinfo(void) {
@@ -308,8 +310,9 @@ static void cmd_user(const char *args) {
 
 static void cmd_gui(const char *args) {
     (void)args;
-    if (lfb_active()) kprintf("Repainting the THU Desktop...\n"), desktop_draw();
-    else              kprintf("gui: high-res framebuffer not available\n");
+    if (!lfb_active()) { kprintf("gui: high-res framebuffer not available\n"); return; }
+    desktop_draw();                 /* repaint chrome */
+    desktop_open_app(APP_TERMINAL); /* back to a fresh terminal */
 }
 
 static void cmd_thupkg(const char *args) {
@@ -402,6 +405,11 @@ static void execute(char *line) {
     else if (strcmp(line, "sys") == 0)       cmd_sys(args);
     else if (strcmp(line, "user") == 0)      cmd_user(args);
     else if (strcmp(line, "gui") == 0)       cmd_gui(args);
+    else if (strcmp(line, "calc") == 0)      desktop_open_app(APP_CALC);
+    else if (strcmp(line, "files") == 0)     desktop_open_app(APP_FILES);
+    else if (strcmp(line, "devices") == 0)   desktop_open_app(APP_SYSTEM);
+    else if (strcmp(line, "about") == 0)     desktop_open_app(APP_ABOUT);
+    else if (strcmp(line, "apps") == 0)      kprintf("Apps: calc, files, devices, about (or click the dock).\n");
     else if (strcmp(line, "echo") == 0)      kprintf("%s\n", args);
     else if (strcmp(line, "banner") == 0)    print_banner();
     else if (strcmp(line, "color") == 0)     cmd_color(args);
@@ -413,27 +421,35 @@ static void execute(char *line) {
     else kprintf("Unknown command: %s (try 'help')\n", line);
 }
 
-void shell_run(void) {
-    char line[LINE_MAX];
-    size_t len = 0;
+/* Line-editing state, shared by the blocking shell_run and the event-loop-driven
+ * shell_feed_char (used when the terminal is one app among several). */
+static char   s_line[LINE_MAX];
+static size_t s_len = 0;
 
+static void shell_prompt(void) { kprintf("thuos> "); }
+
+void shell_start(void) {
+    s_len = 0;
     kprintf("Type 'help' to begin.\n\n");
-    kprintf("thuos> ");
+    shell_prompt();
+}
 
-    for (;;) {
-        char c = keyboard_getchar();
-
-        if (c == '\n') {
-            kputc('\n');
-            line[len] = '\0';
-            execute(line);
-            len = 0;
-            kprintf("thuos> ");
-        } else if (c == '\b') {
-            if (len > 0) { len--; kputc('\b'); }
-        } else if (len < LINE_MAX - 1 && c >= ' ') {
-            line[len++] = c;
-            kputc(c);
-        }
+void shell_feed_char(char c) {
+    if (c == '\n') {
+        kputc('\n');
+        s_line[s_len] = '\0';
+        execute(s_line);
+        s_len = 0;
+        shell_prompt();
+    } else if (c == '\b') {
+        if (s_len > 0) { s_len--; kputc('\b'); }
+    } else if (s_len < LINE_MAX - 1 && c >= ' ') {
+        s_line[s_len++] = c;
+        kputc(c);
     }
+}
+
+void shell_run(void) {            /* text-mode fallback: own the CPU, block on keys */
+    shell_start();
+    for (;;) shell_feed_char(keyboard_getchar());
 }

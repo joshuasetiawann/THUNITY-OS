@@ -23,6 +23,7 @@
 #include "syscall.h"
 #include "usermode.h"
 #include "gfx.h"
+#include "lfb.h"
 #include "desktop.h"
 #include "shell.h"
 
@@ -109,13 +110,15 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
     vga_font_extract();        /* copy the VGA font while still in text mode */
     ok_line("THU Desktop: high-res framebuffer (1024x768x32 truecolor)");
 
-    __asm__ volatile("sti");   /* interrupts on: timer + keyboard now live */
+    __asm__ volatile("sti");   /* interrupts on: timer + keyboard + mouse now live */
 
-    desktop_start();           /* switch to the graphical THU Desktop (or stay text) */
-    kprintf("Welcome to %s %s \"%s\".\n", THUOS_NAME, THUOS_VERSION, THUOS_CODENAME);
-    kprintf("A from-scratch OS with a modern graphical desktop.\n\n");
-
-    shell_run();   /* never returns (runs inside the desktop terminal) */
+    desktop_start();           /* enter graphics + draw the THU Desktop (or stay text) */
+    if (lfb_active()) {
+        desktop_run();         /* mouse + dock + apps; runs the shell as the terminal app */
+    } else {
+        kprintf("Welcome to %s %s \"%s\".\n\n", THUOS_NAME, THUOS_VERSION, THUOS_CODENAME);
+        shell_run();           /* text-mode fallback */
+    }
 
     for (;;) __asm__ volatile("hlt");
 }

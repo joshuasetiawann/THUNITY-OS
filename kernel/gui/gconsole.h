@@ -9,6 +9,7 @@
 
 void gcon_init(int x, int y, int cols, int rows, int scale, uint32_t fg, uint32_t bg);
 int  gcon_active(void);
+void gcon_set_active(int on);   /* deactivate while another app owns the panel */
 void gcon_putc(char c);
 void gcon_clear(void);
 void gcon_set_color(uint32_t fg, long bg);   /* bg<0 keeps current bg */
