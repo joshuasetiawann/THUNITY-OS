@@ -27,6 +27,7 @@ what the OS was at every step, side by side.
 | v0.13.0 | Desktop          | VGA graphics (mode 13h) + the THU Desktop, shell in a graphical terminal |
 | v0.14.0 | Aurora           | Modern high-res truecolor desktop (1024×768×32 via Bochs VBE), dark theme + dock |
 | v0.15.0 | Apps             | PS/2 mouse + clickable dock + built-in apps (Terminal, Calculator, Files, System, About) |
+| v0.16.0 | Polish           | Refined desktop: pictogram app icons, top-bar clock, active-app indicator |
 
 > There is no `v0.1` source — `0.2.0 "Boot Seed"` is the first bootable kernel.
 > Full per-release notes are in [`../CHANGELOG.md`](../CHANGELOG.md).
