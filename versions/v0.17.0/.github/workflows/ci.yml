@@ -1,0 +1,41 @@
+name: CI
+
+# Honest CI for THUOS.
+#  - build-and-test: builds the freestanding i386 kernel and runs the host unit
+#    tests (PMM + kernel heap + paging + scheduler).
+#  - boot-smoke: actually BOOTS the kernel in QEMU and verifies it reaches its
+#    shell prompt over COM1 serial. This is real boot verification.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install 32-bit toolchain
+        run: sudo apt-get update && sudo apt-get install -y gcc-multilib
+
+      - name: Host unit tests (PMM + heap + paging + scheduler)
+        run: make test
+
+      - name: Build kernel + structural verification
+        run: make verify
+
+  boot-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain + QEMU
+        run: sudo apt-get update && sudo apt-get install -y gcc-multilib qemu-system-x86
+
+      - name: Build kernel
+        run: make kernel
+
+      - name: Boot smoke-test (QEMU serial)
+        run: make boottest
