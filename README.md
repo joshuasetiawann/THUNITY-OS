@@ -10,7 +10,7 @@ built incrementally toward a calm, local-first desktop OS tomorrow.
 
 - **Project:** THUOS · **Kernel:** THU Kernel · **Desktop:** THU Desktop
 - **Filesystem (planned):** THUFS · **Package manager (planned):** thupkg
-- **Version:** `0.16.0` "Polish" · **Arch:** x86 (i386, 32-bit) · **Boot:** Multiboot 1 · **Boot status:** ✅ boot-verified in QEMU (CI) · **mouse-driven desktop, pictogram icons, built-in apps**
+- **Version:** `0.17.0` "Suite" · **Arch:** x86 (i386, 32-bit) · **Boot:** Multiboot 1 · **Boot status:** ✅ boot-verified in QEMU (CI) · **Settings + Terminal/Files/Notes/Calculator/Paint apps**
 
 ---
 
@@ -45,6 +45,7 @@ implemented and wired into `kernel_main()`:
 | User mode (ring 3): TSS + `iret` to CPL 3 + `int 0x80` from userspace | ✅ Host-tested + boot-verified (CI) | `kernel/arch/x86/usermode.c`, `usermode_entry.S`, `tss.c` (`tests/test_usermode.c`) |
 | **Modern desktop: 1024×768×32 framebuffer (Bochs VBE) + graphical terminal** | ✅ Boot-verified (CI) + screenshot | `kernel/drivers/lfb.c`, `kernel/gui/gconsole.c`, `desktop.c` |
 | **PS/2 mouse + clickable dock + apps (Calculator, Files, System, About)** | ✅ Boot-verified (CI) + screenshot | `kernel/drivers/mouse.c`, `kernel/gui/apps.c`, `desktop.c` |
+| **Settings menu (live themes) + Notes (ramfs) + Paint (mouse drawing)** | ✅ Boot-verified (CI) + screenshot | `kernel/gui/apps.c`, `desktop.c` |
 | Boot in QEMU → `thuos>` (serial smoke-test) | ✅ Boot-verified (CI) | `scripts/boottest.sh`, CI `boot-smoke` |
 
 > **Honesty:** logic is **host-tested** (`make test`: PMM, heap, paging, scheduler)
@@ -63,13 +64,13 @@ a VM/microVM** (sidestepping the driver moat). See
 [`docs/THUOS_ARCHITECTURE.md`](docs/THUOS_ARCHITECTURE.md).
 
 Done so far (boot-verified in QEMU): paging · context switch · multitasking ·
-RAM filesystem · `int 0x80` syscalls · ring 3 (user mode) · a modern 1024×768
-truecolor desktop (Aurora) · **a PS/2 mouse, a clickable dock, and built-in apps
-(Terminal, Calculator, Files, System, About)**.
+RAM filesystem · `int 0x80` syscalls · ring 3 · a modern 1024×768 truecolor
+desktop · a PS/2 mouse + clickable dock · **a Settings menu (live themes) and
+apps: Terminal, Files, Notes, Calculator, Paint**.
 Next (staged — need boot-verification first): movable windows · an ELF loader +
 per-process isolation so apps load *from files* ("install"). **Honest limits:**
 camera, Wi-Fi and Bluetooth are not supported (no device in QEMU / vendor
-firmware+drivers out of scope) — the System app says so plainly.
+firmware+drivers out of scope) — Settings ▸ Devices says so plainly.
 
 ---
 

@@ -1,8 +1,8 @@
 /* THUOS — the THU Desktop: window manager + event loop (high-res).
  * Flat dark theme: gradient wallpaper, a top bar with a clock, a shadowed
  * rounded window, and a dock of pictogram app icons. Runs a mouse cursor and
- * dispatches keyboard/mouse to the active app (Terminal/Calculator/Files/
- * System/About). */
+ * dispatches keyboard/mouse to the active app (Terminal/Files/Notes/Calculator/
+ * Paint/Settings). Settings > Appearance can change the theme at runtime. */
 #include "desktop.h"
 #include "lfb.h"
 #include "gconsole.h"
@@ -14,16 +14,21 @@
 #include "kprintf.h"
 #include "pit.h"
 
+#define NAPP 6
+
 static int W, H;
 static int wx, wy, ww, wh, th;          /* window */
 static int px, py, pw, ph;              /* content panel */
 static int gcx, gcy, gcols, grows;      /* terminal console region */
 static int dbx, dby, dbw, dbh;          /* dock bar */
-static int ds = 52, dgap = 18, dn = 5;  /* icon size, gap, count */
+static int ds = 52, dgap = 18, dn = NAPP;
 static int g_app = APP_TERMINAL;
 
-static const char *APPNAME[5] = { "THU Terminal", "Calculator", "Files", "System", "About" };
-static const uint32_t TILE[5] = { 0x2d3650, 0xff9f1c, 0x3d8bdc, 0x7c8aa0, 0x9b6bd6 };
+/* theme (Settings > Appearance) */
+static uint32_t g_wall_top = 0x0a1020, g_wall_bot = 0x18243f, g_accent = 0x6cc7ff;
+
+static const char *APPNAME[NAPP] = { "THU Terminal", "Files", "Notes", "Calculator", "Paint", "Settings" };
+static const uint32_t TILE[NAPP] = { 0x2d3650, 0x3d8bdc, 0x2bb5a0, 0xff9f1c, 0xff6f91, 0x7c8aa0 };
 
 /* ---- mouse cursor (composited) ---- */
 #define CUR_W 12
@@ -55,22 +60,32 @@ static void cursor_show(int x, int y) {
 
 /* ---- pictogram app icons (drawn inside a tile) ---- */
 static void icon_glyph(int app, int bx, int by, int s) {
-    uint32_t W_ = 0xffffff;
+    uint32_t WH = 0xffffff;
     switch (app) {
         case APP_TERMINAL: {
-            lfb_round_fill(bx, by, s, s, 4, 0x0a1020);          /* screen */
-            uint32_t g = 0x5be58a;
-            int my = by + s / 2;
+            lfb_round_fill(bx, by, s, s, 4, 0x0a1020);
+            uint32_t g = 0x5be58a; int my = by + s / 2;
             lfb_line(bx + 6, by + 7, bx + 6 + 8, my, g);
             lfb_line(bx + 6, by + 8, bx + 6 + 8, my + 1, g);
             lfb_line(bx + 6, by + s - 7, bx + 6 + 8, my, g);
             lfb_line(bx + 6, by + s - 8, bx + 6 + 8, my - 1, g);
-            lfb_fill(bx + s / 2, by + s - 10, 10, 2, g);        /* cursor underscore */
+            lfb_fill(bx + s / 2, by + s - 10, 10, 2, g);
+            break;
+        }
+        case APP_FILES:
+            lfb_round_fill(bx, by + 5, s * 5 / 9, 6, 2, 0xdbe7f7);
+            lfb_round_fill(bx, by + 8, s, s - 11, 3, WH);
+            lfb_round_fill(bx, by + s / 2, s, s / 2 - 3, 3, 0xeaf2ff);
+            break;
+        case APP_NOTES: {
+            lfb_round_fill(bx + 2, by, s - 4, s, 3, WH);          /* page */
+            for (int i = 0; i < 4; i++)
+                lfb_fill(bx + 7, by + 7 + i * 6, s - 14 - (i == 3 ? 8 : 0), 2, 0x9fb3d8);
             break;
         }
         case APP_CALC: {
-            lfb_round_fill(bx, by, s, s, 4, W_);                /* body */
-            lfb_fill(bx + 4, by + 4, s - 8, 8, 0x2d3650);       /* display */
+            lfb_round_fill(bx, by, s, s, 4, WH);
+            lfb_fill(bx + 4, by + 4, s - 8, 8, 0x2d3650);
             int g = 3, n = 3, bs = (s - 8 - (n - 1) * g) / n;
             for (int r = 0; r < n; r++)
                 for (int c = 0; c < n; c++)
@@ -78,42 +93,35 @@ static void icon_glyph(int app, int bx, int by, int s) {
                                    (r == n - 1 && c == n - 1) ? 0xff9f1c : 0x2d3650);
             break;
         }
-        case APP_FILES: {
-            lfb_round_fill(bx, by + 5, s * 5 / 9, 6, 2, 0xdbe7f7);   /* tab */
-            lfb_round_fill(bx, by + 8, s, s - 11, 3, W_);           /* body */
-            lfb_round_fill(bx, by + s / 2, s, s / 2 - 3, 3, 0xeaf2ff); /* front flap */
+        case APP_PAINT: {
+            lfb_round_fill(bx, by, s, s, s / 2, WH);              /* palette blob */
+            lfb_disc(bx + s / 3,     by + s / 3,     3, 0xff5f56);
+            lfb_disc(bx + 2 * s / 3, by + s / 3,     3, 0xffbd2e);
+            lfb_disc(bx + s / 3,     by + 2 * s / 3, 3, 0x27c93f);
+            lfb_disc(bx + 2 * s / 3, by + 2 * s / 3, 3, 0x6cc7ff);
             break;
         }
-        case APP_SYSTEM: {                                          /* sliders */
+        case APP_SETTINGS: {                                     /* sliders */
             int kx[3] = { bx + s - 9, bx + 8, bx + s / 2 };
             for (int i = 0; i < 3; i++) {
                 int yy = by + 5 + i * ((s - 8) / 2);
                 lfb_round_fill(bx, yy, s, 4, 2, 0xe7ecf5);
-                lfb_disc(kx[i], yy + 2, 4, W_);
+                lfb_disc(kx[i], yy + 2, 4, WH);
                 lfb_disc(kx[i], yy + 2, 2, 0x7c8aa0);
             }
-            break;
-        }
-        case APP_ABOUT: {                                          /* info badge */
-            int cx = bx + s / 2, cy = by + s / 2, r = s / 2 - 1;
-            lfb_disc(cx, cy, r, W_);
-            lfb_disc(cx, cy - r / 2, 2, 0x9b6bd6);                 /* dot */
-            lfb_fill(cx - 1, cy - 2, 3, r, 0x9b6bd6);              /* stem */
             break;
         }
     }
 }
 
 static void draw_dock(void) {
-    lfb_round_fill(dbx + 4, dby + 6, dbw, dbh, 20, 0x05080f);      /* shadow */
-    lfb_round_fill(dbx, dby, dbw, dbh, 20, 0x161f33);             /* bar */
-    lfb_fill(dbx + 16, dby + 1, dbw - 32, 1, 0x2a3a5e);          /* top hairline */
+    lfb_round_fill(dbx + 4, dby + 6, dbw, dbh, 20, 0x05080f);
+    lfb_round_fill(dbx, dby, dbw, dbh, 20, 0x161f33);
     for (int i = 0; i < dn; i++) {
-        int ax = dbx + 14 + i * (ds + dgap), ay = dby + 10;
+        int ax = dbx + 14 + i * (ds + dgap), ay = dby + 10, pad = 11;
         lfb_round_fill(ax, ay, ds, ds, 13, TILE[i]);
-        int pad = 11;
         icon_glyph(i, ax + pad, ay + pad, ds - 2 * pad);
-        if (i == g_app) lfb_disc(ax + ds / 2, dby + dbh - 5, 2, 0xcfe0ff);  /* running dot */
+        if (i == g_app) lfb_disc(ax + ds / 2, dby + dbh - 5, 2, g_accent);
     }
 }
 
@@ -130,13 +138,12 @@ static void draw_clock(void) {
 /* ---- chrome ---- */
 void desktop_draw(void) {
     W = lfb_width(); H = lfb_height();
-    lfb_gradient_v(0, 0, W, H, 0x0a1020, 0x18243f);
-    lfb_gradient_v(0, H / 2, W, H - H / 2, 0x12203a, 0x0c1426);   /* subtle lower band */
+    lfb_gradient_v(0, 0, W, H, g_wall_top, g_wall_bot);
 
     int tb = 38;
     lfb_fill(0, 0, W, tb, 0x0e1626);
     lfb_fill(0, tb, W, 2, 0x223456);
-    lfb_round_fill(16, 11, 16, 16, 4, 0x6cc7ff);
+    lfb_round_fill(16, 11, 16, 16, 4, g_accent);
     lfb_text(42, 6, THUOS_NAME " " THUOS_VERSION, 0xe8eefc, -1, 2);
     draw_clock();
 
@@ -167,20 +174,30 @@ static void titlebar_name(int app) {
 void desktop_open_app(int app) {
     g_app = app;
     titlebar_name(app);
-    switch (app) {
-        case APP_TERMINAL:
-            lfb_round_fill(px, py, pw, ph, 8, 0x0a0f1a);
-            gcon_init(gcx, gcy, gcols, grows, 2, 0x9defb0, 0x0a0f1a);
-            kprintf("Welcome to %s %s \"%s\".\n", THUOS_NAME, THUOS_VERSION, THUOS_CODENAME);
-            shell_start();
-            break;
-        case APP_CALC:   gcon_set_active(0); app_calc_open(px, py, pw, ph);  break;
-        case APP_FILES:  gcon_set_active(0); app_files_open(px, py, pw, ph); break;
-        case APP_SYSTEM: gcon_set_active(0); app_sys_open(px, py, pw, ph);   break;
-        case APP_ABOUT:  gcon_set_active(0); app_about_open(px, py, pw, ph);  break;
+    if (app == APP_TERMINAL) {
+        lfb_round_fill(px, py, pw, ph, 8, 0x0a0f1a);
+        gcon_init(gcx, gcy, gcols, grows, 2, 0x9defb0, 0x0a0f1a);
+        kprintf("Welcome to %s %s \"%s\".\n", THUOS_NAME, THUOS_VERSION, THUOS_CODENAME);
+        shell_start();
+    } else {
+        gcon_set_active(0);
+        switch (app) {
+            case APP_FILES:    app_files_open(px, py, pw, ph);    break;
+            case APP_NOTES:    app_notes_open(px, py, pw, ph);    break;
+            case APP_CALC:     app_calc_open(px, py, pw, ph);     break;
+            case APP_PAINT:    app_paint_open(px, py, pw, ph);    break;
+            case APP_SETTINGS: app_settings_open(px, py, pw, ph); break;
+        }
     }
-    draw_dock();    /* refresh the running-app indicator */
+    draw_dock();
 }
+
+void desktop_set_theme(uint32_t top, uint32_t bot, uint32_t accent) {
+    g_wall_top = top; g_wall_bot = bot; g_accent = accent;
+    desktop_draw();
+    desktop_open_app(g_app);     /* keep the current app on screen */
+}
+uint32_t desktop_accent(void) { return g_accent; }
 
 static int dock_hit(int mx, int my) {
     for (int i = 0; i < dn; i++) {
@@ -193,16 +210,20 @@ static int dock_hit(int mx, int my) {
 static void route_key(char c) {
     if (c == 27) { if (g_app != APP_TERMINAL) desktop_open_app(APP_TERMINAL); return; }
     if (g_app == APP_TERMINAL) shell_feed_char(c);
-    else if (g_app == APP_CALC) app_calc_key(c);
+    else if (g_app == APP_CALC)  app_calc_key(c);
+    else if (g_app == APP_NOTES) app_notes_key(c);
 }
+
+static int in_panel(int mx, int my) { return mx >= px && mx < px + pw && my >= py && my < py + ph; }
 
 static void handle_click(int mx, int my) {
     int a = dock_hit(mx, my);
     if (a >= 0) { desktop_open_app(a); return; }
-    if (mx >= px && mx < px + pw && my >= py && my < py + ph) {
-        if (g_app == APP_CALC)  app_calc_click(mx, my);
-        else if (g_app == APP_FILES) app_files_click(mx, my);
-    }
+    if (!in_panel(mx, my)) return;
+    if (g_app == APP_CALC)          app_calc_click(mx, my);
+    else if (g_app == APP_FILES)    app_files_click(mx, my);
+    else if (g_app == APP_PAINT)    app_paint_click(mx, my);
+    else if (g_app == APP_SETTINGS) app_settings_click(mx, my);
 }
 
 void desktop_run(void) {
@@ -226,6 +247,8 @@ void desktop_run(void) {
             if (!evt) { cursor_hide(); evt = 1; }
             int l = mouse_left();
             if (l && !prevl) handle_click(mouse_x(), mouse_y());
+            else if (l && g_app == APP_PAINT && in_panel(mouse_x(), mouse_y()))
+                app_paint_motion(mouse_x(), mouse_y());     /* drag to draw */
             prevl = l;
         }
         if (evt) cursor_show(mouse_x(), mouse_y());
