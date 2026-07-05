@@ -8,9 +8,9 @@
 #define THUOS_FS_NAME      "THUFS"
 #define THUOS_PKG_NAME     "thupkg"
 
-#define THUOS_VERSION      "0.17.0"
-#define THUOS_CODENAME     "Suite"
-#define THUOS_MILESTONE    "Milestone 0.17 - Suite: Settings menu (themes/display/devices) + Notes + Paint apps, boot-verified (QEMU/CI)"
+#define THUOS_VERSION      "0.18.0"
+#define THUOS_CODENAME     "Portable"
+#define THUOS_MILESTONE    "Milestone 0.18 - Portable: bootloader-provided framebuffer (GRUB Multiboot tag / UEFI GOP) + embedded font so graphics work on real Intel/AMD hardware, not just QEMU; Bochs-VBE fallback retained; boot-verified (QEMU + GRUB ISO)"
 #define THUOS_ARCH         "x86 (i386, 32-bit)"
 
 #define THUOS_BUILD_DATE   __DATE__

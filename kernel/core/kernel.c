@@ -112,7 +112,7 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
 
     __asm__ volatile("sti");   /* interrupts on: timer + keyboard + mouse now live */
 
-    desktop_start();           /* enter graphics + draw the THU Desktop (or stay text) */
+    desktop_start(mb_info_addr); /* bootloader FB (real HW) or Bochs VBE (QEMU); else text */
     if (lfb_active()) {
         desktop_run();         /* mouse + dock + apps; runs the shell as the terminal app */
     } else {

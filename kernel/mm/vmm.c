@@ -9,8 +9,9 @@
 static uint32_t page_dir[1024]            __attribute__((aligned(4096)));
 static uint32_t page_tabs[VMM_NPTS][1024] __attribute__((aligned(4096)));
 /* Extra page tables to map a high-memory MMIO window (the linear framebuffer,
- * which a PCI BAR places far above the identity-mapped low RAM). */
-#define VMM_LFB_NPTS 4                     /* up to 16 MiB */
+ * which a PCI BAR / GOP places far above the identity-mapped low RAM). 8 tables
+ * = 32 MiB, enough for the framebuffer of any panel up to ~2560x1600x32. */
+#define VMM_LFB_NPTS 8                     /* up to 32 MiB */
 static uint32_t lfb_tabs[VMM_LFB_NPTS][1024] __attribute__((aligned(4096)));
 static int      ready = 0;
 static int      enabled = 0;
@@ -29,6 +30,10 @@ void vmm_init(void) {
 int      vmm_is_ready(void)     { return ready; }
 uint32_t vmm_dir_phys(void)     { return (uint32_t)(uintptr_t)page_dir; }
 uint32_t vmm_mapped_bytes(void) { return ready ? VMM_IDMAP_BYTES : 0; }
+
+/* Largest framebuffer span vmm_map_lfb() can cover. The LFB driver clamps to
+ * this so it never draws into an unmapped page. */
+uint32_t vmm_lfb_capacity(void) { return VMM_LFB_NPTS * 4u * 1024u * 1024u; }
 
 uint32_t vmm_phys_of(uint32_t va) {
     uint32_t pts_phys = (uint32_t)(uintptr_t)page_tabs;

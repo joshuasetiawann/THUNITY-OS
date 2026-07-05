@@ -1,15 +1,20 @@
-/* THUOS — high-resolution linear framebuffer (true colour).
- * Uses the Bochs VBE / DISPI interface that QEMU's std VGA emulates to set a
- * 32bpp linear mode (e.g. 1024x768), with the framebuffer found via PCI and
- * mapped into paging. This is the modern display path; the old VGA mode 13h
- * lives in gfx.c. Colours are 0x00RRGGBB. (Prefix lfb_ avoids the frame-bitmap
+/* THUOS — high-resolution linear framebuffer (true colour, 0x00RRGGBB).
+ * Two ways to obtain a 32bpp linear framebuffer:
+ *   1. lfb_init_auto() — preferred: use the framebuffer the bootloader already
+ *      set up (GRUB Multiboot tag on BIOS via VBE, or UEFI GOP via GRUB-EFI).
+ *      This is the portable path that works on real Intel/AMD hardware.
+ *   2. lfb_init()      — fall back to the Bochs/QEMU VBE (DISPI) device, used
+ *      when there is no Multiboot framebuffer (e.g. `qemu -kernel`).
+ * The framebuffer is found/honoured (incl. real pitch) and mapped into paging.
+ * The old VGA mode 13h lives in gfx.c. (Prefix lfb_ avoids the frame-bitmap
  * fb_ symbols in mm/.) */
 #ifndef THUOS_LFB_H
 #define THUOS_LFB_H
 
 #include "types.h"
 
-int  lfb_init(int w, int h);    /* probe + set mode + map LFB; 1 ok, 0 unavailable */
+int  lfb_init_auto(uint32_t mb_info_addr); /* bootloader FB, else VBE; 1 ok, 0 none */
+int  lfb_init(int w, int h);    /* Bochs/QEMU VBE: probe + set mode + map; 1 ok, 0 no */
 int  lfb_active(void);
 int  lfb_width(void);
 int  lfb_height(void);

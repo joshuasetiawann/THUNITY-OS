@@ -6,7 +6,7 @@
 
 enum { APP_TERMINAL = 0, APP_FILES, APP_NOTES, APP_CALC, APP_PAINT, APP_SETTINGS };
 
-void desktop_start(void);        /* enter graphics + draw the desktop chrome */
+void desktop_start(uint32_t mb_info_addr); /* enter graphics (bootloader FB / VBE) + draw chrome */
 void desktop_draw(void);         /* (re)draw the desktop chrome */
 void desktop_run(void);          /* mouse + dock + apps event loop (never returns) */
 void desktop_open_app(int app);  /* switch the active app */

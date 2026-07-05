@@ -255,7 +255,7 @@ void desktop_run(void) {
     }
 }
 
-void desktop_start(void) {
-    if (!lfb_init(1024, 768)) return;
+void desktop_start(uint32_t mb_info_addr) {
+    if (!lfb_init_auto(mb_info_addr)) return;   /* bootloader FB on real HW, else VBE */
     desktop_draw();
 }

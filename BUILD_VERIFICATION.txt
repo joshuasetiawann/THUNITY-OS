@@ -1,6 +1,6 @@
 THUOS BUILD VERIFICATION
 ------------------------------------------------------------
-Generated : 2026-06-09 11:59:22Z
+Generated : 2026-06-10 17:27:29Z
 Host      : Linux 6.18.5 x86_64
 Toolchain : gcc=13 ld=2.42 make=GNU Make 4.3
 Helpers   : python3=3.11.15 node=v22.22.2
@@ -15,14 +15,14 @@ Helpers   : python3=3.11.15 node=v22.22.2
       Class:                             ELF32
       Type:                              EXEC (Executable file)
       Machine:                           Intel 80386
-      Entry point address:               0x108d48
+      Entry point address:               0x108f18
   [PASS] Class is ELF32
   [PASS] Machine is Intel 80386
   [PASS] Type is EXEC
 ------------------------------------------------------------
 3) Multiboot 1 header + checksum (first 8 KiB)
   [ OK ] Multiboot header at file offset 4096
-         magic=0x1BADB002 flags=0x00000003 checksum=0xE4524FFB
+         magic=0x1BADB002 flags=0x00000007 checksum=0xE4524FF7
   [PASS] Multiboot header + checksum valid
 ------------------------------------------------------------
 4) Required symbols — nm
@@ -45,7 +45,7 @@ Helpers   : python3=3.11.15 node=v22.22.2
 ------------------------------------------------------------
 5) Section sizes — size(1)
        text	   data	    bss	    dec	    hex	filename
-      48574	     36	1339936	1388546	 153002	build/kernel.elf
+      49316	     36	1356320	1405672	 1572e8	build/kernel.elf
 ------------------------------------------------------------
 6) Memory allocator — host unit test (tests/test_pmm.c)
     PMM allocator test: OK

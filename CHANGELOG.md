@@ -3,6 +3,59 @@
 All notable changes to THUOS are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Versions track the THU Kernel.
 
+## [0.18.0] — "Portable" — 2026-06-10
+
+**Graphics that work on real Intel/AMD hardware, not just QEMU.** Until now the
+display driver programmed the **Bochs/QEMU "DISPI" VBE** registers, which do not
+exist on real GPUs, and it scraped its bitmap font from VGA text-mode memory —
+both QEMU-only assumptions. THUOS now takes the framebuffer the **bootloader**
+already set up and carries an embedded font, so it renders on bare metal.
+
+- **Bootloader-provided framebuffer (the portable path).** The Multiboot 1
+  header now requests a linear framebuffer (`MB_VIDEO`), and the kernel reads
+  `framebuffer_addr/pitch/width/height/bpp` from the Multiboot info GRUB passes.
+  This is the same mechanism that carries a **UEFI GOP** framebuffer when booted
+  via GRUB-EFI. Crucially, the row stride now comes from the loader's **pitch**
+  (real GPUs have `pitch > width·4`), which fixes skew on real hardware.
+- **Bochs/QEMU VBE fallback retained.** When there is no Multiboot framebuffer
+  (e.g. `qemu -kernel`, which CI uses), the kernel falls back to the DISPI path,
+  so the CI boot-smoke job is unaffected.
+- **Embedded 8×16 font.** The classic VGA font is now baked into the kernel
+  (`gfx.c`) instead of scraped from VGA plane 2 at boot. A bootloader/UEFI hands
+  the kernel a *graphics-mode* framebuffer, where the live VGA font is
+  unreadable — so text would have been blank on real hardware. It now renders in
+  any video mode.
+- **Boot diagnostics over serial.** The kernel logs which display path it took
+  and the framebuffer geometry (`[lfb] bootloader framebuffer 1024x768 x32bpp
+  pitch=4096 @0x… type=1`) — what you read over a serial cable when bringing it
+  up on a physical machine.
+
+### Verified
+- **GRUB ISO booted in QEMU** (`make iso` → `qemu -cdrom`): GRUB sets the mode,
+  passes the framebuffer, and THUOS renders the desktop + text through it — the
+  real-hardware path, exercised end-to-end.
+- `qemu -kernel` fallback, `make test`, and the `boottest` smoke test all stay
+  green.
+
+### Added / Changed — kernel
+- `kernel/boot/boot.S` — Multiboot header requests a 1024×768×32 linear FB.
+- `kernel/mm/multiboot.h` — framebuffer fields + `MB_FLAG_FB` / `MB_FB_TYPE_*`.
+- `kernel/drivers/lfb.c` / `lfb.h` — `lfb_init_auto()` (bootloader FB, else VBE)
+  and `lfb_init_fb()` honoring real pitch; `desktop_start()` takes the MB info.
+- `kernel/drivers/gfx.c` — embedded 8×16 font; `vga_font_extract()` is now a
+  no-op kept for API/boot-log compatibility.
+- `kernel/mm/vmm.c` / `vmm.h` — LFB map window 16→32 MiB + `vmm_lfb_capacity()`.
+- `grub.cfg` — refreshed boot menu.
+- `docs/REAL_HARDWARE.md` — honest guide to booting on a physical machine.
+
+### Honest limits (still the driver moat)
+- This makes **graphics** portable. Booting a **modern UEFI laptop** still needs
+  a UEFI-capable GRUB (grub-efi) and, for keyboard/touchpad, a **USB-HID** stack
+  (those laptops have no PS/2) — both remain future milestones. A desktop/PC with
+  legacy/CSM BIOS + PS/2 is the case most likely to work today.
+- Only 32bpp direct-colour framebuffers are used; exotic VBE/GOP pixel layouts
+  fall back to the VBE path or text. Not yet run on physical hardware here.
+
 ## [0.17.0] — "Suite" — 2026-06-09
 
 **A Settings menu and more apps.** The dock grows to six apps and gains a proper
