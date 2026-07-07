@@ -9,5 +9,6 @@ void keyboard_init(void);
 char keyboard_getchar(void);
 int  keyboard_haskey(void);        /* non-blocking: 1 if a key is pending */
 char keyboard_trygetchar(void);    /* non-blocking: next key, or 0 if none */
+void keyboard_inject(char c);      /* push a translated char (e.g. from a USB HID keyboard) */
 
 #endif /* THUOS_KEYBOARD_H */

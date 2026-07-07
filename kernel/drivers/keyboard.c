@@ -37,6 +37,8 @@ static void buffer_push(char c) {
     }
 }
 
+void keyboard_inject(char c) { if (c) buffer_push(c); }   /* e.g. from a USB HID keyboard */
+
 static void keyboard_callback(registers_t *r) {
     (void)r;
     uint8_t scancode = inb(KBD_DATA);

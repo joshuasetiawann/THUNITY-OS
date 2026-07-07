@@ -71,3 +71,15 @@ int mouse_take_event(void) {
     gdirty = 0;
     return 1;
 }
+
+void mouse_inject(int dx, int dy, int buttons) {
+    if (sw <= 0 || sh <= 0) return;            /* screen not known yet */
+    gx += dx;                                  /* USB HID: +dx right, +dy down */
+    gy += dy;
+    if (gx < 0)      gx = 0;
+    if (gx > sw - 1) gx = sw - 1;
+    if (gy < 0)      gy = 0;
+    if (gy > sh - 1) gy = sh - 1;
+    gbtn = buttons & 0x07;
+    gdirty = 1;
+}

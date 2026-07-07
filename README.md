@@ -10,7 +10,7 @@ built incrementally toward a calm, local-first desktop OS tomorrow.
 
 - **Project:** THUOS · **Kernel:** THU Kernel · **Desktop:** THU Desktop
 - **Filesystem (planned):** THUFS · **Package manager (planned):** thupkg
-- **Version:** `0.18.0` "Portable" · **Arch:** x86 (i386, 32-bit) · **Boot:** Multiboot 1 · **Boot status:** ✅ boot-verified in QEMU (`-kernel`) **and via a GRUB ISO** (bootloader framebuffer — the real-hardware path) · **Settings + Terminal/Files/Notes/Calculator/Paint apps**
+- **Version:** `0.19.0` "USB" · **Arch:** x86 (i386, 32-bit) · **Boot:** Multiboot 1 · **Boot status:** ✅ boot-verified in QEMU (`-kernel`) **and via a GRUB ISO** (bootloader framebuffer — the real-hardware path) · **Input:** PS/2 **+ USB-HID (xHCI)** · **Settings + Terminal/Files/Notes/Calculator/Paint apps**
 
 ---
 
@@ -32,6 +32,7 @@ implemented and wired into `kernel_main()`:
 | PIC remap + IRQ routing + EOI | ✅ Implemented | `kernel/arch/x86/pic.c`, `irq.c` |
 | PIT timer @ 100 Hz + uptime | ✅ Implemented | `kernel/arch/x86/pit.c` |
 | PS/2 keyboard (IRQ1, scancode set 1, shift) | ✅ Implemented | `kernel/drivers/keyboard.c` |
+| **USB: xHCI controller + USB-HID boot keyboard & mouse (real-laptop input, no PS/2)** | ✅ Boot-verified (QEMU `qemu-xhci`) | `kernel/drivers/usb/xhci.c` |
 | Panic / assert system | ✅ Implemented | `kernel/core/panic.c` |
 | Interactive shell (`thuos>`, 29 commands) | ✅ Implemented | `kernel/shell/shell.c` |
 | Freestanding `mem*`/`str*` lib | ✅ Implemented | `kernel/lib/string.c` |
