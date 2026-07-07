@@ -24,6 +24,7 @@
 #include "usermode.h"
 #include "gfx.h"
 #include "lfb.h"
+#include "xhci.h"
 #include "desktop.h"
 #include "shell.h"
 
@@ -106,6 +107,8 @@ void kernel_main(uint32_t magic, uint32_t mb_info_addr) {
     usermode_init();
     usermode_selftest();       /* drop to ring 3, syscall back, return to ring 0 */
     ok_line("User mode (ring 3): entered CPL 3 and returned via int 0x80");
+
+    xhci_init();               /* USB: bring up the xHCI controller (real-HW USB path) */
 
     vga_font_extract();        /* copy the VGA font while still in text mode */
     ok_line("THU Desktop: high-res framebuffer (1024x768x32 truecolor)");
