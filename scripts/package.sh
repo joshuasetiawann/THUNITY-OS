@@ -5,7 +5,7 @@
 set -eu
 cd "$(dirname "$0")/.."
 
-NAME="thuos_milestone_0_3"
+NAME="thuos_milestone_0_20"
 OUT="${NAME}.tar.gz"
 
 # Refresh verification log so the archive carries current, real results.

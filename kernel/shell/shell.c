@@ -21,8 +21,29 @@
 #include "lfb.h"
 #include "gconsole.h"
 #include "desktop.h"
+#include "ai.h"
+#include "osreport.h"
 
 #define LINE_MAX 128
+
+/* Command history ring (general-OS feature; `history` lists recent commands). */
+#define HIST_MAX 16
+static char     hist[HIST_MAX][LINE_MAX];
+static uint32_t hist_n = 0;                 /* total commands ever recorded */
+static void hist_record(const char *line) {
+    if (!line[0]) return;
+    char *d = hist[hist_n % HIST_MAX];
+    uint32_t i = 0;
+    for (; line[i] && i < LINE_MAX - 1; i++) d[i] = line[i];
+    d[i] = '\0';
+    hist_n++;
+}
+static void cmd_history(void) {
+    uint32_t start = hist_n > HIST_MAX ? hist_n - HIST_MAX : 0;
+    if (hist_n == 0) { kprintf("(no commands yet)\n"); return; }
+    for (uint32_t i = start; i < hist_n; i++)
+        kprintf("  %u  %s\n", i + 1, hist[i % HIST_MAX]);
+}
 
 /* Parse a 32-bit hex value, accepting an optional 0x prefix. */
 static bool parse_hex(const char *s, uint32_t *out) {
@@ -89,6 +110,10 @@ static void cmd_help(void) {
     kprintf("  write F T  Write text T to file F\n");
     kprintf("  sys        Invoke syscalls via int 0x80 (demo)\n");
     kprintf("  user       Drop to ring 3 and round-trip a syscall (CPL 3 demo)\n");
+    kprintf("  ai         AI-native layer: ai status|models|tasks|policy|bridge\n");
+    kprintf("  features   OS capability map with honest status labels\n");
+    kprintf("  dmesg/logs Replay the kernel log (boot messages + recent output)\n");
+    kprintf("  history    Show recent shell commands\n");
     kprintf("  apps       files | notes | calc | paint | settings  (or click the dock)\n");
     kprintf("  gui        Repaint the THU Desktop\n");
     kprintf("  echo       Print the rest of the line\n");
@@ -376,6 +401,8 @@ static void halt_machine(void) {
 }
 
 static void execute(char *line) {
+    hist_record(line);                       /* record the full line before splitting */
+
     /* Split into command and argument string. */
     char *args = line;
     while (*args && *args != ' ') args++;
@@ -383,6 +410,11 @@ static void execute(char *line) {
 
     if (line[0] == '\0')                     return;
     else if (strcmp(line, "help") == 0)      cmd_help();
+    else if (strcmp(line, "ai") == 0)        ai_command(args);
+    else if (strcmp(line, "features") == 0)  osreport_print();
+    else if (strcmp(line, "history") == 0)   cmd_history();
+    else if (strcmp(line, "dmesg") == 0)     klog_dump();
+    else if (strcmp(line, "logs") == 0)      klog_dump();
     else if (strcmp(line, "about") == 0)     cmd_about();
     else if (strcmp(line, "version") == 0)   cmd_version();
     else if (strcmp(line, "status") == 0)    cmd_status();
