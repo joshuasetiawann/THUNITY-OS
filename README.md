@@ -25,7 +25,8 @@ modern desktop, built incrementally toward a calm, local-first OS.
 
 - **Project:** THUOS · **Kernel:** THU Kernel · **Desktop:** THU Desktop
 - **Filesystem (planned):** THUFS · **Package manager (planned):** thupkg
-- **Version:** `0.19.0` "USB" · **Arch:** x86 (i386, 32-bit) · **Boot:** Multiboot 1 · **Input:** PS/2 **+ USB-HID (xHCI)** · **Boot status:** ✅ verified in QEMU (`-kernel`) **and via a GRUB ISO**
+- **Version:** `0.20.0` "AI-Native" · **Arch:** x86 (i386, 32-bit) · **Boot:** Multiboot 1 · **Input:** PS/2 **+ USB-HID (xHCI)** · **Boot status:** ✅ verified in QEMU (`-kernel`) **and via a GRUB ISO**
+- **AI-native foundation (host-tested):** in-kernel AI service/model/task/permission/audit core + `ai` shell namespace — **design-only bridge**, *no* inference/networking/Docker/Python yet ([doc](docs/39_AI_NATIVE_GENERAL_OS_FOUNDATION.md) · [bridge strategy](docs/40_THUNITY_AI_BRIDGE_STRATEGY.md))
 
 ---
 
@@ -83,6 +84,9 @@ implemented and wired into `kernel_main()`:
 | **Modern desktop: 1024×768×32 framebuffer (bootloader FB on real HW, Bochs VBE fallback) + graphical terminal** | ✅ Boot-verified (CI `-kernel` + GRUB ISO) + screenshot | `kernel/drivers/lfb.c`, `kernel/gui/gconsole.c`, `desktop.c` |
 | **Mouse (PS/2 + USB) + clickable dock + apps (Calculator, Files, System, About)** | ✅ Boot-verified (CI) + screenshot | `kernel/drivers/mouse.c`, `kernel/gui/apps.c`, `desktop.c` |
 | **Settings menu (live themes) + Notes (ramfs) + Paint (mouse drawing)** | ✅ Boot-verified (CI) + screenshot | `kernel/gui/apps.c`, `desktop.c` |
+| **AI-native core: service/model/task/permission/audit (local-only policy)** | ✅ Host-tested (`tests/test_ai.c`) + `ai` namespace boot-verified | `kernel/ai/ai_core.c`, `ai.c` |
+| **OS feature/status registry + `features`/`dmesg`/`history`** | ✅ Host-tested (`tests/test_features.c`) + boot-verified | `kernel/os/feature_registry.c`, `osreport.c` |
+| Thunity AI bridge (talk to a local Linux AI server) | ⚠️ **Design-only** — no networking/inference in THUOS yet | [doc 40](docs/40_THUNITY_AI_BRIDGE_STRATEGY.md) |
 | Boot in QEMU → `thuos>` (serial smoke-test) | ✅ Boot-verified (CI) | `scripts/boottest.sh`, CI `boot-smoke` |
 
 > **Honesty:** logic is **host-tested** (`make test`: PMM, heap, paging, scheduler)
