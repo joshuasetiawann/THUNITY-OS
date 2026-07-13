@@ -1,4 +1,4 @@
-/* THUOS — OS feature + honesty-status registry (pure logic). See header. */
+/* THUOS - OS feature + honesty-status registry (pure logic). See header. */
 #include "feature_registry.h"
 
 static void cp(char *d, const char *s, int max) {

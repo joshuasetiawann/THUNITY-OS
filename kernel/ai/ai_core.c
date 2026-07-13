@@ -1,4 +1,4 @@
-/* THUOS — AI-native OS core (pure logic). See ai_core.h. No kernel deps. */
+/* THUOS - AI-native OS core (pure logic). See ai_core.h. No kernel deps. */
 #include "ai_core.h"
 
 /* tiny self-contained string helpers (so this stays freestanding + host-portable) */

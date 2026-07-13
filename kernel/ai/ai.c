@@ -1,4 +1,4 @@
-/* THUOS — AI-native layer, kernel side. See ai.h. */
+/* THUOS - AI-native layer, kernel side. See ai.h. */
 #include "types.h"
 #include "kprintf.h"
 #include "ai_core.h"
@@ -12,7 +12,7 @@ void ai_init(void) {
      * yet (no TCP/IP). These describe where a future bridge would point. */
     ai_service_register(&g_ai, "thunity-backend", "http://127.0.0.1:8000",  AI_SVC_BRIDGE, AI_STAT_DESIGN_ONLY);
     ai_service_register(&g_ai, "ollama",          "http://127.0.0.1:11434", AI_SVC_BRIDGE, AI_STAT_DESIGN_ONLY);
-    /* Example model names an operator's local Ollama might host. DECLARED only —
+    /* Example model names an operator's local Ollama might host. DECLARED only -
      * nothing is loaded inside THUOS. */
     ai_model_register(&g_ai, "llama3.1",        AI_ROLE_CHAT,  AI_MODEL_DECLARED);
     ai_model_register(&g_ai, "qwen2.5-coder",   AI_ROLE_CODE,  AI_MODEL_DECLARED);
@@ -36,7 +36,7 @@ static void print_audit_tail(int max) {
 }
 
 static void cmd_status(void) {
-    kprintf("THUOS AI-native layer — foundation (host-tested core; no inference here)\n");
+    kprintf("THUOS AI-native layer - foundation (host-tested core; no inference here)\n");
     kprintf("Services (%d):\n", ai_service_count(&g_ai));
     for (int i = 0; i < AI_MAX_SERVICES; i++) {
         const ai_service_t *s = &g_ai.services[i];
@@ -57,7 +57,7 @@ static void cmd_status(void) {
 }
 
 static void cmd_models(void) {
-    kprintf("Registered models (%d) — DECLARED design entries, not loaded\n", ai_model_count(&g_ai));
+    kprintf("Registered models (%d) - DECLARED design entries, not loaded\n", ai_model_count(&g_ai));
     kprintf("(THUOS has no AI runtime; models live on a LOCAL Linux server e.g. Ollama)\n");
     static const char *role[] = { "chat", "code", "embed", "vision" };
     for (int i = 0; i < AI_MAX_MODELS; i++) {
@@ -72,7 +72,7 @@ static void cmd_models(void) {
 static void cmd_tasks(void) {
     int n = ai_task_count(&g_ai);
     kprintf("AI tasks (%d):\n", n);
-    if (n == 0) { kprintf("  (none yet — run `ai bridge` to see create->policy->audit)\n"); return; }
+    if (n == 0) { kprintf("  (none yet - run `ai bridge` to see create->policy->audit)\n"); return; }
     for (int i = 0; i < n; i++) {
         const ai_task_t *t = ai_task_get(&g_ai, i);
         if (!t) break;
@@ -90,14 +90,14 @@ static void cmd_policy(void) {
     yn("tool-exec",       ai_policy_allows(&g_ai, AI_PERM_TOOL_EXEC));
     yn("cloud",           ai_policy_allows(&g_ai, AI_PERM_CLOUD));
     kprintf("  net-bridge would reach a LOCAL AI server; needs TCP/IP (not in THUOS yet).\n");
-    kprintf("  cloud is blocked by doctrine — THUOS adds no external/cloud AI default.\n");
+    kprintf("  cloud is blocked by doctrine - THUOS adds no external/cloud AI default.\n");
     ai_audit_record(&g_ai, "ai.policy", AI_AUDIT_ALLOW, 0);
 }
 
 /* Demonstrate the full create -> policy -> audit pipeline honestly: no bytes sent. */
 static void cmd_bridge(void) {
     int svc = ai_service_find(&g_ai, "thunity-backend");
-    kprintf("Thunity AI bridge — DESIGN-ONLY (no connection is made)\n");
+    kprintf("Thunity AI bridge - DESIGN-ONLY (no connection is made)\n");
     if (svc >= 0)
         kprintf("Target: %s %s [%s]\n", g_ai.services[svc].name, g_ai.services[svc].endpoint,
                 ai_status_label(g_ai.services[svc].status));
@@ -124,7 +124,7 @@ static void cmd_help(void) {
     kprintf("  models   registered model names (declared; no runtime here)\n");
     kprintf("  tasks    AI task list + state machine\n");
     kprintf("  policy   permission policy (local-only by default)\n");
-    kprintf("  bridge   Thunity/Ollama bridge demo — DESIGN-ONLY (no networking)\n");
+    kprintf("  bridge   Thunity/Ollama bridge demo - DESIGN-ONLY (no networking)\n");
     kprintf("Honest: THUOS does not run AI inference, Docker, Python, or networking yet.\n");
 }
 

@@ -1,4 +1,4 @@
-/* THUOS — OS feature + honesty-status registry (pure logic, no kernel deps).
+/* THUOS - OS feature + honesty-status registry (pure logic, no kernel deps).
  *
  * Encodes THUOS's honesty doctrine *in code*: every advertised OS capability is
  * tagged with exactly how real it is, so the shell (`features`), the docs, and
